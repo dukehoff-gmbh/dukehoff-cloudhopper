@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>eu.cloudhopper.mc</groupId>
+        <artifactId>cloudhopper-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>provider-springboot</artifactId>
+    <name>Cloudhopper: Provider Integration for SpringBoot</name>
+    <packaging>jar</packaging>
+    <properties>
+        <license.header.path>${project.parent.basedir}/src/license/header.txt</license.header.path>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>deployment-config-api</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>provider-http</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>3.2.5</version> <!-- or your preferred Spring Boot version -->
+            <scope>provided</scope> <!-- assuming it's part of the user's app -->
+        </dependency>
+    </dependencies>
+</project>

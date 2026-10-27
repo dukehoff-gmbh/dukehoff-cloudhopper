@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#%L
+  Cloudhopper Core Archetype - a library from the "Cloudhopper" project.
+  Dukehoff GmbH designates this particular file as subject to the "Classpath"
+  exception as provided in the LICENSE-EXCEPTIONS file that accompanies this code.
+  %%
+  Copyright (C) 2024 - 2026 Dukehoff GmbH
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as
+  published by the Free Software Foundation, either version 3 of the
+  License, or (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public
+  License along with this program.  If not, see
+  <http://www.gnu.org/licenses/gpl-3.0.html>.
+  #L%
+-->
+
+<archetype-descriptor name="cloudhopper-core">
+    <requiredProperties>
+        <requiredProperty key="package">
+            <defaultValue>com.example.demo</defaultValue>
+            <description>Base Java package for your functions</description>
+        </requiredProperty>
+        <requiredProperty key="artifactId">
+            <defaultValue>demo</defaultValue>
+            <description>Your project’s artifactId</description>
+        </requiredProperty>
+        <requiredProperty key="version">
+            <defaultValue>1.0-SNAPSHOT</defaultValue>
+            <description>Your project’s version</description>
+        </requiredProperty>
+        <requiredProperty key="generatorIds">
+            <defaultValue>aws-terraform</defaultValue>
+            <description>
+                Comma-separated list of target clouds.  
+                Options: aws-terraform, gcp-terraform, azure-terraform, springboot-http
+            </description>
+        </requiredProperty>
+        <requiredProperty key="includeTerraformProfile">
+            <defaultValue>false</defaultValue>
+            <description>Add a deploy-with-terraform Maven profile?</description>
+        </requiredProperty>
+    </requiredProperties>
+
+    <fileSets>
+        <fileSet packaged="false" filtered="true">
+            <includes>
+                <include>pom.xml</include>
+                <include>README.md</include>
+            </includes>
+        </fileSet>
+        <fileSet filtered="true" packaged="true">
+            <directory>src/main/java</directory>
+            <includes>
+                <include>**/*.java</include>
+            </includes>
+        </fileSet>
+        <fileSet filtered="true" >
+            <directory>src/main/resources/deployment</directory>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</archetype-descriptor>

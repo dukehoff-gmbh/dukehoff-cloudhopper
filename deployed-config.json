@@ -1,0 +1,12 @@
+{
+  "createTime": "2025-05-05T12:11:34.085066609Z",
+  "displayName": "v1",
+  "gatewayServiceAccount": "projects/-/serviceAccounts/550664937630-compute@developer.gserviceaccount.com",
+  "labels": {
+    "goog-terraform-provisioned": "true"
+  },
+  "name": "projects/550664937630/locations/global/apis/cloudhopper-tck-api/configs/v1",
+  "serviceConfigId": "v1-2ww5mwcykcur7",
+  "state": "ACTIVE",
+  "updateTime": "2025-05-05T12:13:45.067720324Z"
+}

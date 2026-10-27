@@ -1,0 +1,41 @@
+{
+  "generatorId": "azure-terraform",
+  "phases": {
+    "shared": [
+      {
+        "templateName": "shared.ftl",
+        "description": "Generates shared resources (e.g., provider blocks, logging config)",
+        "outputFileExtension": "tf",
+        "outputSubDirectory": "",
+        "javaFile": false
+      }
+    ],
+    "function": [
+       {
+        "templateName": "function.ftl",
+        "description": "Generates the Java wrapper for the Lambda handler",
+        "outputFileExtension": "java",
+        "outputSubDirectory": "generated",
+        "javaFile": true
+      }
+    ],
+    "api": [
+      {
+        "templateName": "apiIntegrationClass.ftl",
+        "description": "Generates an APIFunction",
+        "outputFileExtension": "java",
+        "outputSubDirectory": "",
+        "javaFile": true
+      }
+    ],
+    "schedule": [
+      {
+        "templateName": "schedule.ftl",
+        "description": "Generates a Function with @TimerTrigger",
+        "outputFileExtension": "java",
+        "outputSubDirectory": "",
+        "javaFile": true
+       }
+    ]
+  }
+}

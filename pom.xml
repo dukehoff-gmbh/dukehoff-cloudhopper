@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>eu.cloudhopper.mc</groupId>
+    <artifactId>cloudhopper-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Cloudhopper Multicloud Java APIs</name>
+    <url>https://cloudhopper.eu</url>
+    
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <swagger.version>2.2.22</swagger.version>
+        <com.google.code.gson.version>2.10.1</com.google.code.gson.version>
+        <license.header.path>${project.basedir}/src/license/header.txt</license.header.path>
+    </properties>
+
+    <description>Cloudhopper Multicloud APIs - Generate cloud deployments from Java code</description>
+    
+    <developers>
+        <developer>
+            <id>eppleton</id>
+            <name>Anton Epple</name>
+            <email>info@eppleton.de</email>
+            <organization>Dukehoff GmbH</organization>
+            <organizationUrl>https://github.com/dukehoff-gmbh</organizationUrl>
+            <roles>
+                <role>Project-Administrator</role>
+                <role>Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+    </developers>
+
+    <organization>
+        <name>Dukehoff GmbH</name>
+        <url>https://github.com/dukehoff-gmbh</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>GNU General Public License, Version 3, with the Classpath Exception and the Generator Output Exception</name>
+            <url>https://www.gnu.org/licenses/gpl-3.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>
+                See the LICENSE and LICENSE-EXCEPTIONS files. Applications may link the
+                Cloudhopper libraries regardless of their own license, and output generated
+                by Cloudhopper may be used under terms of your choice.
+            </comments>
+        </license>
+    </licenses>
+    
+    <scm>
+        <connection>scm:git:https://github.com/dukehoff-gmbh/dukehoff-cloudhopper.git</connection>
+        <url>https://github.com/dukehoff-gmbh/dukehoff-cloudhopper.git</url>
+        <developerConnection>scm:git:https://github.com/dukehoff-gmbh/dukehoff-cloudhopper.git</developerConnection>
+        <tag>release-${releaseVersion}</tag>
+    </scm>
+    
+    <modules>
+        <module>deployment-config-api</module>
+        <module>deployment-config-processor</module>
+        <module>deployment-config-processor-test-support</module>
+        <module>deployment-config-generator-api</module>
+        <module>deployment-config-generator-generic</module>
+        <module>generator-gcp-terraform</module>
+        <module>generator-azure-terraform</module>
+        <module>generator-aws-terraform</module>
+        <module>generator-springboot</module>
+        <module>provider-aws</module>
+        <module>provider-azure</module>
+        <module>provider-gcp</module>
+        <module>provider-http</module>
+        <module>provider-springboot</module>
+        <module>test/tck/api</module>
+        <module>test/system-tests/test-functions</module>
+        <module>demo</module>
+        <module>test/system-tests/generator-aws-terraform</module>
+        <module>test/system-tests/generator-azure-terraform</module>
+        <module>test/system-tests/generator-gcp-terraform</module>
+        <module>test/system-tests/generator-springboot</module>
+        <module>test/test-support</module>
+        <module>test/tck/core/test-tck-core</module>
+        <module>test/system-tests/test-domain</module>
+        <module>test/tck/generator-bindings/aws-terraform</module>
+        <module>test/tck/generator-bindings/gcp-terraform</module>
+        <module>test/tck/generator-bindings/azure-terraform</module>
+        <module>maven-archetype</module>
+    </modules>
+    <build>
+        <pluginManagement>
+            <plugins>   
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.8.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.6.3</version>
+                    <executions>
+                        <execution>
+                            <id>generate-javadoc</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>javadoc</goal>
+                            </goals>
+                            <configuration>
+                                <destDir>${project.build.directory}/apidocs</destDir>
+                            </configuration>
+                        </execution>
+                    </executions>
+
+                </plugin>            
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>2.4.0</version>
+                    <configuration>
+                        <inceptionYear>2024</inceptionYear>
+                        <organizationName>Dukehoff GmbH</organizationName>
+                        <licenseName>gpl_v3</licenseName>
+                        <failOnMissingHeader>true</failOnMissingHeader>
+                        <descriptionTemplate>${license.header.path}</descriptionTemplate>
+                        <roots>
+                            <root>src</root>
+                        </roots>
+                        <includes>
+                            <include>**/*.java</include>
+                            <include>**/*.xml</include>
+                        </includes>
+                        <excludes>
+                            <!-- exclude the entire archetype-resources folder -->
+                            <exclude>**/archetype-resources/**</exclude>
+                            <exclude>**/generated/**</exclude>
+                        </excludes>
+                       
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>add-license-header</id>
+                            <phase>initialize</phase>
+                            <goals>
+                                <goal>update-file-header</goal>
+                            </goals>
+                        </execution>         
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>templating-maven-plugin</artifactId>
+                    <version>1.0.0</version>
+                    <executions>
+                        <execution>
+                            <id>generate-provider-properties</id>
+                            <phase>generate-resources</phase>
+                            <goals>
+                                <goal>filter-sources</goal>
+                            </goals>
+                            <configuration>
+                                <sourceDirectory>${project.parent.basedir}/src/main/cloudhopper-templates</sourceDirectory>
+                                <outputDirectory>${project.build.outputDirectory}/META-INF/cloudhopper</outputDirectory>
+                                <includes>
+                                    <include>generator.properties</include>
+                                </includes>
+                                <filterProperties>
+                                    <generator.id>${cloudhopper.generator.id}</generator.id>
+                                    <provider.name>${cloudhopper.generator.name}</provider.name>
+                                    <provider.version>${cloudhopper.provider.version}</provider.version>
+                                    <deployment.tool>${cloudhopper.deployment.tool}</deployment.tool>
+                                    <deployment.version>${cloudhopper.deployment.version}</deployment.version>
+                                    <java.version>${cloudhopper.java.version}</java.version>
+                                    <native.support>${cloudhopper.native.support}</native.support>
+                                    <description>${cloudhopper.description}</description>
+                                </filterProperties>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <profiles>  
+        <profile>
+            <id>release-core</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+              
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <additionalOptions>-Xdoclint:none</additionalOptions>
+                            <additionalJOption>-Xdoclint:none</additionalJOption>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.simplify4u.plugins</groupId>
+                        <artifactId>sign-maven-plugin</artifactId>
+                        <version>1.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts-core</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.7.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>false</autoPublish>
+                            <waitUntil>published</waitUntil>
+                            <excludeArtifacts>
+                                <artifactId>system-tests-generator-aws-terraform</artifactId>
+                                <artifactId>system-tests-generator-azure-terraform</artifactId>
+                                <artifactId>system-tests-generator-gcp-terraform</artifactId>
+                                <artifactId>system-tests-generator-springboot</artifactId>
+                                <artifactId>system-tests-generator-springboot</artifactId>
+                                <artifactId>test-domain</artifactId>
+                                <artifactId>test-functions</artifactId>
+                                <artifactId>test-support</artifactId>
+                                <artifactId>maven-archetype</artifactId>
+                                <artifactId>test-tck-core</artifactId>
+                                <artifactId>demo</artifactId>
+                                <artifactId>generator-bindings-gcp-terraform</artifactId>
+                                <artifactId>generator-bindings-aws-terraform</artifactId>
+                                <artifactId>generator-bindings-azure-terraform</artifactId>
+                            </excludeArtifacts>
+                        </configuration>
+                       
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <profile>
+            <id>release-archetype</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <additionalOptions>-Xdoclint:none</additionalOptions>
+                            <additionalJOption>-Xdoclint:none</additionalJOption>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.simplify4u.plugins</groupId>
+                        <artifactId>sign-maven-plugin</artifactId>
+                        <version>1.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts-core</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.7.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>false</autoPublish>
+                            <waitUntil>published</waitUntil>
+                            <excludeArtifacts>
+                                <artifactId>system-tests-generator-aws-terraform</artifactId>
+                                <artifactId>system-tests-generator-azure-terraform</artifactId>
+                                <artifactId>system-tests-generator-gcp-terraform</artifactId>
+                                <artifactId>system-tests-generator-springboot</artifactId>
+                                <artifactId>system-tests-generator-springboot</artifactId>
+                                <artifactId>test-domain</artifactId>
+                                <artifactId>test-functions</artifactId>
+                                <artifactId>test-support</artifactId>
+                                <artifactId>test-tck-core</artifactId>
+                                <artifactId>demo</artifactId>
+                                <artifactId>generator-bindings-gcp-terraform</artifactId>
+                                <artifactId>generator-bindings-aws-terraform</artifactId>
+                                <artifactId>generator-bindings-azure-terraform</artifactId>
+                                <artifactId>deployment-config-api</artifactId>
+                                <artifactId>deployment-config-processor</artifactId>
+                                <artifactId>deployment-config-generator-api</artifactId>
+                                <artifactId>deployment-config-generator-api</artifactId>
+                                <artifactId>deployment-config-generator-generic</artifactId>
+                                <artifactId>generator-gcp-terraform</artifactId>
+                                <artifactId>generator-azure-terraform</artifactId>
+                                <artifactId>generator-aws-terraform</artifactId>
+                                <artifactId>generator-springboot</artifactId>
+                                <artifactId>provider-aws</artifactId>
+                                <artifactId>provider-azure</artifactId>
+                                <artifactId>provider-gcp</artifactId>
+                                <artifactId>provider-http</artifactId>
+                                <artifactId>provider-springboot</artifactId>
+                            </excludeArtifacts>
+                        </configuration>
+                       
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>generate-docs</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.6.3</version>
+                        <executions>
+                            <execution>
+                                <id>generate-javadocs</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>javadoc</goal>
+                                </goals>
+                                <configuration>
+                                    <destDir>${project.build.directory}/apidocs</destDir>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Copy JavaDocs into Docusaurus -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>copy-javadocs-to-docusaurus</id>
+                                <phase>verify</phase>
+                                <inherited>false</inherited>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="docs/static/api/deployment-config-api"/>
+                                        <copy todir="docs/static/api/deployment-config-api" overwrite="true">
+                                            <fileset dir="deployment-config-api/target/site/apidocs"/>
+                                        </copy>
+                                        
+                                        <mkdir dir="docs/static/api/deployment-config-generator-api"/>
+                                        <copy todir="docs/static/api/deployment-config-generator-api" overwrite="true">
+                                            <fileset dir="deployment-config-generator-api/target/site/apidocs"/>
+                                        </copy>
+
+                                        <mkdir dir="docs/static/api/deployment-config-generator-generic"/>
+                                        <copy todir="docs/static/api/deployment-config-generator-generic" overwrite="true">
+                                            <fileset dir="deployment-config-generator-generic/target/site/apidocs"/>
+                                        </copy>
+
+                                        <mkdir dir="docs/static/api/deployment-config-processor"/>
+                                        <copy todir="docs/static/api/deployment-config-processor" overwrite="true">
+                                            <fileset dir="deployment-config-processor/target/site/apidocs"/>
+                                        </copy>
+
+                                        <mkdir dir="docs/static/api/generator-aws-terraform"/>
+                                        <copy todir="docs/static/api/generator-aws-terraform" overwrite="true">
+                                            <fileset dir="generator-aws-terraform/target/site/apidocs"/>
+                                        </copy>
+
+                                        <mkdir dir="docs/static/api/generator-azure-terraform"/>
+                                        <copy todir="docs/static/api/generator-azure-terraform" overwrite="true">
+                                            <fileset dir="generator-azure-terraform/target/site/apidocs"/>
+                                        </copy>
+
+                                        <mkdir dir="docs/static/api/generator-gcp-terraform"/>
+                                        <copy todir="docs/static/api/generator-gcp-terraform" overwrite="true">
+                                            <fileset dir="generator-gcp-terraform/target/site/apidocs"/>
+                                        </copy>
+
+                                        <mkdir dir="docs/static/api/provider-aws"/>
+                                        <copy todir="docs/static/api/provider-aws" overwrite="true">
+                                            <fileset dir="provider-aws/target/site/apidocs"/>
+                                        </copy>
+
+                                        <mkdir dir="docs/static/api/provider-azure"/>
+                                        <copy todir="docs/static/api/provider-azure" overwrite="true">
+                                            <fileset dir="provider-azure/target/site/apidocs"/>
+                                        </copy>
+
+                                        <mkdir dir="docs/static/api/provider-gcp"/>
+                                        <copy todir="docs/static/api/provider-gcp" overwrite="true">
+                                            <fileset dir="provider-gcp/target/site/apidocs"/>
+                                        </copy>
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>ant-contrib</groupId>
+                    <artifactId>ant-contrib</artifactId>
+                    <version>1.0b3</version>
+                </dependency>
+            </dependencies>
+        </profile>
+             
+    </profiles>
+</project>

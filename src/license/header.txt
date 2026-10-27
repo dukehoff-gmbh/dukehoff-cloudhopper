@@ -1,0 +1,5 @@
+
+${projectName} - a library from the "Cloudhopper" project.
+
+Dukehoff GmbH designates this particular file as subject to the "Classpath"
+exception as provided in the LICENSE-EXCEPTIONS file that accompanies this code.

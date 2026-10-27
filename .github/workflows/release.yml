@@ -1,0 +1,387 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'What to release'
+        required: true
+        default: 'core'
+        type: choice
+        options:
+          - core
+          - archetype
+          - both
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        type: string
+      next_version:
+        description: 'Next development version (e.g., 1.1.0-SNAPSHOT)'
+        required: true
+        type: string
+      auto_publish:
+        description: 'Auto-publish to Central (otherwise manual validation required)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  validate-inputs:
+    name: Validate Release Inputs
+    runs-on: ubuntu-latest
+    outputs:
+      should_release_core: ${{ steps.check.outputs.should_release_core }}
+      should_release_archetype: ${{ steps.check.outputs.should_release_archetype }}
+    steps:
+      - name: Validate inputs
+        id: check
+        run: |
+          echo "Release type: ${{ github.event.inputs.release_type }}"
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Next version: ${{ github.event.inputs.next_version }}"
+          
+          # Validate version format
+          if [[ ! "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+(\.[0-9]+)?)?$ ]]; then
+            echo "❌ Version must be in format x.y.z"
+            exit 1
+          fi
+          
+          # Validate next version format
+          if [[ ! "${{ github.event.inputs.next_version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-SNAPSHOT$ ]]; then
+            echo "❌ Next version must be in format x.y.z-SNAPSHOT"
+            exit 1
+          fi
+          
+          # Set outputs for release strategy
+          if [[ "${{ github.event.inputs.release_type }}" == "core" || "${{ github.event.inputs.release_type }}" == "both" ]]; then
+            echo "should_release_core=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_release_core=false" >> $GITHUB_OUTPUT
+          fi
+          
+          if [[ "${{ github.event.inputs.release_type }}" == "archetype" || "${{ github.event.inputs.release_type }}" == "both" ]]; then
+            echo "should_release_archetype=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_release_archetype=false" >> $GITHUB_OUTPUT
+          fi
+        
+  pre-release-tests:
+    name: Pre-Release Tests
+    runs-on: ubuntu-latest
+    needs: validate-inputs
+    
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+      
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        
+    - name: Cache Maven packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+          
+    - name: Run build (build tests but skip running them)
+      run: mvn clean install -DskipTests
+
+
+  release-core:
+    name: Release Core Libraries
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, pre-release-tests]
+    if: needs.validate-inputs.outputs.should_release_core == 'true'
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+            
+      - name: Configure Maven settings for Central Portal
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << EOF
+          <settings>
+            <servers>
+              <server>
+                <id>central</id>
+                <username>\${env.CENTRAL_TOKEN_USERNAME}</username>
+                <password>\${env.CENTRAL_TOKEN_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+          
+      - name: Write GPG private key to file
+        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" > private.key
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Set release version
+        run: |
+          mvn versions:set -DnewVersion=${{ github.event.inputs.version }}
+          mvn versions:commit
+      
+      # Build ALL modules (including test support) to get dependencies right (don't use release profile, which misses some modules)
+      - name: Build all modules with alpha version
+        run: mvn clean install -DskipTests
+        
+      - name: Build and deploy with verbose signing
+        env:
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          SIGN_KEY_PASS: ${{ secrets.GPG_PASSPHRASE }}
+          SIGN_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          SIGN_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          mvn deploy -Prelease-core \
+            -DskipTests \
+            -Dsign.keyFile=$(pwd)/private.key \
+            -Dsign.keyPass="${GPG_PASSPHRASE}" \
+            -Dsign.asc=true \
+            -Dsign.keyId="${SIGN_KEY_ID}" \
+            -Dauto-publish=${{ github.event.inputs.auto_publish }}
+            
+      - name: Create and push release tag for core
+        run: |
+          git add .
+          git commit -m "Release core libraries v${{ github.event.inputs.version }}"
+          git tag -a "core-v${{ github.event.inputs.version }}" -m "Core Libraries Release v${{ github.event.inputs.version }}"
+          git push origin "core-v${{ github.event.inputs.version }}"
+
+      - name: Set next development version
+        run: |
+          mvn versions:set -DnewVersion=${{ github.event.inputs.next_version }}
+          mvn versions:commit
+          git add .
+          git commit -m "Prepare for next development iteration v${{ github.event.inputs.next_version }}"
+          git push origin main
+
+      - name: Create GitHub Release for Core
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "core-v${{ github.event.inputs.version }}"
+          release_name: "Core Libraries v${{ github.event.inputs.version }}"
+          body: |
+            ## Cloudhopper Core Libraries v${{ github.event.inputs.version }}
+
+            This release contains the core Cloudhopper libraries for multi-cloud deployment generation.
+
+            ### Maven Coordinates
+            ```xml
+            <dependency>
+              <groupId>eu.cloudhopper.mc</groupId>
+              <artifactId>deployment-config-api</artifactId>
+              <version>${{ github.event.inputs.version }}</version>
+            </dependency>
+            ```
+
+            ### What's included:
+            - Core APIs
+            - AWS, Azure, GCP providers
+            - Terraform generators
+            - SpringBoot integration
+
+            🔗 **Available on Maven Central**: https://central.sonatype.com/search?q=eu.cloudhopper.mc
+          draft: false
+          prerelease: false
+      
+  wait-for-core:
+    name: Wait for Core Libraries
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, release-core]
+    if: needs.validate-inputs.outputs.should_release_archetype == 'true' && needs.validate-inputs.outputs.should_release_core == 'true'
+    
+    steps:
+    - name: Wait for Maven Central sync
+      run: |
+        echo "⏳ Waiting for core libraries to be available on Maven Central..."
+        echo "This usually takes 10-30 minutes."
+        sleep 1800  # Wait 30 minutes
+        
+    - name: Verify availability on Maven Central
+      run: |
+        echo "🔍 Checking if core libraries are available..."
+        # Simple check if the artifact is available
+        curl -f "https://repo1.maven.org/maven2/eu/cloudhopper/mc/deployment-config-api/${{ github.event.inputs.version }}/deployment-config-api-${{ github.event.inputs.version }}.pom" || {
+          echo "❌ Core libraries not yet available on Maven Central. Please wait and run archetype release manually."
+          exit 1
+        }
+        echo "✅ Core libraries are available on Maven Central!"
+
+  release-archetype:
+    name: Release Maven Archetype
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, pre-release-tests, wait-for-core]
+    if: needs.validate-inputs.outputs.should_release_archetype == 'true' && always() && !failure()
+    
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        
+    - name: Cache Maven packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+          
+    - name: Configure Maven settings for Central Portal
+      run: |
+        mkdir -p ~/.m2
+        cat > ~/.m2/settings.xml << EOF
+        <settings>
+          <servers>
+            <server>
+              <id>central</id>
+              <username>\${env.CENTRAL_TOKEN_USERNAME}</username>
+              <password>\${env.CENTRAL_TOKEN_PASSWORD}</password>
+            </server>
+            <server>
+                <id>sign-key-id</id>
+                <passphrase>\${env.GPG_PASSPHRASE}</passphrase>
+                <privateKey>$(pwd)/private.key</privateKey>
+            </server>
+          </servers>
+        </settings>
+        EOF
+   
+    - name: Configure Git
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+
+    - name: Update archetype to use released core version
+      if: needs.validate-inputs.outputs.should_release_core == 'true'
+      working-directory: maven-archetype
+      run: |
+        # Update archetype's pom.xml to reference the released core version
+        # This assumes your archetype has a property or dependency to update
+        sed -i 's/<cloudhopper.version>.*<\/cloudhopper.version>/<cloudhopper.version>${{ github.event.inputs.version }}<\/cloudhopper.version>/g' pom.xml
+
+    - name: Set archetype release version
+      working-directory: maven-archetype
+      run: |
+        mvn versions:set -DnewVersion=${{ github.event.inputs.version }}
+        mvn versions:commit
+
+    - name: Test archetype with released dependencies
+      working-directory: maven-archetype
+      run: mvn -B clean integration-test
+
+    - name: Build and deploy archetype
+      env:
+        CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+        CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+      run: |
+        mvn  -Prelease-archetype \
+          -DskipTests \
+          -Dauto-publish=${{ github.event.inputs.auto_publish }}
+           
+    - name: Create and push release tag for archetype
+      run: |
+        git add .
+        git commit -m "Release archetype v${{ github.event.inputs.version }}"
+        git tag -a "archetype-v${{ github.event.inputs.version }}" -m "Maven Archetype Release v${{ github.event.inputs.version }}"
+        git push origin "archetype-v${{ github.event.inputs.version }}"
+
+    - name: Create GitHub Release for Archetype
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: "archetype-v${{ github.event.inputs.version }}"
+        release_name: "Maven Archetype v${{ github.event.inputs.version }}"
+        body: |
+          ## Cloudhopper Maven Archetype v${{ github.event.inputs.version }}
+          
+          Quick start archetype for Cloudhopper projects.
+          
+          ### Usage
+          ```bash
+          mvn archetype:generate \
+            -DgroupId=eu.cloudhopper.mc \
+            -DartifactId=cloudhopper-quickstart-archetype \
+            -Dversion=${{ github.event.inputs.version }}
+          ```
+          
+          🔗 **Available on Maven Central**: https://central.sonatype.com/artifact/eu.cloudhopper.mc/cloudhopper-quickstart-archetype
+        draft: false
+        prerelease: false
+
+  notify-completion:
+    name: Notify Release Completion
+    runs-on: ubuntu-latest
+    needs: [validate-inputs, release-core, release-archetype]
+    if: always()
+    
+    steps:
+    - name: Release Summary
+      run: |
+        echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Release Type**: ${{ github.event.inputs.release_type }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Version**: ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Auto-publish**: ${{ github.event.inputs.auto_publish }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ needs.release-core.result }}" == "success" ]]; then
+          echo "✅ **Core Libraries**: Successfully released" >> $GITHUB_STEP_SUMMARY
+        elif [[ "${{ needs.validate-inputs.outputs.should_release_core }}" == "true" ]]; then
+          echo "❌ **Core Libraries**: Failed to release" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⏭️ **Core Libraries**: Skipped" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ "${{ needs.release-archetype.result }}" == "success" ]]; then
+          echo "✅ **Maven Archetype**: Successfully released" >> $GITHUB_STEP_SUMMARY
+        elif [[ "${{ needs.validate-inputs.outputs.should_release_archetype }}" == "true" ]]; then
+          echo "❌ **Maven Archetype**: Failed to release" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⏭️ **Maven Archetype**: Skipped" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ github.event.inputs.auto_publish }}" == "false" ]]; then
+          echo "⚠️ **Manual Action Required**: Please visit [Central Publisher Portal](https://central.sonatype.com) to validate and publish your deployment." >> $GITHUB_STEP_SUMMARY
+        fi
