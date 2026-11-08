@@ -5,19 +5,64 @@
 
 .heroBanner {
   padding: 4rem 0;
-  text-align: center;
   position: relative;
   overflow: hidden;
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
-  }
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.heroText .hero__subtitle {
+  font-size: 1.25rem;
+}
+
+.heroCode {
+  min-width: 0;
+  text-align: left;
+}
+
+.heroCode pre {
+  font-size: 0.85rem;
 }
 
 .buttons {
   display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   align-items: center;
-  justify-content: center;
+}
+
+.buttonLight {
+  color: #fff;
+  border: 2px solid #fff;
+}
+
+.buttonLight:hover {
+  color: var(--ifm-color-primary-darkest);
+  background: #fff;
+}
+
+.section {
+  padding: 2rem 0 0;
+}
+
+.sectionAlt {
+  padding: 3rem 0;
+  background: var(--ifm-background-surface-color);
+  border-top: 1px solid var(--ifm-toc-border-color);
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 2rem 0;
+  }
+
+  .heroGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
 }

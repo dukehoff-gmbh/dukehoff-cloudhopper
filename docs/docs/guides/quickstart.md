@@ -1,6 +1,6 @@
-# 🚀 Deploy Your First Cloud Function in 5 Minutes
+# 🚀 Deploy Your First Cloud Function
 
-Want to see Cloudhopper in action? This guide walks you through generating, deploying, and testing a serverless function on your favorite cloud — in just five minutes.
+Want to see Cloudhopper in action? This guide walks you through generating, deploying, and testing a serverless function on your favorite cloud.
 
 ---
 
@@ -11,10 +11,33 @@ You’ll need:
 - **Java 21+**
 - **[Maven 3.8+](https://maven.apache.org/install.html)**
 - **[Terraform 1.5+](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)**
+- **[Git](https://git-scm.com/downloads)**, to build Cloudhopper from source (see Step 0)
 - A cloud account and CLI set up for one of the following:
   - [AWS →](../setup/aws-prerequisites)
-  - [GCP →](../setup/gcp-prerequisites) 
-  - [Azure →](../setup/azure-prerequisites) 
+  - [GCP →](../setup/gcp-prerequisites)
+  - [Azure →](../setup/azure-prerequisites)
+
+For the `springboot-http` target, which runs your functions as a local Spring
+Boot application, you need neither Terraform nor a cloud account.
+
+---
+
+## Step 0: Build Cloudhopper from Source
+
+:::info Pre-release
+Version 1.0 is not on Maven Central yet. Until it is, install Cloudhopper into
+your local Maven repository first, so that the archetype and the libraries can
+be resolved:
+
+```bash
+git clone https://github.com/dukehoff-gmbh/dukehoff-cloudhopper.git
+cd dukehoff-cloudhopper
+mvn clean install -DskipTests
+cd ..
+```
+
+This installs version `1.0-SNAPSHOT`, which the commands below refer to.
+:::
 
 ---
 
@@ -29,12 +52,14 @@ mvn archetype:generate \
   -DartifactId=my-function \
   -Dversion=1.0-SNAPSHOT \
   -Dpackage=com.example.fn \
-  -DgeneratorIds=aws-terraform,gcp-terraform,azure-terraform,springboot \
+  -DgeneratorIds=aws-terraform,gcp-terraform,azure-terraform,springboot-http \
   -DincludeTerraformProfile=true \
   -B
 ```
 
-> Change the list of generatorIds if targeting a different provider. 
+> `generatorIds` lists the targets the project is prepared for:
+> `aws-terraform`, `gcp-terraform`, `azure-terraform` and `springboot-http`.
+> Keep only the ones you need.
 
 ---
 

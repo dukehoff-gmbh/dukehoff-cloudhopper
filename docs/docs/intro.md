@@ -23,7 +23,7 @@ Cloudhopper makes it easy to deploy the same app across different clouds.
 
 ### On-premise deployments without the drama
 
-Your customers wants an on-premise installation because of their policies, security, or regulations?  
+Your customers want an on-premise installation because of their policies, security, or regulations?  
 Cloudhopper makes it easy to offer both cloud and on-prem options — from the same codebase.
 
 ## How it Works

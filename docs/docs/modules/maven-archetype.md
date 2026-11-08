@@ -4,6 +4,12 @@ The easiest way to get started is the Maven Archetype. It generates a minimal
 Cloudhopper-based function project that can be deployed to various cloud providers
  using our provider-specific generators.
 
+:::info Pre-release
+Version 1.0 is not on Maven Central yet. Install Cloudhopper into your local
+Maven repository first, as described in
+[Step 0 of the Quickstart](../guides/quickstart#step-0-build-cloudhopper-from-source).
+:::
+
 ## 🚀 Features
 
 The Archetype creates a simple "Hello World!" function using cloudhopper annotations.
