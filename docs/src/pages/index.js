@@ -17,22 +17,29 @@ const EXAMPLE = `public class HelloFunction {
     }
 }`;
 
-const BUILD = `mvn clean install -Paws-terraform
-# or -Pgcp-terraform, -Pazure-terraform, -Pspringboot-http`;
+const BUILD = `# Same code, different provider:
+mvn clean install -Paws-terraform
+mvn clean install -Pazure-terraform
+mvn clean install -Pgcp-terraform
+mvn clean install -Pspringboot-http   # on-premise`;
 
 function HomepageHeader() {
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className={clsx('container', styles.heroGrid)}>
         <div className={styles.heroText}>
+          <p className={styles.eyebrow}>Java's old promise, for serverless</p>
           <Heading as="h1" className="hero__title">
-            Serverless Java without the YAML
+            Write once, run anywhere. Revisited.
           </Heading>
           <p className="hero__subtitle">
-            Write plain Java methods with a few annotations. At compile time,
-            Cloudhopper MC generates the cloud-specific handler classes and the
-            deployment files for AWS Lambda, Azure Functions, Google Cloud
-            Functions or a Spring Boot service on your own servers.
+            Your functions don't know which cloud they run on. One provider got
+            too expensive? Data has to stay in the EU? The customer wants it
+            on-premise? Change the target in your build, not your code.
+          </p>
+          <p className={styles.heroTargets}>
+            Targets: AWS Lambda, Azure Functions, Google Cloud Functions, and a
+            Spring Boot service that runs on any server.
           </p>
           <div className={styles.buttons}>
             <Link
@@ -111,7 +118,7 @@ export default function Home() {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title="Serverless Java without the YAML"
+      title="Write once, run anywhere. Revisited."
       description={siteConfig.customFields.description}>
       <HomepageHeader />
       <main>

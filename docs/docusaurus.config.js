@@ -5,14 +5,14 @@ import {themes as prismThemes} from 'prism-react-renderer';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
     title: 'Cloudhopper MC',
-    tagline: 'Serverless Java without the YAML',
+    tagline: 'Write once, run anywhere. Revisited for serverless Java.',
     favicon: 'img/favicon.ico',
 
     customFields: {
         description:
-            'Cloudhopper MC generates cloud-specific handler classes, Terraform and OpenAPI ' +
-            'from annotated Java methods, for AWS Lambda, Azure Functions, Google Cloud ' +
-            'Functions or a Spring Boot service. Open source by Dukehoff GmbH.',
+            'Write once, run anywhere, revisited: Cloudhopper MC deploys the same annotated Java functions ' +
+            'to AWS Lambda, Azure Functions, Google Cloud Functions or a Spring Boot service on your own ' +
+            'servers. Switching providers is a build setting. Open source by Dukehoff GmbH.',
     },
 
     // Set the production url of your site here

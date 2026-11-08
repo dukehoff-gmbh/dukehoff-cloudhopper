@@ -66,3 +66,17 @@
     gap: 1.5rem;
   }
 }
+
+.eyebrow {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.heroTargets {
+  font-size: 1rem;
+  opacity: 0.9;
+}

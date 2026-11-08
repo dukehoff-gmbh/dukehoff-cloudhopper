@@ -9,3 +9,10 @@
   height: 200px;
   width: 200px;
 }
+
+.footnote {
+  max-width: 46rem;
+  margin: 1rem auto 0;
+  font-size: 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+}
