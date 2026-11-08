@@ -4,9 +4,16 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-    title: 'Cloudhopper mc',
-    tagline: 'Hop on now...',
+    title: 'Cloudhopper MC',
+    tagline: 'Serverless Java without the YAML',
     favicon: 'img/favicon.ico',
+
+    customFields: {
+        description:
+            'Cloudhopper MC generates cloud-specific handler classes, Terraform and OpenAPI ' +
+            'from annotated Java methods, for AWS Lambda, Azure Functions, Google Cloud ' +
+            'Functions or a Spring Boot service. Open source by Dukehoff GmbH.',
+    },
 
     // Set the production url of your site here
     url: 'https://cloudhopper.eu',
@@ -70,11 +77,14 @@ const config = {
             /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
                     ({
                         // Replace with your project's social card
-                        image: 'img/docusaurus-social-card.jpg',
+                        image: 'img/social-card.png',
+                        metadata: [
+                            {name: 'keywords', content: 'Java, serverless, multi-cloud, AWS Lambda, Azure Functions, Google Cloud Functions, Terraform, OpenAPI, annotation processor'},
+                        ],
                         navbar: {
-                            title: 'Cloudhopper mc',
+                            title: 'Cloudhopper MC',
                             logo: {
-                                alt: 'Cloudhopper mc Logo',
+                                alt: 'Cloudhopper MC logo',
                                 src: 'img/logo.svg',
                             },
                             items: [
@@ -98,30 +108,50 @@ const config = {
                                     title: 'Docs',
                                     items: [
                                         {
-                                            label: 'Tutorial',
+                                            label: 'Overview',
                                             to: '/docs/intro',
                                         },
-                                    ],
-                                },
-                                {
-                                    title: 'Community',
-                                    items: [
                                         {
-                                            label: 'Stack Overflow',
-                                            href: 'https://stackoverflow.com/questions/tagged/cloudhopper',
+                                            label: 'Quickstart',
+                                            to: '/docs/guides/quickstart',
+                                        },
+                                        {
+                                            label: 'Writing functions',
+                                            to: '/docs/guides/writing-functions',
                                         },
                                     ],
                                 },
                                 {
-                                    title: 'More',
+                                    title: 'Project',
                                     items: [
-//              {
-//                label: 'Blog',
-//                to: '/blog',
-//              },
                                         {
                                             label: 'GitHub',
                                             href: 'https://github.com/dukehoff-gmbh/dukehoff-cloudhopper',
+                                        },
+                                        {
+                                            label: 'Issues',
+                                            href: 'https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues',
+                                        },
+                                        {
+                                            label: 'Roadmap',
+                                            to: '/docs/roadmap',
+                                        },
+                                    ],
+                                },
+                                {
+                                    title: 'Dukehoff GmbH',
+                                    items: [
+                                        {
+                                            label: 'dukehoff.com',
+                                            href: 'https://dukehoff.com/en/',
+                                        },
+                                        {
+                                            label: 'Imprint (Impressum)',
+                                            to: '/impressum',
+                                        },
+                                        {
+                                            label: 'Privacy (Datenschutz)',
+                                            to: '/datenschutz',
                                         },
                                     ],
                                 },
@@ -131,6 +161,7 @@ const config = {
                         prism: {
                             theme: prismThemes.github,
                             darkTheme: prismThemes.dracula,
+                            additionalLanguages: ['java', 'bash', 'hcl'],
                         },
                         mermaid: {
                             theme: {light: 'neutral', dark: 'forest'},

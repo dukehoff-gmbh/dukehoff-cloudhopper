@@ -20,8 +20,8 @@ const sidebars = {
                     collapsed: true,
                     items: [
                         'setup/aws-prerequisites',
-//                        'setup/gcp-prerequisites',
-//                        'setup/azure-prerequisites',
+                        'setup/gcp-prerequisites',
+                        'setup/azure-prerequisites',
                     ],
                 }
             ],
