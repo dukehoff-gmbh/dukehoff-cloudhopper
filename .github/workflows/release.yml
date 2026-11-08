@@ -136,7 +136,7 @@ jobs:
           EOF
           
       - name: Write GPG private key to file
-        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" > private.key
+        run: echo "${{ secrets.MAVEN_GPG_PRIVATE_KEY }}" > private.key
 
       - name: Configure Git
         run: |
@@ -154,12 +154,12 @@ jobs:
         
       - name: Build and deploy with verbose signing
         env:
-          CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
-          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          SIGN_KEY_PASS: ${{ secrets.GPG_PASSPHRASE }}
-          SIGN_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          SIGN_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          SIGN_KEY_PASS: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          SIGN_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          SIGN_KEY_ID: ${{ vars.MAVEN_GPG_KEY_ID }}
         run: |
           mvn deploy -Prelease-core \
             -DskipTests \
@@ -310,8 +310,8 @@ jobs:
 
     - name: Build and deploy archetype
       env:
-        CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
-        CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+        CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+        CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
       run: |
         mvn  -Prelease-archetype \
           -DskipTests \
