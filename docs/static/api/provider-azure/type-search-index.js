@@ -1,1 +1,1 @@
-typeSearchIndex = [{"l":"Alle Klassen und Schnittstellen","u":"allclasses-index.html"},{"p":"eu.cloudhopper.mc.provider.azure","l":"AzureBaseFunctionWrapper"}];updateSearchResults();
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"eu.cloudhopper.mc.provider.azure","l":"AzureBaseFunctionWrapper"}];updateSearchResults();

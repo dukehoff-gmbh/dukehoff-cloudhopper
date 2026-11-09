@@ -18,7 +18,8 @@ Deutschland
 
 ## Kontakt
 
-E-Mail: [info@dukehoff.com](mailto:info@dukehoff.com)
+E-Mail: [info@dukehoff.com](mailto:info@dukehoff.com)<br />
+Kontaktformular: [dukehoff.com/kontakt](https://dukehoff.com/kontakt/)
 
 ## Registereintrag
 

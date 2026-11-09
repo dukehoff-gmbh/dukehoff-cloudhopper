@@ -119,6 +119,10 @@ const config = {
                                             label: 'Writing functions',
                                             to: '/docs/guides/writing-functions',
                                         },
+                                        {
+                                            label: 'API reference (Javadoc)',
+                                            href: 'pathname:///api/deployment-config-api/index.html',
+                                        },
                                     ],
                                 },
                                 {
