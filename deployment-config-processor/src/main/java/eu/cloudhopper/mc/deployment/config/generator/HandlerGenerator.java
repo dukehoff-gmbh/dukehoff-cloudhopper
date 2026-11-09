@@ -33,6 +33,7 @@ import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 import javax.lang.model.element.Modifier;
 import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import static javassist.bytecode.stackmap.TypeData.ArrayType.typeName;
 import javax.annotation.processing.Filer;
@@ -204,19 +205,32 @@ public class HandlerGenerator {
                 .build();
         classBuilder.addField(delegateField);
 
+        TypeName stringMap = ParameterizedTypeName.get(
+                ClassName.get(Map.class), ClassName.get(String.class), ClassName.get(String.class));
+        ClassName handlerContext = ClassName.get("eu.cloudhopper.mc.runtime", "HandlerContext");
+
         // handleRequest method
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("handleRequest")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(returnType)
                 .addParameter(bodyType, "_body")
-                .addParameter(ParameterizedTypeName.get(
-                        ClassName.get(Map.class), ClassName.get(String.class), ClassName.get(String.class)
-                ), "_path")
-                .addParameter(ParameterizedTypeName.get(
-                        ClassName.get(Map.class), ClassName.get(String.class), ClassName.get(String.class)
-                ), "_query")
-                .addParameter(ClassName.bestGuess("eu.cloudhopper.mc.runtime.HandlerContext"), "_ctx");
+                .addParameter(stringMap, "_path")
+                .addParameter(stringMap, "_query")
+                .addParameter(stringMap, "_headers")
+                .addParameter(handlerContext, "_ctx");
+
+        // the variant without headers delegates with an empty map
+        classBuilder.addMethod(MethodSpec.methodBuilder("handleRequest")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(returnType)
+                .addParameter(bodyType, "_body")
+                .addParameter(stringMap, "_path")
+                .addParameter(stringMap, "_query")
+                .addParameter(handlerContext, "_ctx")
+                .addStatement("return handleRequest(_body, _path, _query, $T.emptyMap(), _ctx)", Collections.class)
+                .build());
 
         // Parameter extraction
         for (ParamInfo p : info.getParams()) {

@@ -90,10 +90,13 @@ before calling your method.
 | `@RequestBody` | The deserialized request body | At most one per method |
 | `@PathParam("id")` | A path template variable | Blank value → the parameter name is used |
 | `@QueryParam("q")` | A query string parameter | Blank value → the parameter name is used |
-| `@HeaderParam("X-Token")` | An HTTP request header | The header name is **required** |
+| `@HeaderParam("X-Token")` | An HTTP request header | The header name is **required** and matched case-insensitively |
 
 Because a blank value falls back to the parameter name, `@PathParam Integer id`
 binds the `{id}` path variable without repeating the name.
+
+Path, query and header values can be bound as `String`, `Integer`, `Long`,
+`Double` or `Boolean` (or the primitive types); they are converted for you.
 
 A parameter of type `HandlerContext` is recognized automatically — no annotation
 needed — and gives you invocation metadata (request id, remaining time, memory

@@ -24,6 +24,7 @@ package eu.cloudhopper.mc.provider.gcp;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import eu.cloudhopper.mc.runtime.Headers;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
@@ -93,7 +94,8 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
             pathParams = extractPathParams(request.getPath(), routePattern);
         }
 
-        O output = handler.handleRequest(input, pathParams, queryParams, new GcpContextAdapter(request));
+        O output = handler.handleRequest(input, pathParams, queryParams, Headers.ofFirstValues(request.getHeaders()),
+                new GcpContextAdapter(request));
         writeOutput(response, output);
     }
 

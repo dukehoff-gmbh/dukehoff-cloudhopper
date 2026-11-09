@@ -31,8 +31,15 @@ import org.junit.jupiter.api.Test;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static com.google.testing.compile.Compiler.javac;
+import eu.cloudhopper.mc.runtime.CloudRequestHandler;
+import eu.cloudhopper.mc.runtime.Headers;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import javax.tools.StandardLocation;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ServerlessFunctionProcessorTest {
@@ -83,5 +90,91 @@ public class ServerlessFunctionProcessorTest {
                 "Path extraction missing:\n" + generated);
         assertTrue(generated.contains("return delegate.greet(id, _body)"),
                 "Invocation mismatch:\n" + generated);
+    }
+
+    // The tests below compile the generated handler and call it: a check of the generated text
+    // alone did not notice that @HeaderParam produced code that does not compile (#13).
+
+    @Test
+    public void headerParamsCompileAndAreMatchedCaseInsensitively() throws Exception {
+        CloudRequestHandler<Void, String> handler = compileAndLoad("com.example.HeaderService", ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "public class HeaderService {\n"
+                + "  @Function(name=\"headers\")\n"
+                + "  @HttpTrigger(method=\"GET\", path=\"/headers\")\n"
+                + "  public String echo(@HeaderParam(\"X-Test-Header\") String text,\n"
+                + "                     @HeaderParam(\"X-Count\") Integer count) {\n"
+                + "    return text + \":\" + count;\n"
+                + "  }\n"
+                + "}\n",
+                "com.example.HeaderService_echo_Handler");
+
+        Map<String, String> headers = Headers.of(Map.of("x-test-header", "hello", "X-COUNT", "3"));
+        assertEquals("hello:3", handler.handleRequest(null, Map.of(), Map.of(), headers, null));
+        // the variant without headers still works and passes none
+        assertEquals("null:null", handler.handleRequest(null, Map.of(), Map.of(), null));
+    }
+
+    @Test
+    public void allParameterKindsCompileAndAreBound() throws Exception {
+        CloudRequestHandler<String, String> handler = compileAndLoad("com.example.AllService", ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import eu.cloudhopper.mc.runtime.HandlerContext;\n"
+                + "public class AllService {\n"
+                + "  @Function(name=\"all\")\n"
+                + "  @HttpTrigger(method=\"POST\", path=\"/items/{id}\")\n"
+                + "  public String all(@PathParam(\"id\") Long id, @QueryParam(\"flag\") boolean flag,\n"
+                + "                    @QueryParam String q, @HeaderParam(\"X-Ratio\") Double ratio,\n"
+                + "                    HandlerContext ctx, String body) {\n"
+                + "    return id + \"|\" + flag + \"|\" + q + \"|\" + ratio + \"|\" + (ctx == null) + \"|\" + body;\n"
+                + "  }\n"
+                + "}\n",
+                "com.example.AllService_all_Handler");
+
+        String result = handler.handleRequest("payload", Map.of("id", "42"), Map.of("flag", "true", "q", "x"),
+                Headers.of(Map.of("x-ratio", "0.5")), null);
+        assertEquals("42|true|x|0.5|true|payload", result);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <I, O> CloudRequestHandler<I, O> compileAndLoad(String sourceName, String source,
+                                                                   String handlerClass) throws Exception {
+        Compilation compilation = javac()
+                .withOptions(
+                        "--add-modules", "jdk.compiler",
+                        "--add-exports", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+                        "--add-exports", "jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+                        "--add-exports", "jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
+                        "--add-exports", "jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+                        "--add-exports", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+                )
+                .withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString(sourceName, source));
+        assertThat(compilation).succeeded();
+
+        Map<String, byte[]> classes = new HashMap<>();
+        for (JavaFileObject file : compilation.generatedFiles()) {
+            if (file.getKind() == JavaFileObject.Kind.CLASS) {
+                String name = file.toUri().getPath();
+                name = name.substring(name.indexOf(StandardLocation.CLASS_OUTPUT.getName()) + StandardLocation.CLASS_OUTPUT.getName().length() + 1);
+                name = name.substring(0, name.length() - ".class".length()).replace('/', '.');
+                try (InputStream in = file.openInputStream()) {
+                    classes.put(name, in.readAllBytes());
+                }
+            }
+        }
+        ClassLoader loader = new ClassLoader(ServerlessFunctionProcessorTest.class.getClassLoader()) {
+            @Override
+            protected Class<?> findClass(String name) throws ClassNotFoundException {
+                byte[] bytes = classes.get(name);
+                if (bytes == null) {
+                    throw new ClassNotFoundException(name);
+                }
+                return defineClass(name, bytes, 0, bytes.length);
+            }
+        };
+        return (CloudRequestHandler<I, O>) loader.loadClass(handlerClass).getDeclaredConstructor().newInstance();
     }
 }

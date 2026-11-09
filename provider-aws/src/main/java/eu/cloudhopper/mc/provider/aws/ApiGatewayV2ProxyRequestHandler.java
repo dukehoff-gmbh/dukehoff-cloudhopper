@@ -1,5 +1,6 @@
 package eu.cloudhopper.mc.provider.aws;
 
+import eu.cloudhopper.mc.runtime.Headers;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2ProxyRequestEvent;
@@ -80,7 +81,8 @@ public abstract class ApiGatewayV2ProxyRequestHandler<I, O> implements RequestHa
                     ? event.getQueryStringParameters()
                     : Collections.emptyMap();
 
-            O output = handler.handleRequest(input, pathParams, queryParams, new AwsContextAdapter(context));
+            O output = handler.handleRequest(input, pathParams, queryParams, Headers.of(event.getHeaders()),
+                    new AwsContextAdapter(context));
             String result = mapper.writeValueAsString(output);
             APIGatewayV2ProxyResponseEvent response = new APIGatewayV2ProxyResponseEvent();
             response.setStatusCode(200);
