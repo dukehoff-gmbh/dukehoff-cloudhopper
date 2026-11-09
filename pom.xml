@@ -13,6 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+        <central.autoPublish>false</central.autoPublish>
         <swagger.version>2.2.22</swagger.version>
         <com.google.code.gson.version>2.10.1</com.google.code.gson.version>
         <license.header.path>${project.basedir}/src/license/header.txt</license.header.path>
@@ -192,54 +193,58 @@
     </build>
     
     <profiles>  
+        <!--
+          mvn -Prelease deploy: sources and javadoc jars, GPG signatures, upload of all published modules,
+          the archetype included, to Maven Central as one deployment.
+          Needs a "central" server with a Sonatype Central token in ~/.m2/settings.xml and the GPG key.
+          The deployment is uploaded but not published unless -Dcentral.autoPublish=true; publish it at
+          https://central.sonatype.com. The release workflow (.github/workflows/release.yml) runs this.
+        -->
         <profile>
-            <id>release-core</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
+            <id>release</id>
             <build>
                 <plugins>
-              
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.3.0</version>
-                        <extensions>true</extensions>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
+                                <id>attach-sources</id>
                                 <goals>
-                                    <goal>jar</goal>
+                                    <goal>jar-no-fork</goal>
                                 </goals>
-                                <phase>package</phase>
                             </execution>
                         </executions>
-                        <configuration>
-                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <extensions>true</extensions>
+                        <configuration>
+                            <doclint>none</doclint>
+                        </configuration>
                         <executions>
                             <execution>
+                                <id>attach-javadocs</id>
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
-                                <phase>package</phase>
                             </execution>
                         </executions>
-                        <configuration>
-                            <additionalOptions>-Xdoclint:none</additionalOptions>
-                            <additionalJOption>-Xdoclint:none</additionalJOption>
-                        </configuration>
                     </plugin>
                     <plugin>
-                        <groupId>org.simplify4u.plugins</groupId>
-                        <artifactId>sign-maven-plugin</artifactId>
-                        <version>1.1.0</version>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.7</version>
+                        <configuration>
+                            <!-- the release key of Dukehoff GmbH ("Dukehoff GmbH Releases <opensource@dukehoff.com>"),
+                                 as for dukehoff-decide; set here, not in settings.xml, so other projects on the
+                                 same machine keep their own key -->
+                            <keyname>323E745250E3722363642D1454583F1C96B286C0</keyname>
+                        </configuration>
                         <executions>
                             <execution>
-                                <id>sign-artifacts-core</id>
+                                <id>sign-artifacts</id>
                                 <phase>verify</phase>
                                 <goals>
                                     <goal>sign</goal>
@@ -250,130 +255,29 @@
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.7.0</version>
+                        <!-- 0.12.0 or newer: before, with Maven 3.10 the bundle kept maven-metadata-local.xml next
+                             to the version folders and Central rejected it (seen with dukehoff-mcp 0.9.5) -->
+                        <version>0.12.0</version>
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
-                            <autoPublish>false</autoPublish>
-                            <waitUntil>published</waitUntil>
+                            <autoPublish>${central.autoPublish}</autoPublish>
+                            <!-- tests, test fixtures and the demo; everything else is published -->
                             <excludeArtifacts>
-                                <artifactId>system-tests-generator-aws-terraform</artifactId>
-                                <artifactId>system-tests-generator-azure-terraform</artifactId>
-                                <artifactId>system-tests-generator-gcp-terraform</artifactId>
-                                <artifactId>system-tests-generator-springboot</artifactId>
-                                <artifactId>system-tests-generator-springboot</artifactId>
-                                <artifactId>test-domain</artifactId>
-                                <artifactId>test-functions</artifactId>
-                                <artifactId>test-support</artifactId>
-                                <artifactId>maven-archetype</artifactId>
-                                <artifactId>test-tck-core</artifactId>
-                                <artifactId>demo</artifactId>
-                                <artifactId>generator-bindings-gcp-terraform</artifactId>
-                                <artifactId>generator-bindings-aws-terraform</artifactId>
-                                <artifactId>generator-bindings-azure-terraform</artifactId>
+                                <excludeArtifact>demo</excludeArtifact>
+                                <excludeArtifact>test-functions</excludeArtifact>
+                                <excludeArtifact>test-domain</excludeArtifact>
+                                <excludeArtifact>test-support</excludeArtifact>
+                                <excludeArtifact>test-tck-core</excludeArtifact>
+                                <excludeArtifact>system-tests-generator-aws-terraform</excludeArtifact>
+                                <excludeArtifact>system-tests-generator-azure-terraform</excludeArtifact>
+                                <excludeArtifact>system-tests-generator-gcp-terraform</excludeArtifact>
+                                <excludeArtifact>system-tests-generator-springboot</excludeArtifact>
+                                <excludeArtifact>generator-bindings-aws-terraform</excludeArtifact>
+                                <excludeArtifact>generator-bindings-azure-terraform</excludeArtifact>
+                                <excludeArtifact>generator-bindings-gcp-terraform</excludeArtifact>
                             </excludeArtifacts>
                         </configuration>
-                       
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        
-        <profile>
-            <id>release-archetype</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>3.3.0</version>
-                        <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                        <configuration>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <additionalOptions>-Xdoclint:none</additionalOptions>
-                            <additionalJOption>-Xdoclint:none</additionalJOption>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.simplify4u.plugins</groupId>
-                        <artifactId>sign-maven-plugin</artifactId>
-                        <version>1.1.0</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts-core</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.sonatype.central</groupId>
-                        <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.7.0</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <publishingServerId>central</publishingServerId>
-                            <autoPublish>false</autoPublish>
-                            <waitUntil>published</waitUntil>
-                            <excludeArtifacts>
-                                <artifactId>system-tests-generator-aws-terraform</artifactId>
-                                <artifactId>system-tests-generator-azure-terraform</artifactId>
-                                <artifactId>system-tests-generator-gcp-terraform</artifactId>
-                                <artifactId>system-tests-generator-springboot</artifactId>
-                                <artifactId>system-tests-generator-springboot</artifactId>
-                                <artifactId>test-domain</artifactId>
-                                <artifactId>test-functions</artifactId>
-                                <artifactId>test-support</artifactId>
-                                <artifactId>test-tck-core</artifactId>
-                                <artifactId>demo</artifactId>
-                                <artifactId>generator-bindings-gcp-terraform</artifactId>
-                                <artifactId>generator-bindings-aws-terraform</artifactId>
-                                <artifactId>generator-bindings-azure-terraform</artifactId>
-                                <artifactId>deployment-config-api</artifactId>
-                                <artifactId>deployment-config-processor</artifactId>
-                                <artifactId>deployment-config-generator-api</artifactId>
-                                <artifactId>deployment-config-generator-api</artifactId>
-                                <artifactId>deployment-config-generator-generic</artifactId>
-                                <artifactId>generator-gcp-terraform</artifactId>
-                                <artifactId>generator-azure-terraform</artifactId>
-                                <artifactId>generator-aws-terraform</artifactId>
-                                <artifactId>generator-springboot</artifactId>
-                                <artifactId>provider-aws</artifactId>
-                                <artifactId>provider-azure</artifactId>
-                                <artifactId>provider-gcp</artifactId>
-                                <artifactId>provider-http</artifactId>
-                                <artifactId>provider-springboot</artifactId>
-                            </excludeArtifacts>
-                        </configuration>
-                       
                     </plugin>
                 </plugins>
             </build>
