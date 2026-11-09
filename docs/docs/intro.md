@@ -1,4 +1,4 @@
-# Cloudhopper for Java
+# Dukehoff Cloudhopper
 
 **You code, we take out the YAML**
 

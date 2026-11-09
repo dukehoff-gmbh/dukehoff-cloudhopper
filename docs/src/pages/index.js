@@ -28,7 +28,7 @@ function HomepageHeader() {
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className={clsx('container', styles.heroGrid)}>
         <div className={styles.heroText}>
-          <p className={styles.eyebrow}>Java's old promise, for serverless</p>
+          <p className={styles.eyebrow}>Dukehoff Cloudhopper</p>
           <Heading as="h1" className="hero__title">
             Write once, run anywhere. Revisited.
           </Heading>
@@ -85,7 +85,7 @@ function LicenseAndMaker() {
           <div className="col col--6">
             <Heading as="h2">Open source, and the output is yours</Heading>
             <p>
-              Cloudhopper MC is licensed under the GNU General Public License,
+              Dukehoff Cloudhopper is licensed under the GNU General Public License,
               version 3, with the Classpath Exception and a Generator Output
               Exception. Everything it generates for your project, such as
               handler classes, Terraform and API descriptions, you may use,
@@ -100,7 +100,7 @@ function LicenseAndMaker() {
           <div className="col col--6">
             <Heading as="h2">Built by Dukehoff GmbH</Heading>
             <p>
-              Cloudhopper MC is developed by Dukehoff GmbH near Munich. If you
+              Dukehoff Cloudhopper is developed by Dukehoff GmbH near Munich. If you
               want help moving Java services to serverless, between cloud
               providers or onto your own servers, talk to us.
             </p>
