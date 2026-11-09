@@ -1,1 +1,1 @@
-typeSearchIndex = [{"l":"Alle Klassen und Schnittstellen","u":"allclasses-index.html"},{"p":"eu.cloudhopper.mc.provider.aws","l":"AwsTerraformOpenApiJava21TemplateRegistration"}];updateSearchResults();
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"eu.cloudhopper.mc.provider.aws","l":"AwsTerraformOpenApiJava21TemplateRegistration"}];updateSearchResults();
