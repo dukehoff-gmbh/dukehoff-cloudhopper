@@ -4,12 +4,6 @@ The easiest way to get started is the Maven Archetype. It generates a minimal
 Cloudhopper-based function project that can be deployed to various cloud providers
  using our provider-specific generators.
 
-:::info Pre-release
-Version 1.0 is not on Maven Central yet. Install Cloudhopper into your local
-Maven repository first, as described in
-[Step 0 of the Quickstart](../guides/quickstart#step-0-build-cloudhopper-from-source).
-:::
-
 ## 🚀 Features
 
 The Archetype creates a simple "Hello World!" function using cloudhopper annotations.
@@ -24,7 +18,7 @@ If you want to use Maven to deploy your functions, the archetype can optionally 
     mvn archetype:generate \
       -DarchetypeGroupId=eu.cloudhopper.mc \
       -DarchetypeArtifactId=cloudhopper-maven-archetype-core \
-      -DarchetypeVersion=1.0-SNAPSHOT
+      -DarchetypeVersion=1.0.1
 ```
 
 ### ⚙️ Non-interactive (fully scripted)
@@ -33,7 +27,7 @@ If you want to use Maven to deploy your functions, the archetype can optionally 
     mvn archetype:generate \
       -DarchetypeGroupId=eu.cloudhopper.mc \
       -DarchetypeArtifactId=cloudhopper-maven-archetype-core \
-      -DarchetypeVersion=1.0-SNAPSHOT \
+      -DarchetypeVersion=1.0.1 \
       -DgroupId=com.example \
       -DartifactId=my-function \
       -Dversion=1.0-SNAPSHOT \
@@ -135,7 +129,7 @@ the path to your terraform executable in the pom's properties:
 ```xml
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <cloudhopper.version>1.0-SNAPSHOT</cloudhopper.version>
+        <cloudhopper.version>1.0.1</cloudhopper.version>
         <!-- add the path to your terraform executable here -->
         <terraform.executable>terraform</terraform.executable>
         <path.extras></path.extras>

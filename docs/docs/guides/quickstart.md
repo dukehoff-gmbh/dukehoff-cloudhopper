@@ -11,7 +11,6 @@ You’ll need:
 - **Java 21+**
 - **[Maven 3.8+](https://maven.apache.org/install.html)**
 - **[Terraform 1.5+](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)**
-- **[Git](https://git-scm.com/downloads)**, to build Cloudhopper from source (see Step 0)
 - A cloud account and CLI set up for one of the following:
   - [AWS →](../setup/aws-prerequisites)
   - [GCP →](../setup/gcp-prerequisites)
@@ -22,32 +21,13 @@ Boot application, you need neither Terraform nor a cloud account.
 
 ---
 
-## Step 0: Build Cloudhopper from Source
-
-:::info Pre-release
-Version 1.0 is not on Maven Central yet. Until it is, install Cloudhopper into
-your local Maven repository first, so that the archetype and the libraries can
-be resolved:
-
-```bash
-git clone https://github.com/dukehoff-gmbh/dukehoff-cloudhopper.git
-cd dukehoff-cloudhopper
-mvn clean install -DskipTests
-cd ..
-```
-
-This installs version `1.0-SNAPSHOT`, which the commands below refer to.
-:::
-
----
-
 ## Step 1: Generate a Project
 
 ```bash
 mvn archetype:generate \
   -DarchetypeGroupId=eu.cloudhopper.mc \
   -DarchetypeArtifactId=cloudhopper-maven-archetype-core \
-  -DarchetypeVersion=1.0-SNAPSHOT \
+  -DarchetypeVersion=1.0.1 \
   -DgroupId=com.example \
   -DartifactId=my-function \
   -Dversion=1.0-SNAPSHOT \
