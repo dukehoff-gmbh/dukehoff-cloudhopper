@@ -34,7 +34,7 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
 public class ScheduledFunctionCompatibilityTest implements FeatureAwareTest {
     
     private static final String FUNCTION_NAME = "scheduled";
-    private static final int MAX_ATTEMPTS = 6;
+    private static final int MAX_ATTEMPTS = 10;
     
     @Override
     public void run(TestContext context) throws Exception {

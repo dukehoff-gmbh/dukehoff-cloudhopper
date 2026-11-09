@@ -142,12 +142,10 @@ public class TestContextAzure implements TestContext {
             String appInsightsName = TerraformUtil.getOutputString(terraformDir, "application_insights_name");
             String accessToken = getAzureAccessToken(); // OAuth2 token
 
-            // only the traces of this function: Azure names the operation after the function
-            // ("<functionId>", "<functionId>_api", "<functionId>_scheduled"); all traces of the app
-            // also contain host startup messages, which used to satisfy the wait below on their own
-            String query = "traces | where timestamp > ago(15m)"
-                    + " | where operation_Name startswith '" + functionName.toLowerCase() + "'"
-                    + " | order by timestamp asc | project message";
+            // All traces of the app, oldest first. The function's own output (java.util.logging
+            // via the worker's console) carries no operation name, so it cannot be filtered by
+            // function; the caller looks for its line and fetches again while it is missing.
+            String query = "traces | where timestamp > ago(15m) | order by timestamp asc | project message";
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(String.format(
