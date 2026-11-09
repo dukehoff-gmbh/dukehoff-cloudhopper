@@ -86,4 +86,33 @@
             <version>2.11.0</version>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <!-- Maven Central requires a javadoc jar; the archetype has no Java API, so it gets one with a README -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.4.2</version>
+                        <executions>
+                            <execution>
+                                <id>placeholder-javadoc</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <classifier>javadoc</classifier>
+                                    <classesDirectory>${project.basedir}/src/main/javadoc</classesDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
