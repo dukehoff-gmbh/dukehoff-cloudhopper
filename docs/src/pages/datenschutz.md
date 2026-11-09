@@ -21,7 +21,7 @@ E-Mail: [info@dukehoff.com](mailto:info@dukehoff.com)
 ## 2. Allgemeiner Hinweis
 
 Diese Website ist die Projekt- und Dokumentationsseite der Open-Source-Software
-Cloudhopper MC. Sie besteht aus statischen Seiten. Es gibt keine
+Dukehoff Cloudhopper. Sie besteht aus statischen Seiten. Es gibt keine
 Benutzerkonten, keine Formulare, keine Kommentarfunktion und keinen Newsletter.
 
 ## 3. Hosting bei GitHub Pages

@@ -54,7 +54,7 @@ entsprechende Links umgehend.
 ## Urheberrecht und Lizenz
 
 Die Inhalte dieser Seiten unterliegen dem deutschen Urheberrecht. Die Software
-Cloudhopper MC steht unter der GNU General Public License, Version 3, mit den
+Dukehoff Cloudhopper steht unter der GNU General Public License, Version 3, mit den
 in der Datei
 [LICENSE-EXCEPTIONS](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/blob/main/LICENSE-EXCEPTIONS)
 genannten Ausnahmen.

@@ -4,13 +4,13 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-    title: 'Cloudhopper MC',
+    title: 'Dukehoff Cloudhopper',
     tagline: 'Write once, run anywhere. Revisited for serverless Java.',
     favicon: 'img/favicon.ico',
 
     customFields: {
         description:
-            'Write once, run anywhere, revisited: Cloudhopper MC deploys the same annotated Java functions ' +
+            'Write once, run anywhere, revisited: Dukehoff Cloudhopper deploys the same annotated Java functions ' +
             'to AWS Lambda, Azure Functions, Google Cloud Functions or a Spring Boot service on your own ' +
             'servers. Switching providers is a build setting. Open source by Dukehoff GmbH.',
     },
@@ -82,9 +82,9 @@ const config = {
                             {name: 'keywords', content: 'Java, serverless, multi-cloud, AWS Lambda, Azure Functions, Google Cloud Functions, Terraform, OpenAPI, annotation processor'},
                         ],
                         navbar: {
-                            title: 'Cloudhopper MC',
+                            title: 'Dukehoff Cloudhopper',
                             logo: {
-                                alt: 'Cloudhopper MC logo',
+                                alt: 'Dukehoff Cloudhopper logo',
                                 src: 'img/logo.svg',
                             },
                             items: [
