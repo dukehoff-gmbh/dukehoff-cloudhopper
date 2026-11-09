@@ -30,32 +30,38 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class HttpClientHelper {
 
     public static HttpResponse get(URI uri) throws Exception {
-        return request("GET", uri, null);
+        return request("GET", uri, null, Map.of());
+    }
+
+    public static HttpResponse get(URI uri, Map<String, String> headers) throws Exception {
+        return request("GET", uri, null, headers);
     }
 
     public static HttpResponse post(URI uri, String jsonBody) throws Exception {
-        return request("POST", uri, jsonBody);
+        return request("POST", uri, jsonBody, Map.of());
     }
 
     public static HttpResponse put(URI uri, String jsonBody) throws Exception {
-        return request("PUT", uri, jsonBody);
+        return request("PUT", uri, jsonBody, Map.of());
     }
 
     public static HttpResponse delete(URI uri) throws Exception {
-        return request("DELETE", uri, null);
+        return request("DELETE", uri, null, Map.of());
     }
 
     public static HttpResponse patch(URI uri, String jsonBody) throws Exception {
-        return request("PATCH", uri, jsonBody);
+        return request("PATCH", uri, jsonBody, Map.of());
     }
 
-    private static HttpResponse request(String method, URI uri, String body) throws Exception {
+    private static HttpResponse request(String method, URI uri, String body, Map<String, String> headers) throws Exception {
         HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
         conn.setRequestMethod(method);
+        headers.forEach(conn::setRequestProperty);
         conn.setConnectTimeout(30000);
         conn.setReadTimeout(30000);
 

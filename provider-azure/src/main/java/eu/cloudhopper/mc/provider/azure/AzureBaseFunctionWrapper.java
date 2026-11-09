@@ -24,6 +24,7 @@ package eu.cloudhopper.mc.provider.azure;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import eu.cloudhopper.mc.runtime.Headers;
 import com.microsoft.azure.functions.*;
 import eu.cloudhopper.mc.runtime.CloudRequestHandler;
 import eu.cloudhopper.mc.runtime.HandlerContext;
@@ -33,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -92,7 +94,8 @@ public abstract class AzureBaseFunctionWrapper<I, O> {
                 input = parseInput(request);
             }
 
-            O output = handler.handleRequest(input, new AzureContextAdapter(context));
+            O output = handler.handleRequest(input, Collections.emptyMap(), request.getQueryParameters(),
+                    Headers.of(request.getHeaders()), new AzureContextAdapter(context));
             return createSuccessResponse(request, output);
         } catch (Exception e) {
             return createErrorResponse(request, e);
@@ -119,7 +122,8 @@ public abstract class AzureBaseFunctionWrapper<I, O> {
             Map<String, String> pathParams = extractPathParams(request, routePattern);
             Map<String, String> queryParams = request.getQueryParameters();
 
-            O output = handler.handleRequest(input, pathParams, queryParams, new AzureContextAdapter(context));
+            O output = handler.handleRequest(input, pathParams, queryParams, Headers.of(request.getHeaders()),
+                    new AzureContextAdapter(context));
             return createSuccessResponse(request, output);
         } catch (Exception e) {
             return createErrorResponse(request, e);

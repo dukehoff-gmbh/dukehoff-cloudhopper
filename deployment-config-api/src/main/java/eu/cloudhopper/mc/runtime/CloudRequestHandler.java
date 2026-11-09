@@ -75,4 +75,23 @@ public interface CloudRequestHandler<I, O> {
      * @return the response object
      */
     O handleRequest(I input, Map<String, String> pathParams, Map<String, String> queryParams, HandlerContext context);
+
+    /**
+     * Handles an incoming request with path, query and header parameters.
+     *
+     * <p>The providers call this method. Header names are matched case-insensitively. Generated
+     * handlers override it; for implementations that predate it, the default ignores the headers
+     * and delegates to {@link #handleRequest(Object, Map, Map, HandlerContext)}.</p>
+     *
+     * @param input       the deserialized input object (e.g., request body)
+     * @param pathParams  map of path parameters extracted from the request URL
+     * @param queryParams map of query parameters
+     * @param headers     map of request headers, keyed case-insensitively
+     * @param context     runtime context information about the invocation
+     * @return the response object
+     */
+    default O handleRequest(I input, Map<String, String> pathParams, Map<String, String> queryParams,
+                            Map<String, String> headers, HandlerContext context) {
+        return handleRequest(input, pathParams, queryParams, context);
+    }
 }

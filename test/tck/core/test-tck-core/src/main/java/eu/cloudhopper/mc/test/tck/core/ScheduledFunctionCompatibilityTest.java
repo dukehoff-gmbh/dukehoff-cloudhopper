@@ -34,16 +34,25 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
 public class ScheduledFunctionCompatibilityTest implements FeatureAwareTest {
     
     private static final String FUNCTION_NAME = "scheduled";
+    private static final int MAX_ATTEMPTS = 10;
     
     @Override
     public void run(TestContext context) throws Exception {
         System.out.println("⏰ Waiting 70s to allow scheduled trigger to run...");
         Thread.sleep(70_000);
-        
-        List<String> logs = context.fetchLogs(FUNCTION_NAME);
-        System.out.println("📜 Fetched logs:");
-        logs.stream().forEach(System.out::println);
-        boolean triggered = logs.stream().anyMatch(line -> line.contains("Method was called"));
+
+        // logs reach the platform's log store with a delay (minutes on Azure Application
+        // Insights), so look again until the line is there instead of judging the first fetch
+        boolean triggered = false;
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS && !triggered; attempt++) {
+            List<String> logs = context.fetchLogs(FUNCTION_NAME);
+            System.out.println("📜 Fetched logs (attempt " + attempt + "):");
+            logs.forEach(System.out::println);
+            triggered = logs.stream().anyMatch(line -> line.contains("Method was called"));
+            if (!triggered && attempt < MAX_ATTEMPTS) {
+                Thread.sleep(30_000);
+            }
+        }
         Assert.assertTrue("Scheduled function did not appear to run as expected", triggered);
     }
     

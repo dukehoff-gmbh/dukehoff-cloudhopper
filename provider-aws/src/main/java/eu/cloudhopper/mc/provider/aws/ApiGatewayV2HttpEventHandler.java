@@ -25,6 +25,7 @@ package eu.cloudhopper.mc.provider.aws;
  * #L%
  */
 
+import eu.cloudhopper.mc.runtime.Headers;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
@@ -80,7 +81,8 @@ public abstract class ApiGatewayV2HttpEventHandler<I, O> implements RequestHandl
                     ? event.getQueryStringParameters()
                     : Collections.emptyMap();
 
-            O output = handler.handleRequest(input, pathParams, queryParams, new AwsContextAdapter(awsContext));
+            O output = handler.handleRequest(input, pathParams, queryParams, Headers.of(event.getHeaders()),
+                    new AwsContextAdapter(awsContext));
 
             APIGatewayV2HTTPResponse response = new APIGatewayV2HTTPResponse();
             response.setStatusCode(200);

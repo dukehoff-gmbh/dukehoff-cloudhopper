@@ -142,7 +142,10 @@ public class TestContextAzure implements TestContext {
             String appInsightsName = TerraformUtil.getOutputString(terraformDir, "application_insights_name");
             String accessToken = getAzureAccessToken(); // OAuth2 token
 
-            String query = "traces | where timestamp > ago(10m) | project message";
+            // All traces of the app, oldest first. The function's own output (java.util.logging
+            // via the worker's console) carries no operation name, so it cannot be filtered by
+            // function; the caller looks for its line and fetches again while it is missing.
+            String query = "traces | where timestamp > ago(15m) | order by timestamp asc | project message";
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(String.format(

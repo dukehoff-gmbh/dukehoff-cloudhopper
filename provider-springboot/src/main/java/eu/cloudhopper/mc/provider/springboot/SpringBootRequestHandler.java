@@ -27,9 +27,11 @@ package eu.cloudhopper.mc.provider.springboot;
 
 
 import eu.cloudhopper.mc.runtime.CloudRequestHandler;
+import eu.cloudhopper.mc.runtime.Headers;
 import eu.cloudhopper.mc.provider.http.LocalHandlerContext;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -56,7 +58,22 @@ public abstract class SpringBootRequestHandler<I, O> {
      * @return HTTP response with serialized output
      */
     public ResponseEntity<O> handle(I input) {
-        O output = handler.handleRequest(input, new LocalHandlerContext());
+        return handle(input, Map.of(), Map.of(), Map.of());
+    }
+
+    /**
+     * Handles the HTTP request, passing path, query and header parameters on to the function.
+     *
+     * @param input       input deserialized from the HTTP request body, or {@code null}
+     * @param pathParams  path variables of the matched route
+     * @param queryParams query parameters (first value of each)
+     * @param headers     request headers (first value of each), matched case-insensitively
+     * @return HTTP response with serialized output
+     */
+    public ResponseEntity<O> handle(I input, Map<String, String> pathParams, Map<String, String> queryParams,
+                                    Map<String, String> headers) {
+        O output = handler.handleRequest(input, pathParams, queryParams, Headers.of(headers),
+                new LocalHandlerContext());
         return ResponseEntity.ok(output);
     }
 }
