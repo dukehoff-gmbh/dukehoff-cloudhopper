@@ -54,10 +54,10 @@ jobs:
           java-version: '21'
           cache: maven
           server-id: central
-          server-username: CENTRAL_USERNAME
-          server-password: CENTRAL_PASSWORD
+          server-username-env-var: CENTRAL_USERNAME
+          server-password-env-var: CENTRAL_PASSWORD
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          gpg-passphrase-env-var: MAVEN_GPG_PASSPHRASE
 
       - name: Version
         id: version
@@ -156,7 +156,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           cat > notes.md <<EOF
-          Cloudhopper MC ${VERSION}: write your cloud functions once, generate the deployment for AWS, Azure, GCP or Spring Boot.
+          Dukehoff Cloudhopper ${VERSION}: write your cloud functions once, generate the deployment for AWS, Azure, GCP or Spring Boot.
 
           \`\`\`bash
           mvn archetype:generate \\
@@ -169,5 +169,5 @@ jobs:
           Documentation: https://cloudhopper.eu
           EOF
           prerelease=; case "$VERSION" in *-*) prerelease=--prerelease ;; esac
-          gh release create "$GITHUB_REF_NAME" --verify-tag --title "Cloudhopper MC ${VERSION}" \
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "Dukehoff Cloudhopper ${VERSION}" \
               --notes-file notes.md --generate-notes $prerelease

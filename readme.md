@@ -1,4 +1,4 @@
-# Cloudhopper for Java
+# Dukehoff Cloudhopper
 
 **You code, we take out the YAML**
 
@@ -43,7 +43,7 @@ No boilerplate. No endless YAML. No regrets.
 
 ## License
 
-Cloudhopper MC is developed by [Dukehoff GmbH](https://github.com/dukehoff-gmbh) and licensed under
+Dukehoff Cloudhopper is developed by [Dukehoff GmbH](https://github.com/dukehoff-gmbh) and licensed under
 the [GNU General Public License v3](LICENSE) with two additional permissions (see [LICENSE-EXCEPTIONS](LICENSE-EXCEPTIONS)):
 
 - **Classpath Exception** – you may use the Cloudhopper libraries in applications under any license.

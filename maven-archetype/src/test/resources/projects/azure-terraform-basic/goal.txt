@@ -1,0 +1,1 @@
+verify -P azure-terraform
