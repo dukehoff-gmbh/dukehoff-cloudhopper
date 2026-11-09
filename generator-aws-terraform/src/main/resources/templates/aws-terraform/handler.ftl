@@ -8,6 +8,7 @@ import eu.cloudhopper.mc.provider.aws.AwsLambdaRequestHandler;
 import eu.cloudhopper.mc.provider.aws.ApiGatewayV2ProxyRequestHandler;
 import eu.cloudhopper.mc.provider.aws.ApiGatewayV2HttpEventHandler;
 import eu.cloudhopper.mc.provider.aws.ApiGatewayEventRouter;
+import eu.cloudhopper.mc.provider.aws.SqsEventHandler;
 
 /**
  * Generated AWS Lambda handler class for ${handlerInfo.handlerClassName}.
@@ -42,11 +43,12 @@ public class AwsLambda${handlerInfo.handlerClassName}Handler {
     }
 
     /**
-     * Smart router for all supported event types (proxy, http, scheduled, plain).
+     * Smart router for all supported event types (proxy, http, sqs, scheduled, plain).
      */
     public static class Auto extends ApiGatewayEventRouter<${handlerInfo.inputType}, ${handlerInfo.outputType}> {
         public Auto() {
-            super(new Plain(), new ApiProxyV2(), new ApiHttpV2());
+            super(new Plain(), new ApiProxyV2(), new ApiHttpV2(),
+                    new SqsEventHandler<>(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputType}.class));
         }
     }
 }

@@ -33,4 +33,14 @@ public interface TestContext {
     List<String> fetchLogs(String functionName);
     void deployTestFunctions();
     void cleanupTestFunctions();
+
+    /**
+     * Sends a message to the queue an {@code @EventTrigger(source = QUEUE)} function listens to.
+     *
+     * @param queueName the name given in the annotation
+     * @param message   the message body (JSON)
+     */
+    default void sendQueueMessage(String queueName, String message) {
+        throw new UnsupportedOperationException("This binding cannot send queue messages");
+    }
 }

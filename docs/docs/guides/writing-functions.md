@@ -77,6 +77,39 @@ public void cleanup() {
 }
 ```
 
+### `@EventTrigger`
+
+Invokes the function once for each message on a queue. The message body is
+deserialized from JSON into the body parameter, just like an HTTP request body.
+
+| Attribute | Default | Description |
+|-----------|---------|-------------|
+| `source` | — (required) | The kind of source; `EventSource.QUEUE` for now |
+| `name` | — (required) | Name of the queue: 3 to 63 lowercase letters, digits and single hyphens, starting with a letter |
+| `create` | `true` | `true` creates the queue with the function; `false` connects to an existing one of that name |
+
+```java
+@Function(name = "orderReceived")
+@EventTrigger(source = EventSource.QUEUE, name = "orders")
+public void onOrder(Order order, EventMetadata meta) {
+    // ...
+}
+```
+
+Each target maps the queue to its native service:
+
+| Target | Queue | Notes |
+|--------|-------|-------|
+| `aws-terraform` | SQS queue | One message per invocation; failed messages are reported individually and delivered again |
+| `azure-terraform` | Storage queue in the function app's storage account | Messages must be Base64-encoded; after five failed attempts a message moves to `<name>-poison` |
+| `gcp-terraform` | Pub/Sub topic, delivered through Eventarc | Requires the Eventarc and Pub/Sub APIs in the project |
+| `springboot-http` | `POST /events/<function name>` | The body is the message; optional `ce-id`, `ce-source` and `ce-time` headers (CloudEvents) fill the metadata. Answers `204`, or an error status if the function throws |
+
+Delivery is **at least once**: when the function throws, the platform delivers
+the message again, so make the function tolerate duplicates. A parameter of type
+`EventMetadata` gives you the message id, source, time, delivery attempt and
+attributes; on invocations that are not events it is `null`.
+
 ### When a target does not support something
 
 Not every target supports every trigger or attribute. The `springboot-http`
@@ -118,8 +151,9 @@ Path, query and header values can be bound as `String`, `Integer`, `Long`,
 
 A parameter of type `HandlerContext` is recognized automatically — no annotation
 needed — and gives you invocation metadata (request id, remaining time, memory
-limit, and so on). Any unannotated, non-context parameter is treated as the
-request body.
+limit, and so on). The same holds for `EventMetadata` in event-triggered
+functions (see [`@EventTrigger`](#eventtrigger)). Any other unannotated
+parameter is treated as the request body.
 
 ```java
 @Function(name = "updatePlayer")

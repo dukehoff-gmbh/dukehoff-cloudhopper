@@ -57,6 +57,7 @@ import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
 import eu.cloudhopper.mc.annotations.HttpTrigger;
+import eu.cloudhopper.mc.annotations.EventTrigger;
 import eu.cloudhopper.mc.annotations.ScheduledTrigger;
 
 /**
@@ -200,6 +201,18 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         } catch (ConfigGenerationException e) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Failed to generate schedule for function " + handlerInfo.getFunctionId().toLowerCase() + ": " + e.getMessage());
         }
+    }
+
+    @Override
+    public void generateEventTrigger(String generatorId, String configOutputDir, HandlerInfo handlerInfo,
+            EventTrigger eventTrigger, ProcessingEnvironment processingEnv) throws ConfigGenerationException {
+        Map<String, Object> dataModel = createBaseDataModel(handlerInfo);
+        dataModel.put("packageName", handlerInfo.getHandlerPackage());
+        dataModel.put("eventSource", eventTrigger.source().name());
+        dataModel.put("eventName", eventTrigger.name());
+        dataModel.put("eventCreate", eventTrigger.create());
+        runPhase(processingEnv, GenerationPhase.EVENT, dataModel, handlerInfo, configOutputDir,
+                handlerInfo.getFunctionId().toLowerCase() + "_event");
     }
 
     private void runPhase(ProcessingEnvironment processingEnv,

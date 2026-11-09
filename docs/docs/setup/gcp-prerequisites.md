@@ -42,7 +42,8 @@ gcloud auth application-default login
 ```
 
 The account needs permission to create Cloud Functions, storage buckets,
-API Gateway resources and, for scheduled functions, Cloud Scheduler jobs.
+API Gateway resources and, for scheduled functions, Cloud Scheduler jobs; for
+queue-triggered functions also Pub/Sub topics and Eventarc triggers.
 Terraform reports any API that is not yet enabled in the project, together
 with the link to enable it.
 
@@ -63,8 +64,10 @@ declares these variables:
 | `cloudscheduler_service_account_email` | `scheduler@my-project-123.iam.gserviceaccount.com` |
 
 The last one is the service account Cloud Scheduler uses to call scheduled
-functions; it is only used if your project contains a
-[`@ScheduledTrigger`](../guides/writing-functions#scheduledtrigger).
+functions, and Eventarc to deliver queue messages; it is only used if your
+project contains a
+[`@ScheduledTrigger`](../guides/writing-functions#scheduledtrigger) or an
+[`@EventTrigger`](../guides/writing-functions#eventtrigger).
 
 Set the variables in the generated `gcp.auto.tfvars`, which Terraform loads
 automatically, or as environment variables (`TF_VAR_gcp_project_id`, …).

@@ -25,6 +25,8 @@ package eu.cloudhopper.mc.generator.springboot;
  * #L%
  */
 
+import eu.cloudhopper.mc.annotations.EventTrigger;
+import eu.cloudhopper.mc.annotations.EventTrigger.EventTriggerAttribute;
 import eu.cloudhopper.mc.annotations.HttpTrigger.HttpTriggerAttribute;
 import eu.cloudhopper.mc.annotations.Function;
 import eu.cloudhopper.mc.annotations.Function.FunctionAttribute;
@@ -42,6 +44,14 @@ import eu.cloudhopper.mc.annotations.HttpTrigger;
             supportedAnnotation = Function.class,
             supportedAttributes = {
                 FunctionAttribute.NAME
+            }
+        ),
+        @GeneratorFeature(
+            supportedAnnotation = EventTrigger.class,
+            supportedAttributes = {
+                EventTriggerAttribute.SOURCE,
+                EventTriggerAttribute.NAME,
+                EventTriggerAttribute.CREATE
             }
         ),
         @GeneratorFeature(
@@ -63,6 +73,14 @@ import eu.cloudhopper.mc.annotations.HttpTrigger;
             phase = GenerationPhase.API,
             templateName = "handler.ftl",
             description = "Generates Spring Boot REST controller for API functions",
+            outputFileExtension = "java",
+            outputSubDirectory = "generated",
+            javaFile = true
+        ),
+        @Template(
+            phase = GenerationPhase.EVENT,
+            templateName = "event.ftl",
+            description = "Generates the Spring Boot endpoint POST /events/<function> for event-triggered functions",
             outputFileExtension = "java",
             outputSubDirectory = "generated",
             javaFile = true

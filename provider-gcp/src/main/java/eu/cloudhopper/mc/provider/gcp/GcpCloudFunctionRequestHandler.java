@@ -33,7 +33,15 @@ import eu.cloudhopper.mc.runtime.HandlerContext;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import eu.cloudhopper.mc.runtime.EventHandlerContext;
+import eu.cloudhopper.mc.runtime.EventMetadata;
 import java.io.BufferedWriter;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
+import java.util.Base64;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -52,6 +60,9 @@ import java.util.Map;
  * @param <O> the output type
  */
 public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFunction {
+
+    /** The CloudEvent type Eventarc sets for Pub/Sub messages. */
+    private static final String PUBSUB_MESSAGE_PUBLISHED = "google.cloud.pubsub.topic.v1.messagePublished";
 
     private final CloudRequestHandler<I, O> handler;
     private final Type inputType;
@@ -78,6 +89,10 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
      */
     @Override
     public void service(HttpRequest request, HttpResponse response) throws IOException {
+        if (PUBSUB_MESSAGE_PUBLISHED.equals(request.getFirstHeader("ce-type").orElse(null))) {
+            handlePubSubEvent(request, response);
+            return;
+        }
         I input = parseInput(request);
 
         Map<String, String> queryParams = new HashMap<>();
@@ -97,6 +112,58 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
         O output = handler.handleRequest(input, pathParams, queryParams, Headers.ofFirstValues(request.getHeaders()),
                 new GcpContextAdapter(request));
         writeOutput(response, output);
+    }
+
+    /**
+     * Handles a Pub/Sub message delivered by Eventarc (queue triggers). The body is the push
+     * envelope {@code {"message": {"data": <base64>, "attributes": {...}, "messageId": ...,
+     * "publishTime": ...}, "subscription": ...}}. An exception makes the framework answer with an
+     * error status, so that Pub/Sub delivers the message again.
+     */
+    private void handlePubSubEvent(HttpRequest request, HttpResponse response) throws IOException {
+        String body = request.getReader().lines().reduce("", (accumulator, actual) -> accumulator + actual);
+        JsonObject envelope = JsonParser.parseString(body).getAsJsonObject();
+        JsonObject message = envelope.has("message") ? envelope.getAsJsonObject("message") : new JsonObject();
+
+        String data = message.has("data") && !message.get("data").isJsonNull()
+                ? new String(Base64.getDecoder().decode(message.get("data").getAsString()), StandardCharsets.UTF_8)
+                : null;
+
+        Map<String, String> attributes = new HashMap<>();
+        if (message.has("attributes") && message.get("attributes").isJsonObject()) {
+            message.getAsJsonObject("attributes").entrySet()
+                    .forEach(e -> attributes.put(e.getKey(), e.getValue().getAsString()));
+        }
+        String id = message.has("messageId") ? message.get("messageId").getAsString()
+                : request.getFirstHeader("ce-id").orElse(null);
+        Instant time = null;
+        String publishTime = message.has("publishTime") ? message.get("publishTime").getAsString()
+                : request.getFirstHeader("ce-time").orElse(null);
+        if (publishTime != null) {
+            try {
+                time = Instant.parse(publishTime);
+            } catch (DateTimeParseException ignored) {
+                // leave the time unknown
+            }
+        }
+        // only set when the subscription has a dead-letter policy
+        int attempt = envelope.has("deliveryAttempt") ? envelope.get("deliveryAttempt").getAsInt() : 0;
+        String source = request.getFirstHeader("ce-source").orElse(null);
+
+        EventMetadata meta = new EventMetadata(id, source, time, attempt, attributes);
+        handler.handleRequest(parseData(data), new EventHandlerContext(new GcpContextAdapter(request), meta));
+        response.setStatusCode(204);
+    }
+
+    @SuppressWarnings("unchecked")
+    private I parseData(String data) {
+        if (data == null || inputType == Void.class) {
+            return null;
+        }
+        if (inputType == String.class) {
+            return (I) data;
+        }
+        return gson.fromJson(data, inputType);
     }
 
     /**
@@ -170,7 +237,7 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
          */
         @Override
         public String getRequestId() {
-            return request.getHeaders().get("X-Cloud-Trace-Context").get(0);
+            return request.getFirstHeader("X-Cloud-Trace-Context").orElse(null);
         }
 
         /**

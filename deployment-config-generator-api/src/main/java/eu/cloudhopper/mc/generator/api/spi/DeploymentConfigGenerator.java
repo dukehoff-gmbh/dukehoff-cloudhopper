@@ -29,6 +29,7 @@ import eu.cloudhopper.mc.generator.api.ConfigGenerationException;
 import eu.cloudhopper.mc.generator.api.HandlerInfo;
 import javax.annotation.processing.ProcessingEnvironment;
 import eu.cloudhopper.mc.annotations.HttpTrigger;
+import eu.cloudhopper.mc.annotations.EventTrigger;
 import eu.cloudhopper.mc.annotations.ScheduledTrigger;
 /**
  * Service Provider Interface (SPI) for custom deployment configuration generators.
@@ -102,6 +103,24 @@ public interface DeploymentConfigGenerator {
      * @param processingEnv annotation processing context
      */
     void generateScheduledTrigger(String generatorID, String configOutputDir, HandlerInfo handlerInfo, ScheduledTrigger schedule, ProcessingEnvironment processingEnv);
+
+    /**
+     * Generates configuration for an event trigger and, if requested, its source.
+     * <p>
+     * Called if the function is annotated with {@link eu.cloudhopper.mc.annotations.EventTrigger}.
+     * The default does nothing, for generators written before event triggers existed.
+     *
+     * @param generatorId the generator ID
+     * @param configOutputDir output directory for the config
+     * @param handlerInfo function metadata
+     * @param eventTrigger the event trigger annotation
+     * @param processingEnv annotation processing context
+     * @throws ConfigGenerationException if generation fails
+     */
+    default void generateEventTrigger(String generatorId, String configOutputDir, HandlerInfo handlerInfo,
+            EventTrigger eventTrigger, ProcessingEnvironment processingEnv) throws ConfigGenerationException {
+        // no event support
+    }
 
     /**
      * Performs any final configuration generation steps after all handlers are processed.

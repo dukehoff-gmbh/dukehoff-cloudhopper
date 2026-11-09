@@ -24,6 +24,8 @@ package eu.cloudhopper.mc.provider.aws;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import eu.cloudhopper.mc.annotations.EventTrigger;
+import eu.cloudhopper.mc.annotations.EventTrigger.EventTriggerAttribute;
 import eu.cloudhopper.mc.annotations.Function;
 import eu.cloudhopper.mc.annotations.ScheduledTrigger.ScheduleAttribute;
 import eu.cloudhopper.mc.generator.generic.annotations.Template;
@@ -51,6 +53,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     supportedAnnotation = ScheduledTrigger.class,
                     supportedAttributes = {
                         ScheduleAttribute.CRON
+                    }
+            ),
+            @GeneratorFeature(
+                    supportedAnnotation = EventTrigger.class,
+                    supportedAttributes = {
+                        EventTriggerAttribute.SOURCE,
+                        EventTriggerAttribute.NAME,
+                        EventTriggerAttribute.CREATE
                     }
             ),
             @GeneratorFeature(
@@ -112,6 +122,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     phase = GenerationPhase.SCHEDULE,
                     templateName = "schedule.ftl",
                     description = "Generates AWS EventBridge/CloudWatch schedule rule (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.EVENT,
+                    templateName = "queue.ftl",
+                    description = "Generates the SQS queue and its event source mapping (Terraform)",
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
                     javaFile = false

@@ -50,11 +50,14 @@ import eu.cloudhopper.mc.annotations.HttpTrigger;
 import eu.cloudhopper.mc.annotations.PathParam;
 import eu.cloudhopper.mc.annotations.QueryParam;
 import eu.cloudhopper.mc.annotations.ScheduledTrigger;
+import eu.cloudhopper.mc.annotations.EventTrigger;
+import java.util.regex.Pattern;
 import eu.cloudhopper.mc.deployment.config.generator.HandlerGenerator.MethodHandlerInfo;
 import eu.cloudhopper.mc.deployment.config.generator.HandlerGenerator.ParamInfo;
 import eu.cloudhopper.mc.deployment.config.generator.HandlerGenerator.ParamInfo.ParamType;
 import static eu.cloudhopper.mc.deployment.config.generator.HandlerGenerator.ParamInfo.ParamType.BODY;
 import static eu.cloudhopper.mc.deployment.config.generator.HandlerGenerator.ParamInfo.ParamType.CONTEXT;
+import static eu.cloudhopper.mc.deployment.config.generator.HandlerGenerator.ParamInfo.ParamType.EVENT_METADATA;
 import static eu.cloudhopper.mc.deployment.config.generator.HandlerGenerator.ParamInfo.ParamType.HEADER;
 import static eu.cloudhopper.mc.deployment.config.generator.HandlerGenerator.ParamInfo.ParamType.QUERY;
 import java.util.HashSet;
@@ -73,6 +76,13 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
     private Types typeUtils;
     private Elements elementUtils;
     private TypeMirror contextType;
+    private TypeMirror eventMetadataType;
+
+    /**
+     * Event source names valid on every target: Azure queue names are the strictest
+     * (3-63 lowercase letters, digits and single hyphens); Pub/Sub topics must start with a letter.
+     */
+    private static final Pattern EVENT_SOURCE_NAME = Pattern.compile("[a-z][a-z0-9]*(-[a-z0-9]+)*");
 
     @Override
     public synchronized void init(ProcessingEnvironment env) {
@@ -81,6 +91,9 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
         this.elementUtils = env.getElementUtils();
         this.contextType = elementUtils
                 .getTypeElement("eu.cloudhopper.mc.runtime.HandlerContext")
+                .asType();
+        this.eventMetadataType = elementUtils
+                .getTypeElement("eu.cloudhopper.mc.runtime.EventMetadata")
                 .asType();
     }
 
@@ -96,6 +109,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
             Function fn = m.getAnnotation(Function.class);
             HttpTrigger http = m.getAnnotation(HttpTrigger.class);
             ScheduledTrigger sched = m.getAnnotation(ScheduledTrigger.class);
+            EventTrigger event = m.getAnnotation(EventTrigger.class);
             if (featureValidator != null) {
                 featureValidator.validate(m);
             }
@@ -106,6 +120,8 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                 String name = p.getSimpleName().toString();
                 if (typeUtils.isSameType(tm, contextType)) {
                     params.add(new ParamInfo(CONTEXT, null, tm.toString(), name));
+                } else if (typeUtils.isSameType(tm, eventMetadataType)) {
+                    params.add(new ParamInfo(EVENT_METADATA, null, tm.toString(), name));
                 } else if (p.getAnnotation(PathParam.class) != null) {
                     PathParam ann = p.getAnnotation(PathParam.class);
 
@@ -131,7 +147,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                 }
             }
 
-            if (!validateParams(m, params)) {
+            if (!validateParams(m, params) || (event != null && !validateEventTrigger(m, event))) {
                 continue;
             }
             String pkg = elementUtils.getPackageOf(cls).getQualifiedName().toString();
@@ -180,6 +196,10 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     deploymentGenerator.generateScheduledTrigger(
                             generatorId, configOutputDir, hinfo, sched, processingEnv);
                 }
+                if (event != null) {
+                    deploymentGenerator.generateEventTrigger(
+                            generatorId, configOutputDir, hinfo, event, processingEnv);
+                }
             } catch (ConfigGenerationException cex) {
                 processingEnv.getMessager().printMessage(ERROR,
                         cex.getMessage(), m);
@@ -194,6 +214,17 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
             }
         }
 
+        return true;
+    }
+
+    private boolean validateEventTrigger(ExecutableElement method, EventTrigger event) {
+        String name = event.name();
+        if (name.length() < 3 || name.length() > 63 || !EVENT_SOURCE_NAME.matcher(name).matches()) {
+            processingEnv.getMessager().printMessage(ERROR,
+                    "@EventTrigger name '" + name + "' is not valid on every target: use 3 to 63 lowercase"
+                    + " letters, digits and single hyphens, starting with a letter.", method);
+            return false;
+        }
         return true;
     }
 

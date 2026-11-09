@@ -24,6 +24,8 @@ package eu.cloudhopper.mc.provider.gcp;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import eu.cloudhopper.mc.annotations.EventTrigger;
+import eu.cloudhopper.mc.annotations.EventTrigger.EventTriggerAttribute;
 import eu.cloudhopper.mc.annotations.HttpTrigger.HttpTriggerAttribute;
 import eu.cloudhopper.mc.annotations.Function;
 import eu.cloudhopper.mc.annotations.Function.FunctionAttribute;
@@ -53,6 +55,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     supportedAttributes = {ScheduleAttribute.CRON, ScheduleAttribute.TIMEZONE}
             ),
             @GeneratorFeature(
+                    supportedAnnotation = EventTrigger.class,
+                    supportedAttributes = {
+                        EventTriggerAttribute.SOURCE,
+                        EventTriggerAttribute.NAME,
+                        EventTriggerAttribute.CREATE
+                    }
+            ),
+            @GeneratorFeature(
                     supportedAnnotation = HttpTrigger.class,
                     supportedAttributes = {
                         HttpTriggerAttribute.SUMMARY, 
@@ -67,6 +77,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
 @TemplateRegistration(
         generatorId = "gcp-terraform",
         templates = {
+            @Template(
+                    phase = GenerationPhase.EVENT,
+                    templateName = "queue.ftl",
+                    description = "Generates the Pub/Sub topic and the Eventarc trigger (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
+            ),
             @Template(
                     phase = GenerationPhase.SHARED,
                     templateName = "shared.ftl",

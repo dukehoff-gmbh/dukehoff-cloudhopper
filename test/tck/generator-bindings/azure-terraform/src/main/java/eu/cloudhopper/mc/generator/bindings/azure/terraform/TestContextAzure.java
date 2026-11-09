@@ -38,6 +38,11 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.util.*;
 
 public class TestContextAzure implements TestContext {
@@ -231,6 +236,60 @@ public class TestContextAzure implements TestContext {
             return root.get("access_token").asText();
         } catch (Exception e) {
             throw new RuntimeException("Failed to obtain Azure access token", e);
+        }
+    }
+
+    /**
+     * Puts a message on a queue of the function app's storage account (Queue service REST API,
+     * Shared Key authorization). The Functions host expects Base64-encoded messages.
+     */
+    @Override
+    public void sendQueueMessage(String queueName, String message) {
+        try {
+            // read the outputs directly: TerraformUtil.getOutputString would print the account key
+            JsonNode outputs = TerraformUtil.readTerraformOutput(terraformDir);
+            String account = outputs.path("function_storage_name").path("value").asText();
+            String key = outputs.path("function_storage_primary_access_key").path("value").asText();
+
+            String encoded = Base64.getEncoder().encodeToString(message.getBytes(StandardCharsets.UTF_8));
+            byte[] body = ("<QueueMessage><MessageText>" + encoded + "</MessageText></QueueMessage>")
+                    .getBytes(StandardCharsets.UTF_8);
+            String date = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US)
+                    .format(ZonedDateTime.now(ZoneOffset.UTC));
+            String version = "2021-08-06";
+            String contentType = "application/xml";
+
+            String stringToSign = "POST\n"
+                    + "\n" // Content-Encoding
+                    + "\n" // Content-Language
+                    + body.length + "\n"
+                    + "\n" // Content-MD5
+                    + contentType + "\n"
+                    + "\n" // Date (x-ms-date is used)
+                    + "\n\n\n\n" // If-Modified-Since, If-Match, If-None-Match, If-Unmodified-Since
+                    + "\n" // Range
+                    + "x-ms-date:" + date + "\n"
+                    + "x-ms-version:" + version + "\n"
+                    + "/" + account + "/" + queueName + "/messages";
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(Base64.getDecoder().decode(key), "HmacSHA256"));
+            String signature = Base64.getEncoder().encodeToString(mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8)));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://" + account + ".queue.core.windows.net/" + queueName + "/messages"))
+                    .header("x-ms-date", date)
+                    .header("x-ms-version", version)
+                    .header("Content-Type", contentType)
+                    .header("Authorization", "SharedKey " + account + ":" + signature)
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(body))
+                    .build();
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 201) {
+                throw new IllegalStateException("Put Message returned " + response.statusCode() + ": " + response.body());
+            }
+            System.out.println("📨 Sent message to storage queue " + queueName);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send a message to queue " + queueName, e);
         }
     }
 

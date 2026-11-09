@@ -24,6 +24,8 @@ package eu.cloudhopper.mc.provider.azure;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import eu.cloudhopper.mc.annotations.EventTrigger;
+import eu.cloudhopper.mc.annotations.EventTrigger.EventTriggerAttribute;
 import eu.cloudhopper.mc.annotations.HttpTrigger.HttpTriggerAttribute;
 import eu.cloudhopper.mc.annotations.Function;
 import eu.cloudhopper.mc.annotations.Function.FunctionAttribute;
@@ -49,6 +51,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     supportedAnnotation = ScheduledTrigger.class,
                     supportedAttributes = {
                         ScheduleAttribute.CRON
+                    }
+            ),
+            @GeneratorFeature(
+                    supportedAnnotation = EventTrigger.class,
+                    supportedAttributes = {
+                        EventTriggerAttribute.SOURCE,
+                        EventTriggerAttribute.NAME,
+                        EventTriggerAttribute.CREATE
                     }
             ),
             @GeneratorFeature(
@@ -105,6 +115,22 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     outputFileExtension = "java",
                     outputSubDirectory = "",
                     javaFile = true
+            ),
+            @Template(
+                    phase = GenerationPhase.EVENT,
+                    templateName = "queueFunction.ftl",
+                    description = "Generates a Function with @QueueTrigger",
+                    outputFileExtension = "java",
+                    outputSubDirectory = "",
+                    javaFile = true
+            ),
+            @Template(
+                    phase = GenerationPhase.EVENT,
+                    templateName = "queue.ftl",
+                    description = "Generates the storage queue (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
             ),
         }
 )
