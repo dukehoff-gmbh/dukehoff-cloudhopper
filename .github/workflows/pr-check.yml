@@ -6,8 +6,38 @@ on:
       - main
 
 jobs:
+  # Decides whether the PR touches anything outside docs/. A docs-only PR skips
+  # the jobs below via their `if`; skipped jobs report success, so the required
+  # checks still pass (a workflow-level paths-ignore would leave them pending).
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Look for changes outside docs/
+      id: diff
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA")
+        echo "$changed"
+        if echo "$changed" | grep -qv '^docs/'; then
+          echo "code=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "code=false" >> "$GITHUB_OUTPUT"
+        fi
+
   archetype-test:
     name: Test Archetype with Terraform
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     
     steps:
@@ -55,6 +85,8 @@ jobs:
       
   build-and-validate:
     name: Build and Validate
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     # The TCK steps deploy into shared cloud accounts, partly with fixed resource
     # names. Run at most one of them at a time; a newer run waits instead.
