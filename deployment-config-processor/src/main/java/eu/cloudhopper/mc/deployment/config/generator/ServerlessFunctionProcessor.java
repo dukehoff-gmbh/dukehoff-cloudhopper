@@ -37,6 +37,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -64,6 +65,8 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("eu.cloudhopper.mc.annotations.Function")
+@SupportedOptions({"generatorId", "configOutputDir", "artifactId", "classifier", "version", "targetDir",
+        AnnotationFeatureValidator.STRICT_OPTION})
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
 
@@ -93,6 +96,9 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
             Function fn = m.getAnnotation(Function.class);
             HttpTrigger http = m.getAnnotation(HttpTrigger.class);
             ScheduledTrigger sched = m.getAnnotation(ScheduledTrigger.class);
+            if (featureValidator != null) {
+                featureValidator.validate(m);
+            }
 
             List<ParamInfo> params = new ArrayList<>();
             for (VariableElement p : m.getParameters()) {
