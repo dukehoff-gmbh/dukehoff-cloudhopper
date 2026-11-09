@@ -50,7 +50,7 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
             ),
             @GeneratorFeature(
                     supportedAnnotation = ScheduledTrigger.class,
-                    supportedAttributes = {ScheduleAttribute.CRON}
+                    supportedAttributes = {ScheduleAttribute.CRON, ScheduleAttribute.TIMEZONE}
             ),
             @GeneratorFeature(
                     supportedAnnotation = HttpTrigger.class,

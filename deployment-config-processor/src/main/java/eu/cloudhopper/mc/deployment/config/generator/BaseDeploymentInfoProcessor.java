@@ -54,6 +54,7 @@ public abstract class BaseDeploymentInfoProcessor extends AbstractProcessor {
     protected String version;
     protected String targetDir;
     protected GeneratorFeatureInfo generatorFeatureInfo;
+    protected AnnotationFeatureValidator featureValidator;
     protected String generatorId;
 
     @Override
@@ -81,6 +82,12 @@ public abstract class BaseDeploymentInfoProcessor extends AbstractProcessor {
         }
         deploymentGenerator = getDeploymentGenerator();
         generatorFeatureInfo = GeneratorFeatureInfo.Loader.loadFeaturesFor(deploymentGenerator.getGeneratorID());
+        if (generatorFeatureInfo != null) {
+            featureValidator = new AnnotationFeatureValidator(processingEnv, generatorFeatureInfo);
+        } else {
+            messager.printMessage(Diagnostic.Kind.NOTE, "No feature declaration found for generator '"
+                    + deploymentGenerator.getGeneratorID() + "'; supported annotations are not checked.");
+        }
     }
 
     protected DeploymentConfigGenerator getDeploymentGenerator() {
