@@ -68,9 +68,10 @@ function StatusNote() {
     <section className={styles.section}>
       <div className="container">
         <div className="alert alert--info" role="note">
-          <strong>Pre-release.</strong> Version 1.0 is not on Maven Central yet.
-          To try it today, build it from source; the{' '}
-          <Link to="/docs/guides/quickstart">Quickstart</Link> shows how.
+          <strong>Version 1.0.1 is out</strong> and{' '}
+          <Link href="https://central.sonatype.com/namespace/eu.cloudhopper.mc">on Maven Central</Link>.
+          The <Link to="/docs/guides/quickstart">Quickstart</Link> takes you from
+          an empty folder to a deployed function.
         </div>
       </div>
     </section>
