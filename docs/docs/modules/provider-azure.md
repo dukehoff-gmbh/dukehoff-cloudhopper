@@ -6,7 +6,7 @@ It is currently used by the `generator-azure-terraform` module and is important 
 
 ---
 
-## 🧩 Purpose
+## Purpose
 
 The `AzureBaseFunctionWrapper<I, O>` class:
 
@@ -18,7 +18,7 @@ The `AzureBaseFunctionWrapper<I, O>` class:
 
 ---
 
-## 🔧 Example Usage in a Generated Handler
+## Example Usage in a Generated Handler
 
 ```java
 public class MyFunction extends AzureBaseFunctionWrapper<MyInput, MyOutput> {
@@ -49,7 +49,7 @@ public class MyFunction extends AzureBaseFunctionWrapper<MyInput, MyOutput> {
 
 ---
 
-## 🧠 Internal Structure
+## Internal Structure
 
 The class contains:
 
@@ -61,7 +61,7 @@ The class contains:
 
 ---
 
-## 🛠️ For Generator Authors
+## For Generator Authors
 
 If you're implementing your own Azure generator (e.g., replacing or extending `generator-azure-terraform`):
 
@@ -71,7 +71,7 @@ If you're implementing your own Azure generator (e.g., replacing or extending `g
 
 ---
 
-## 📦 Module Summary
+## Module Summary
 
 | Component                  | Description                                   |
 |---------------------------|-----------------------------------------------|
@@ -80,7 +80,7 @@ If you're implementing your own Azure generator (e.g., replacing or extending `g
 
 ---
 
-## 📚 Related Modules
+## Related Modules
 
 | Module                    | Role                                                   |
 |---------------------------|--------------------------------------------------------|

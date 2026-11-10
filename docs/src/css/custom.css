@@ -1,30 +1,123 @@
 /**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+ * Dukehoff Cloudhopper theme.
+ *
+ * Brand colors come from the grasshopper mascot: the bright body green (#0DDC2C) and the
+ * deep navy outline (#090231). The bright green is too light for text on white, so light
+ * mode uses a darker green for links and buttons (5.5:1 on white); dark mode uses the
+ * mascot green on navy.
  */
 
-/* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  /* brand primitives */
+  --ch-green: #0ddc2c;
+  --ch-green-text: #0a7a1f;
+  --ch-navy: #090231;
+  --ch-navy-2: #120b45;
+  --ch-navy-3: #1d1658;
+  --ch-ink: #14112b;
+  --ch-mist: #f5f6fa;
+
+  /* Infima */
+  --ifm-color-primary: #0a7a1f;
+  --ifm-color-primary-dark: #096e1c;
+  --ifm-color-primary-darker: #09681a;
+  --ifm-color-primary-darkest: #075516;
+  --ifm-color-primary-light: #0b8622;
+  --ifm-color-primary-lighter: #0c8c23;
+  --ifm-color-primary-lightest: #0d9f28;
+
+  --ifm-font-family-base: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ifm-font-family-monospace: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --ifm-heading-font-weight: 700;
+  --ifm-font-color-base: var(--ch-ink);
+  --ifm-heading-color: var(--ch-navy);
+  --ifm-code-font-size: 92%;
+  --ifm-global-radius: 8px;
+  --ifm-navbar-shadow: none;
+  --ifm-footer-background-color: var(--ch-navy);
+  --ifm-footer-link-color: #c9c6e4;
+  --ifm-footer-link-hover-color: var(--ch-green);
+  --ifm-footer-title-color: #ffffff;
+  --docusaurus-highlighted-code-line-bg: rgba(10, 122, 31, 0.12);
+
+  --ch-surface: #ffffff;
+  --ch-surface-alt: var(--ch-mist);
+  --ch-border: #e3e2ee;
+  --ch-muted: #4d4a68;
+  --ch-focus: #0a7a1f;
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+html[data-theme='dark'] {
+  --ifm-color-primary: #0ddc2c;
+  --ifm-color-primary-dark: #0cc628;
+  --ifm-color-primary-darker: #0bbb25;
+  --ifm-color-primary-darkest: #099a1f;
+  --ifm-color-primary-light: #1ff03f;
+  --ifm-color-primary-lighter: #2bf149;
+  --ifm-color-primary-lightest: #4df366;
+
+  --ifm-background-color: #0b0727;
+  --ifm-background-surface-color: #110b3a;
+  --ifm-navbar-background-color: #0b0727;
+  --ifm-font-color-base: #e6e4f5;
+  --ifm-heading-color: #ffffff;
+  --ifm-toc-border-color: #2a2366;
+  --ifm-color-emphasis-300: #2a2366;
+  --ifm-footer-background-color: #07031d;
+  --docusaurus-highlighted-code-line-bg: rgba(13, 220, 44, 0.12);
+
+  --ch-surface: #110b3a;
+  --ch-surface-alt: #0e0832;
+  --ch-border: #2a2366;
+  --ch-muted: #b4b0d6;
+  --ch-focus: #0ddc2c;
+}
+
+/* Bright green needs dark text: white on #0DDC2C is only 1.9:1. */
+[data-theme='dark'] .button--primary,
+[data-theme='dark'] .button--primary:hover {
+  color: var(--ch-navy);
+}
+
+/* Visible keyboard focus everywhere */
+:focus-visible {
+  outline: 3px solid var(--ch-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.navbar {
+  border-bottom: 1px solid var(--ch-border);
+}
+
+.navbar__title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.footer--dark {
+  --ifm-footer-background-color: var(--ch-navy);
+  --ifm-footer-link-color: #c9c6e4;
+  --ifm-footer-title-color: #ffffff;
+  --ifm-footer-color: #b4b0d6;
+  border-top: 3px solid var(--ch-green);
+}
+
+html[data-theme='dark'] .footer--dark {
+  --ifm-footer-background-color: #07031d;
+}
+
+.button {
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.015em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
 }

@@ -10,7 +10,7 @@ It implements the `DeploymentConfigGenerator` SPI and is used as the default gen
 
 ---
 
-## 💡 Purpose
+## Purpose
 
 This module enables:
 - Code generation from annotations without writing Java generator logic
@@ -19,7 +19,7 @@ This module enables:
 
 ---
 
-## 🔧 Usage
+## Usage
 
 To use this generator, create a class annotated with `@TemplateRegistration` and list all templates used by your provider.
 
@@ -56,7 +56,7 @@ This tells Cloudhopper to:
 
 ---
 
-## 📦 Template Directory Structure
+## Template Directory Structure
 
 Your templates must be available in:
 
@@ -81,7 +81,7 @@ You can optionally include documentation resources (like generated instructions 
 
 ---
 
-## 🧩 Generation Phases
+## Generation Phases
 
 Each template is associated with a phase:
 
@@ -97,7 +97,7 @@ The generator will call your templates in the correct order based on these phase
 
 ---
 
-## ⚙️ Annotations
+## Annotations
 
 Provided in the package `eu.cloudhopper.mc.generator.generic.annotations`:
 
@@ -106,7 +106,7 @@ Provided in the package `eu.cloudhopper.mc.generator.generic.annotations`:
 
 ---
 
-## 🛠 Developer Notes
+## Developer Notes
 
 - The generator uses Freemarker under the hood
 - You do not need to implement the generator SPI manually — just annotate your templates
@@ -115,7 +115,7 @@ Provided in the package `eu.cloudhopper.mc.generator.generic.annotations`:
 
 ---
 
-## 🚀 Related Modules
+## Related Modules
 
 - `deployment-config-generator-api`: defines the SPI and phase model
 - `deployment-config-processor`: invokes this generator during annotation processing

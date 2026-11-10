@@ -4,15 +4,15 @@ The easiest way to get started is the Maven Archetype. It generates a minimal
 Cloudhopper-based function project that can be deployed to various cloud providers
  using our provider-specific generators.
 
-## 🚀 Features
+## Features
 
 The Archetype creates a simple "Hello World!" function using cloudhopper annotations.
 Using commandline parameters you can configure where you want to deploy the function, or more accurately, what generator you want to use.
 If you want to use Maven to deploy your functions, the archetype can optionally add a Terraform-based deployment profile.
 
-## 🛠 Usage
+## Usage
 
-### 📦 Interactive (with prompts)
+### Interactive (with prompts)
 
 ```sh
     mvn archetype:generate \
@@ -21,7 +21,7 @@ If you want to use Maven to deploy your functions, the archetype can optionally 
       -DarchetypeVersion=1.0.1
 ```
 
-### ⚙️ Non-interactive (fully scripted)
+### Non-interactive (fully scripted)
 
 ```sh
     mvn archetype:generate \
@@ -40,7 +40,7 @@ If you want to use Maven to deploy your functions, the archetype can optionally 
 ```
 ---
 
-## 🧩 Supported Generators
+## Supported Generators
 
 You can specify one or more `generatorIds` (comma-separated) to activate support for the following providers:
 
@@ -53,7 +53,7 @@ You can specify one or more `generatorIds` (comma-separated) to activate support
 
 ---
 
-## 🧪 Terraform Support {#terraform-support}
+## Terraform Support {#terraform-support}
 
 If `includeTerraformProfile=true`, the generated project will include a `deploy-with-terraform` Maven profile that executes:
 
@@ -70,7 +70,7 @@ Customize the Terraform executable path and environment using project properties
 ```
 ---
 
-## 📋 Project Layout
+## Project Layout
 
 The generated project looks like this:
 
@@ -96,7 +96,7 @@ my-function
                     └── main.tf                 // customize to provide credentials, etc. 
 ```
 
-## 🏗️ Build the project
+## Build the project
 
 For each of the generatorIds specified, a profile is created in the pom that can be used to build the project and generate
 for the specified platform and generate the boilerplate needed for deployment.

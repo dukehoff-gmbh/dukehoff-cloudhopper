@@ -6,7 +6,7 @@ It is used internally by the `generator-gcp-terraform` module and is essential f
 
 ---
 
-## 🧩 Purpose
+## Purpose
 
 The `GcpCloudFunctionRequestHandler<I, O>` class:
 
@@ -18,7 +18,7 @@ The `GcpCloudFunctionRequestHandler<I, O>` class:
 
 ---
 
-## 🔧 Example Usage in a Generated Function
+## Example Usage in a Generated Function
 
 ```java
 public class MyFunction extends GcpCloudFunctionRequestHandler<MyInput, MyOutput> {
@@ -37,7 +37,7 @@ Google Cloud Functions will call `service(...)` on this class, which in turn:
 
 ---
 
-## 🧠 Internal Structure
+## Internal Structure
 
 | Method | Responsibility |
 |--------|----------------|
@@ -50,7 +50,7 @@ Some AWS/Azure-specific context features (ARN, logs, etc.) are not available on 
 
 ---
 
-## 💡 For Generator Developers
+## For Generator Developers
 
 If you are building your own GCP generator (or extending `generator-gcp-terraform`):
 
@@ -62,7 +62,7 @@ If you are building your own GCP generator (or extending `generator-gcp-terrafor
 
 ---
 
-## 📦 Module Overview
+## Module Overview
 
 | Component | Purpose |
 |----------|---------|
@@ -71,7 +71,7 @@ If you are building your own GCP generator (or extending `generator-gcp-terrafor
 
 ---
 
-## 📚 Related Modules
+## Related Modules
 
 | Module | Description |
 |--------|-------------|
