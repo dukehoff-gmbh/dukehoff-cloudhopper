@@ -57,7 +57,9 @@ the project:
 PROJECT_ID=<project-id>
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 
-# Cloud Storage publishes its events through Pub/Sub
+# Cloud Storage publishes its events through Pub/Sub; the first command creates
+# the Cloud Storage service agent if the project does not have it yet
+gcloud storage service-agent --project=$PROJECT_ID
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:service-$PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com" \
   --role="roles/pubsub.publisher"
