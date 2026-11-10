@@ -25,7 +25,8 @@ resource "google_eventarc_trigger" "${fid}_event" {
 
   destination {
     cloud_run_service {
-      service = google_cloudfunctions2_function.${fid}.service_config[0].service
+      # service_config[0].service is the full resource name; Eventarc wants the service name only
+      service = element(reverse(split("/", google_cloudfunctions2_function.${fid}.service_config[0].service)), 0)
       region  = var.gcp_region
     }
   }
