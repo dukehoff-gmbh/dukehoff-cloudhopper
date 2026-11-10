@@ -41,7 +41,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import com.google.cloud.ServiceOptions;
 import java.util.*;
 
 public class TestContextGcp implements TestContext {
@@ -194,6 +196,33 @@ public class TestContextGcp implements TestContext {
                 .createScoped(List.of("https://www.googleapis.com/auth/cloud-platform"));
         credentials.refreshIfExpired();
         return credentials.getAccessToken().getTokenValue();
+    }
+
+    /**
+     * Publishes a message to the Pub/Sub topic of that name in the default project.
+     */
+    @Override
+    public void sendQueueMessage(String queueName, String message) {
+        try {
+            String project = ServiceOptions.getDefaultProjectId();
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode body = mapper.createObjectNode();
+            body.putArray("messages").addObject()
+                    .put("data", Base64.getEncoder().encodeToString(message.getBytes(StandardCharsets.UTF_8)));
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://pubsub.googleapis.com/v1/projects/" + project + "/topics/" + queueName + ":publish"))
+                    .header("Authorization", "Bearer " + getAccessToken())
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)))
+                    .build();
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 300) {
+                throw new IllegalStateException("Publish returned " + response.statusCode() + ": " + response.body());
+            }
+            System.out.println("📨 Published to Pub/Sub topic " + queueName + ": " + response.body());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to publish a message to topic " + queueName, e);
+        }
     }
 
     private String functionNameToOutputKey(String functionName) {

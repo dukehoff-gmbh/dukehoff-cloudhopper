@@ -32,7 +32,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import eu.cloudhopper.mc.runtime.EventHandlerContext;
+import eu.cloudhopper.mc.runtime.EventMetadata;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
@@ -181,6 +186,58 @@ public abstract class AzureBaseFunctionWrapper<I, O> {
         } catch (Exception e) {
             context.getLogger().severe("Error in scheduled request: " + e.getMessage());
         }
+    }
+
+    /**
+     * Handles one message from a storage queue (queue-triggered function invocations).
+     * <p>
+     * An exception is passed on, so that the Functions host delivers the message again; after
+     * five attempts it moves the message to the {@code <queue>-poison} queue.
+     *
+     * @param message       the message body
+     * @param id            the message id
+     * @param dequeueCount  how often the message has been delivered, starting at 1
+     * @param insertionTime when the message was added to the queue, as sent by the host
+     * @param queueName     the name of the queue
+     * @param context       the Azure execution context
+     */
+    protected void handleQueueMessage(String message, String id, long dequeueCount, String insertionTime,
+                                      String queueName, ExecutionContext context) {
+        I input;
+        try {
+            input = parseBody(message);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Queue message " + id + " is not valid JSON for " + inputType, e);
+        }
+        EventMetadata meta = new EventMetadata(id, queueName, parseTime(insertionTime), (int) dequeueCount, null);
+        handler.handleRequest(input, new EventHandlerContext(new AzureContextAdapter(context), meta));
+    }
+
+    private static Instant parseTime(String time) {
+        if (time == null) {
+            return null;
+        }
+        String t = time.trim();
+        if (t.startsWith("\"") && t.endsWith("\"") && t.length() > 1) {
+            t = t.substring(1, t.length() - 1);
+        }
+        try {
+            return OffsetDateTime.parse(t).toInstant();
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private I parseBody(String body) throws IOException {
+        if (body == null || inputType == Void.class) {
+            return null;
+        }
+        if (inputType == String.class) {
+            return (I) body;
+        }
+        JavaType javaType = objectMapper.getTypeFactory().constructType(inputType);
+        return objectMapper.readValue(body, javaType);
     }
 
     /**

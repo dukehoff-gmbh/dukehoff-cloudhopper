@@ -44,6 +44,9 @@ import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 public class TestContextAws implements TestContext {
 
@@ -183,6 +186,15 @@ public class TestContextAws implements TestContext {
 
         } catch (Exception e) {
             return List.of("[Failed to fetch logs: " + e.getMessage() + "]");
+        }
+    }
+
+    @Override
+    public void sendQueueMessage(String queueName, String message) {
+        try (SqsClient sqs = SqsClient.create()) {
+            String url = sqs.getQueueUrl(GetQueueUrlRequest.builder().queueName(namePrefix + queueName).build()).queueUrl();
+            String id = sqs.sendMessage(SendMessageRequest.builder().queueUrl(url).messageBody(message).build()).messageId();
+            System.out.println("📨 Sent message " + id + " to SQS queue " + namePrefix + queueName);
         }
     }
 

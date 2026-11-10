@@ -49,7 +49,7 @@ public class HandlerGenerator {
     public static class ParamInfo {
 
         public enum ParamType {
-            BODY, PATH, QUERY, HEADER, CONTEXT
+            BODY, PATH, QUERY, HEADER, CONTEXT, EVENT_METADATA
         }
 
         private final ParamType type;
@@ -339,6 +339,12 @@ public class HandlerGenerator {
 
                 case CONTEXT:
                     methodBuilder.addStatement("$T $L = _ctx",
+                            toTypeName(p.getTypeName()), p.getVarName());
+                    break;
+
+                case EVENT_METADATA:
+                    // null when the invocation is not an event (HTTP, schedule, direct call)
+                    methodBuilder.addStatement("$T $L = _ctx == null ? null : _ctx.getEventMetadata()",
                             toTypeName(p.getTypeName()), p.getVarName());
                     break;
             }

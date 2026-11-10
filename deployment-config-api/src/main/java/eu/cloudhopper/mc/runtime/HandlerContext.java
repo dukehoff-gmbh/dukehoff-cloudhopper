@@ -75,4 +75,17 @@ public interface HandlerContext {
      * @return the memory limit for the function in megabytes
      */
     int getMemoryLimitInMB();
+
+    /**
+     * Returns the metadata of the event that invoked the function.
+     *
+     * <p>Functions usually declare a parameter of type {@link EventMetadata} instead of calling
+     * this method.</p>
+     *
+     * @return the event metadata, or {@code null} if the invocation was not an event
+     *         (for example an HTTP request or a schedule)
+     */
+    default EventMetadata getEventMetadata() {
+        return null;
+    }
 }

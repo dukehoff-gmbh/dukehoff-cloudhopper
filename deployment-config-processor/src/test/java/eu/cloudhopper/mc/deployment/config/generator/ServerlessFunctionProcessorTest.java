@@ -33,6 +33,10 @@ import static com.google.testing.compile.CompilationSubject.assertThat;
 import static com.google.testing.compile.Compiler.javac;
 import eu.cloudhopper.mc.runtime.CloudRequestHandler;
 import eu.cloudhopper.mc.runtime.Headers;
+import eu.cloudhopper.mc.runtime.EventHandlerContext;
+import eu.cloudhopper.mc.runtime.EventMetadata;
+import eu.cloudhopper.mc.runtime.HandlerContext;
+import java.time.Instant;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -136,6 +140,57 @@ public class ServerlessFunctionProcessorTest {
         String result = handler.handleRequest("payload", Map.of("id", "42"), Map.of("flag", "true", "q", "x"),
                 Headers.of(Map.of("x-ratio", "0.5")), null);
         assertEquals("42|true|x|0.5|true|payload", result);
+    }
+
+    @Test
+    public void eventMetadataIsTakenFromTheContext() throws Exception {
+        CloudRequestHandler<String, String> handler = compileAndLoad("com.example.QueueService", ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import eu.cloudhopper.mc.runtime.EventMetadata;\n"
+                + "public class QueueService {\n"
+                + "  @Function(name=\"orders\")\n"
+                + "  @EventTrigger(source=EventSource.QUEUE, name=\"orders\")\n"
+                + "  public String onOrder(String order, EventMetadata meta) {\n"
+                + "    return order + \"|\" + (meta == null ? \"none\" : meta.getId() + \"/\" + meta.getDeliveryAttempt());\n"
+                + "  }\n"
+                + "}\n",
+                "com.example.QueueService_onOrder_Handler");
+
+        EventMetadata meta = new EventMetadata("m-1", "orders", Instant.EPOCH, 2, Map.of("k", "v"));
+        assertEquals("o1|m-1/2", handler.handleRequest("o1", new EventHandlerContext(new StubContext(), meta)));
+        // not an event: no metadata
+        assertEquals("o2|none", handler.handleRequest("o2", new StubContext()));
+        assertEquals("o3|none", handler.handleRequest("o3", null));
+    }
+
+    @Test
+    public void eventSourceNamesMustBeValidOnEveryTarget() {
+        for (String name : new String[]{"Orders", "or", "orders_in", "orders--in", "-orders", "1orders"}) {
+            Compilation compilation = javac()
+                    .withProcessors(new ServerlessFunctionProcessor())
+                    .compile(JavaFileObjects.forSourceString("com.example.BadQueue", ""
+                            + "package com.example;\n"
+                            + "import eu.cloudhopper.mc.annotations.*;\n"
+                            + "public class BadQueue {\n"
+                            + "  @Function(name=\"bad\")\n"
+                            + "  @EventTrigger(source=EventSource.QUEUE, name=\"" + name + "\")\n"
+                            + "  public void on(String message) { }\n"
+                            + "}\n"));
+            assertThat(compilation).hadErrorContaining("@EventTrigger name '" + name + "' is not valid on every target");
+        }
+    }
+
+    /** A platform context with fixed values. */
+    private static final class StubContext implements HandlerContext {
+        @Override public String getRequestId() { return "r"; }
+        @Override public String getFunctionName() { return "f"; }
+        @Override public String getFunctionVersion() { return "1"; }
+        @Override public String getInvokedFunctionArn() { return null; }
+        @Override public String getLogGroupName() { return null; }
+        @Override public String getLogStreamName() { return null; }
+        @Override public long getRemainingTimeInMillis() { return 0; }
+        @Override public int getMemoryLimitInMB() { return 0; }
     }
 
     @SuppressWarnings("unchecked")

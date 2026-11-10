@@ -35,7 +35,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 
 /**
- * Routes Lambda invocations to the appropriate handler based on input type.
+ * Routes Lambda invocations to the appropriate handler based on input type: API Gateway
+ * events, SQS events, schedules and direct calls.
  */
 public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Object> {
 
@@ -43,15 +44,29 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
     private final RequestHandler<I, O> plain;
     private final RequestHandler<APIGatewayV2ProxyRequestEvent, APIGatewayV2ProxyResponseEvent> proxy;
     private final RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> http;
+    private final SqsEventHandler<I, O> sqs;
 
     public ApiGatewayEventRouter(
             RequestHandler<I, O> plain,
             RequestHandler<APIGatewayV2ProxyRequestEvent, APIGatewayV2ProxyResponseEvent> proxy,
             RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> http
     ) {
+        this(plain, proxy, http, null);
+    }
+
+    /**
+     * @param sqs handles SQS events (queue triggers); {@code null} if the function has none
+     */
+    public ApiGatewayEventRouter(
+            RequestHandler<I, O> plain,
+            RequestHandler<APIGatewayV2ProxyRequestEvent, APIGatewayV2ProxyResponseEvent> proxy,
+            RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> http,
+            SqsEventHandler<I, O> sqs
+    ) {
         this.plain = plain;
         this.proxy = proxy;
         this.http = http;
+        this.sqs = sqs;
     }
 
     @Override
@@ -65,6 +80,10 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
         } else if (input instanceof Map) {
             // Try to detect based on available fields
             Map<?, ?> map = (Map<?, ?>) input;
+
+            if (sqs != null && SqsEventHandler.isSqsEvent(map)) {
+                return sqs.handle(map, context);
+            }
 
             if (map.containsKey("version") && map.containsKey("routeKey") && map.containsKey("rawPath")) {
                 // Looks like an APIGatewayV2HTTPEvent
