@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.0">
 <title data-rh="true">Google Cloud Setup Guide | Dukehoff Cloudhopper</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://cloudhopper.eu/img/social-card.png"><meta data-rh="true" name="twitter:image" content="https://cloudhopper.eu/img/social-card.png"><meta data-rh="true" property="og:url" content="https://cloudhopper.eu/docs/setup/gcp-prerequisites"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="Java, serverless, multi-cloud, AWS Lambda, Azure Functions, Google Cloud Functions, Terraform, OpenAPI, annotation processor"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Google Cloud Setup Guide | Dukehoff Cloudhopper"><meta data-rh="true" name="description" content="This guide prepares your environment for deploying Cloudhopper functions to"><meta data-rh="true" property="og:description" content="This guide prepares your environment for deploying Cloudhopper functions to"><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://cloudhopper.eu/docs/setup/gcp-prerequisites"><link data-rh="true" rel="alternate" href="https://cloudhopper.eu/docs/setup/gcp-prerequisites" hreflang="en"><link data-rh="true" rel="alternate" href="https://cloudhopper.eu/docs/setup/gcp-prerequisites" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Google Cloud Setup Guide","item":"https://cloudhopper.eu/docs/setup/gcp-prerequisites"}]}</script><link rel="stylesheet" href="/assets/css/styles.d76b75da.css">
-<script src="/assets/js/runtime~main.bca3a931.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.2679e74d.js" defer="defer"></script>
 <script src="/assets/js/main.287c2b9a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -32,7 +32,8 @@ for your operating system, then sign in:</p>
 Application Default Credentials:</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">gcloud auth application-default login</span><br></span></code></pre></div></div>
 <p>The account needs permission to create Cloud Functions, storage buckets,
-API Gateway resources and, for scheduled functions, Cloud Scheduler jobs.
+API Gateway resources and, for scheduled functions, Cloud Scheduler jobs; for
+queue-triggered functions also Pub/Sub topics and Eventarc triggers.
 Terraform reports any API that is not yet enabled in the project, together
 with the link to enable it.</p>
 <hr>
@@ -41,8 +42,10 @@ with the link to enable it.</p>
 declares these variables:</p>
 <table><thead><tr><th>Variable</th><th>Example</th></tr></thead><tbody><tr><td><code>gcp_project_id</code></td><td><code>my-project-123</code></td></tr><tr><td><code>gcp_region</code></td><td><code>europe-west3</code></td></tr><tr><td><code>gcp_zone</code></td><td><code>europe-west3-a</code></td></tr><tr><td><code>project_name</code></td><td><code>my-cloudhopper-project</code></td></tr><tr><td><code>environment</code></td><td><code>dev</code></td></tr><tr><td><code>cloudscheduler_service_account_email</code></td><td><code>scheduler@my-project-123.iam.gserviceaccount.com</code></td></tr></tbody></table>
 <p>The last one is the service account Cloud Scheduler uses to call scheduled
-functions; it is only used if your project contains a
-<a href="/docs/guides/writing-functions#scheduledtrigger"><code>@ScheduledTrigger</code></a>.</p>
+functions, and Eventarc to deliver queue messages; it is only used if your
+project contains a
+<a href="/docs/guides/writing-functions#scheduledtrigger"><code>@ScheduledTrigger</code></a> or an
+<a href="/docs/guides/writing-functions#eventtrigger"><code>@EventTrigger</code></a>.</p>
 <p>Set the variables in the generated <code>gcp.auto.tfvars</code>, which Terraform loads
 automatically, or as environment variables (<code>TF_VAR_gcp_project_id</code>, …).</p>
 <hr>
