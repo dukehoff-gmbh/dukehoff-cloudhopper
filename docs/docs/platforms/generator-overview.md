@@ -1,4 +1,4 @@
-# ☁️ Cloud Provider Generator Overview
+# Cloud Provider Generator Overview
 
 Cloudhopper supports serverless deployment to multiple cloud providers through provider-specific **generator modules**. These generators produce:
 
@@ -8,7 +8,7 @@ Cloudhopper supports serverless deployment to multiple cloud providers through p
 
 ---
 
-## ✨ Comparison
+## Comparison
 
 | Feature                          | AWS Generator                          | Azure Generator                          | GCP Generator                              |
 |----------------------------------|----------------------------------------|------------------------------------------|--------------------------------------------|
@@ -23,7 +23,7 @@ Cloudhopper supports serverless deployment to multiple cloud providers through p
 
 ---
 
-## 🛠️ Maven Configuration (Common Structure)
+## Maven Configuration (Common Structure)
 
 To activate a generator, you need:
 
@@ -54,7 +54,7 @@ To activate a generator, you need:
 
 ---
 
-## 🔌 Related Modules
+## Related Modules
 
 | Generator Module           | Runtime Adapter Module |
 |---------------------------|------------------------|
@@ -64,7 +64,7 @@ To activate a generator, you need:
 
 ---
 
-## 📚 See Also
+## See Also
 
 - [AWS Generator](../modules/provider-aws.md)
 - [Azure Generator](../modules/provider-azure.md)

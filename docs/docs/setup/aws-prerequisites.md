@@ -1,4 +1,4 @@
-# 🛠 AWS Setup Guide
+# AWS Setup Guide
 
 This guide helps you prepare your environment for deploying Cloudhopper functions to **AWS Lambda** using the `aws-terraform` generator.
 
@@ -14,7 +14,7 @@ If you don’t have an AWS account yet:
 
 ## Install Required Tools
 
-### ✅ AWS CLI
+### AWS CLI
 
 Install the AWS CLI:
 ```bash

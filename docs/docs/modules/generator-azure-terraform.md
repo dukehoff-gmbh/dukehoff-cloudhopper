@@ -1,4 +1,4 @@
-# ⚙️ Azure Terraform Generator
+# Azure Terraform Generator
 
 This module provides a Cloudhopper generator that enables the deployment of annotated Java functions as **Azure Functions** using **Terraform** and **Java handler code generation**.
 
@@ -6,7 +6,7 @@ Azure is unique in that Cloudhopper generates most of the glue code as Java clas
 
 ---
 
-## 📢 Documentation Notice:
+## Documentation Notice:
 
 All Cloudhopper functions on Azure are exposed via HTTP under the `/api/{name}` route unless otherwise specified with an `@HttpTrigger(path="...")` annotation.
 - Functions without an @HttpTrigger will default to their `@Function(name)` value as the HTTP route.
@@ -14,7 +14,7 @@ All Cloudhopper functions on Azure are exposed via HTTP under the `/api/{name}` 
 
 Therefore, every Cloudhopper function in Azure is accessible via an HTTP call to its assigned route.
 
-## 📦 How to Use
+## How to Use
 
 To use this generator in your own project, configure the following:
 
@@ -130,7 +130,7 @@ This plugin is used to **package and deploy** the generated Azure function handl
 
 ---
 
-## 📁 Templates
+## Templates
 
 Templates are located under:
 
@@ -148,7 +148,7 @@ src/main/resources/templates/azure-terraform/
 
 ---
 
-## 🔌 Template Registration
+## Template Registration
 
 ```java
 @TemplateRegistration(
@@ -170,7 +170,7 @@ public class AzureTerraformJava21TemplateRegistration { ... }
 
 ---
 
-## 📂 Output
+## Output
 
 | Artifact                       | Location                                |
 |--------------------------------|-----------------------------------------|
@@ -181,7 +181,7 @@ public class AzureTerraformJava21TemplateRegistration { ... }
 
 ---
 
-## 📚 Related Modules
+## Related Modules
 
 | Module              | Description                                                 |
 |---------------------|-------------------------------------------------------------|

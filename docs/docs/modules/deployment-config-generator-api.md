@@ -10,7 +10,7 @@ It defines the **SPI**, annotations, and support types used by integrators to de
 
 ---
 
-## 💡 Purpose
+## Purpose
 
 This module is intended for:
 - Platform integrators building custom code generators
@@ -19,7 +19,7 @@ This module is intended for:
 
 ---
 
-## 🔌 Key Components
+## Key Components
 
 ### SPI
 
@@ -43,7 +43,7 @@ This module is intended for:
   Used to signal errors during generation.
 ---
 
-## 🧩 Example
+## Example
 
 ~~~java
 @GeneratorFeatures(
@@ -78,7 +78,7 @@ public class AwsTemplateRegistration {
 
 ---
 
-## 📦 Package Overview
+## Package Overview
 
 | Package                                      | Description                                  |
 |---------------------------------------------|----------------------------------------------|
@@ -88,7 +88,7 @@ public class AwsTemplateRegistration {
 
 ---
 
-## 🚀 Related Modules
+## Related Modules
 
 - `deployment-config-processor`: consumes this SPI to perform annotation processing
 - `deployment-config-generator-generic`: default implementation using templates

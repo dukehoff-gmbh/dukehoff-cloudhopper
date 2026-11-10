@@ -1,4 +1,4 @@
-# 🛠 Azure Setup Guide
+# Azure Setup Guide
 
 This guide prepares your environment for deploying Cloudhopper functions to
 **Azure Functions** with the `azure-terraform` generator.

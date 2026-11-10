@@ -10,7 +10,7 @@ It provides the key building blocks for function declaration, scheduling, and AP
 
 ---
 
-## 💡 Purpose
+## Purpose
 
 The goal of this module is to allow application developers to define serverless functions in a clean, portable way using standard Java annotations and interfaces.
 
@@ -18,7 +18,7 @@ This module is **used by developers**, **referenced by integrators**, and **cons
 
 ---
 
-## 📦 Package Overview
+## Package Overview
 
 | Package                             | Description                                                  |
 |-------------------------------------|--------------------------------------------------------------|
@@ -27,7 +27,7 @@ This module is **used by developers**, **referenced by integrators**, and **cons
 
 ---
 
-## 🧩 Key Annotations
+## Key Annotations
 
 ### `@Function`
 Marks a **method** as a deployable cloud function. The processor generates the
@@ -63,7 +63,7 @@ Declares HTTP API metadata used to configure gateway routes.
 
 ---
 
-## 🔌 Binding request data
+## Binding request data
 
 Instead of implementing a handler interface, you declare exactly the parameters
 your method needs and annotate them. The processor deserializes and converts
@@ -92,7 +92,7 @@ public Player update(@RequestBody Player input,
 
 ---
 
-## ⚙️ Runtime Interfaces
+## Runtime Interfaces
 
 These types live in `eu.cloudhopper.mc.runtime`.
 
@@ -126,14 +126,14 @@ The platform adapter (e.g. AWS, Azure, GCP) supplies this to your function. It g
 
 ---
 
-## 🔗 Related Modules
+## Related Modules
 
 - `deployment-config-generator-api`: used by integrators to build custom code generators
 - `deployment-config-processor`: uses this module to process annotations at compile time
 
 ---
 
-## 👤 Intended Audience
+## Intended Audience
 
 This module is for:
 - Application developers writing cloud functions
