@@ -49,7 +49,7 @@ import org.springframework.http.ResponseEntity;
 /**
  * Starts the controllers generated for the springboot-http target from the shared test functions
  * and calls them over HTTP: header (#13), path and query parameters (#15) must reach the function,
- * and queue events posted to /events/<function> (#2) must invoke it.
+ * and queue and storage events posted to /events/<function> (#2) must invoke it.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         classes = SpringBootGeneratedControllersTest.App.class)
@@ -130,4 +130,37 @@ class SpringBootGeneratedControllersTest {
         assertEquals("[{\"id\":10,\"name\":\"Player10\",\"ranking\":10},{\"id\":20,\"name\":\"Player20\",\"ranking\":20}]",
                 response.getBody());
     }
+    @Test
+    void storageEventsArePostedToTheEventEndpoint() {
+        List<String> messages = new ArrayList<>();
+        Handler collector = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                messages.add(record.getMessage());
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        Logger logger = Logger.getLogger(StorageUploadFunction.class.getName());
+        logger.addHandler(collector);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            ResponseEntity<Void> response = rest.postForEntity("/events/storageupload",
+                    new HttpEntity<>("{\"key\":\"in/a.txt\",\"size\":7}", headers), Void.class);
+
+            assertEquals(204, response.getStatusCode().value());
+            // the bucket defaults to the name in the annotation
+            assertEquals(List.of("Object uploaded: dukehoff-cloudhopper-tck-uploads/in/a.txt (7 bytes)"), messages);
+        } finally {
+            logger.removeHandler(collector);
+        }
+    }
+
 }

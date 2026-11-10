@@ -1,3 +1,4 @@
+<#include "storageQueueName.ftl">
 package ${handlerInfo.handlerPackage};
 
 import com.microsoft.azure.functions.*;
@@ -8,7 +9,6 @@ import ${handlerInfo.outputTypeImport};
 import ${handlerInfo.handlerFullyQualifiedName};
 import com.google.gson.reflect.TypeToken;
 
-<#-- event sources other than QUEUE get no Java function; the class still compiles -->
 public class Azure${handlerInfo.handlerClassName}EventFunction extends AzureBaseFunctionWrapper<${handlerInfo.inputType}, ${handlerInfo.outputType}> {
 
     public Azure${handlerInfo.handlerClassName}EventFunction() {
@@ -24,6 +24,16 @@ public class Azure${handlerInfo.handlerClassName}EventFunction extends AzureBase
             @BindingName("InsertionTime") String insertionTime,
             final ExecutionContext context) {
         handleQueueMessage(message, id, dequeueCount, insertionTime, "${eventName}", context);
+    }
+<#elseif eventSource == "STORAGE">
+
+    <#-- Event Grid puts the "blob created" events of the container on this queue (see storage.ftl) -->
+    @FunctionName("${handlerInfo.functionId}_event")
+    public void onStorageEvent(
+            @QueueTrigger(name = "message", queueName = "${storageEventQueue(eventName)}", connection = "AzureWebJobsStorage") String message,
+            @BindingName("DequeueCount") long dequeueCount,
+            final ExecutionContext context) {
+        handleBlobCreatedEvent(message, dequeueCount, context);
     }
 </#if>
 }

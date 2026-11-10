@@ -86,6 +86,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     javaFile = false
             ),
             @Template(
+                    phase = GenerationPhase.EVENT,
+                    templateName = "storage.ftl",
+                    description = "Generates the Cloud Storage bucket and the Eventarc trigger (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
+            ),
+            @Template(
                     phase = GenerationPhase.SHARED,
                     templateName = "shared.ftl",
                     description = "Generates shared resources (e.g., provider blocks, logging config)",

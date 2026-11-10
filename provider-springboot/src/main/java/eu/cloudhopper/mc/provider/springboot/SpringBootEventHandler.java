@@ -33,6 +33,8 @@ import eu.cloudhopper.mc.runtime.CloudRequestHandler;
 import eu.cloudhopper.mc.runtime.EventHandlerContext;
 import eu.cloudhopper.mc.runtime.EventMetadata;
 import eu.cloudhopper.mc.runtime.Headers;
+import eu.cloudhopper.mc.runtime.StorageEvent;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
@@ -51,7 +53,8 @@ import java.util.UUID;
  * {@code POST /events/<function name>}.
  * <p>
  * The request follows the CloudEvents HTTP binding in binary mode: the body is the event data
- * (for a queue, the message as JSON), and the optional headers {@code ce-id}, {@code ce-source}
+ * (for a queue, the message as JSON; for a bucket, {@code {"bucket": ..., "key": ..., "size": ...}},
+ * where {@code bucket} defaults to the name in the annotation), and the optional headers {@code ce-id}, {@code ce-source}
  * and {@code ce-time} fill the {@link EventMetadata}; other {@code ce-*} headers become its
  * attributes. A successful invocation answers {@code 204 No Content}; an exception answers with
  * an error status, so that the caller can deliver the event again.
@@ -97,7 +100,7 @@ public abstract class SpringBootEventHandler<I, O> {
                 parseTime(h.get("ce-time")),
                 0,
                 attributes);
-        handler.handleRequest(parseBody(body), new EventHandlerContext(new LocalHandlerContext(), meta));
+        handler.handleRequest(parseBody(body, defaultSource), new EventHandlerContext(new LocalHandlerContext(), meta));
         return ResponseEntity.noContent().build();
     }
 
@@ -113,12 +116,20 @@ public abstract class SpringBootEventHandler<I, O> {
     }
 
     @SuppressWarnings("unchecked")
-    private I parseBody(String body) throws IOException {
+    private I parseBody(String body, String defaultSource) throws IOException {
         if (body == null || body.isEmpty() || inputType.getRawClass() == Void.class) {
             return null;
         }
         if (inputType.getRawClass() == String.class) {
             return (I) body;
+        }
+        if (inputType.getRawClass() == StorageEvent.class) {
+            JsonNode node = objectMapper.readTree(body);
+            if (!node.hasNonNull("key")) {
+                throw new IllegalArgumentException("A storage event needs a \"key\"");
+            }
+            return (I) new StorageEvent(node.path("bucket").asText(defaultSource), node.path("key").asText(),
+                    node.path("size").asLong(-1), StorageEvent.Kind.CREATED);
         }
         return objectMapper.readValue(body, inputType);
     }

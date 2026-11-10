@@ -37,6 +37,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import eu.cloudhopper.mc.runtime.EventHandlerContext;
 import eu.cloudhopper.mc.runtime.EventMetadata;
+import eu.cloudhopper.mc.runtime.StorageEvent;
 import java.io.BufferedWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -63,6 +64,9 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
 
     /** The CloudEvent type Eventarc sets for Pub/Sub messages. */
     private static final String PUBSUB_MESSAGE_PUBLISHED = "google.cloud.pubsub.topic.v1.messagePublished";
+
+    /** The CloudEvent type Eventarc sets for objects created or overwritten in Cloud Storage. */
+    private static final String STORAGE_OBJECT_FINALIZED = "google.cloud.storage.object.v1.finalized";
 
     private final CloudRequestHandler<I, O> handler;
     private final Type inputType;
@@ -91,6 +95,10 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
     public void service(HttpRequest request, HttpResponse response) throws IOException {
         if (PUBSUB_MESSAGE_PUBLISHED.equals(request.getFirstHeader("ce-type").orElse(null))) {
             handlePubSubEvent(request, response);
+            return;
+        }
+        if (STORAGE_OBJECT_FINALIZED.equals(request.getFirstHeader("ce-type").orElse(null))) {
+            handleStorageEvent(request, response);
             return;
         }
         I input = parseInput(request);
@@ -152,6 +160,49 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
 
         EventMetadata meta = new EventMetadata(id, source, time, attempt, attributes);
         handler.handleRequest(parseData(data), new EventHandlerContext(new GcpContextAdapter(request), meta));
+        response.setStatusCode(204);
+    }
+
+    /**
+     * Handles an object-finalized event from Cloud Storage delivered by Eventarc (storage
+     * triggers). The body is the object resource {@code {"bucket": ..., "name": ...,
+     * "size": "123", "contentType": ...}}. An exception makes the framework answer with an error
+     * status, so that the event is delivered again.
+     */
+    @SuppressWarnings("unchecked")
+    private void handleStorageEvent(HttpRequest request, HttpResponse response) throws IOException {
+        String body = request.getReader().lines().reduce("", (accumulator, actual) -> accumulator + actual);
+        JsonObject object = JsonParser.parseString(body).getAsJsonObject();
+
+        String bucket = object.has("bucket") ? object.get("bucket").getAsString() : null;
+        String name = object.has("name") ? object.get("name").getAsString() : null;
+        long size = -1;
+        if (object.has("size")) {
+            try {
+                size = Long.parseLong(object.get("size").getAsString());
+            } catch (NumberFormatException ignored) {
+                // leave the size unknown
+            }
+        }
+        StorageEvent storageEvent = new StorageEvent(bucket, name, size, StorageEvent.Kind.CREATED);
+
+        Instant time = null;
+        String eventTime = request.getFirstHeader("ce-time").orElse(null);
+        if (eventTime != null) {
+            try {
+                time = Instant.parse(eventTime);
+            } catch (DateTimeParseException ignored) {
+                // leave the time unknown
+            }
+        }
+        Map<String, String> attributes = new HashMap<>();
+        if (object.has("contentType") && !object.get("contentType").isJsonNull()) {
+            attributes.put("contentType", object.get("contentType").getAsString());
+        }
+        EventMetadata meta = new EventMetadata(request.getFirstHeader("ce-id").orElse(null),
+                request.getFirstHeader("ce-source").orElse(null), time, 0, attributes);
+        I input = inputType == StorageEvent.class ? (I) storageEvent : null;
+        handler.handleRequest(input, new EventHandlerContext(new GcpContextAdapter(request), meta));
         response.setStatusCode(204);
     }
 

@@ -79,14 +79,23 @@ public void cleanup() {
 
 ### `@EventTrigger`
 
-Invokes the function once for each message on a queue. The message body is
-deserialized from JSON into the body parameter, just like an HTTP request body.
+Invokes the function once for each event from a queue or a storage bucket.
 
 | Attribute | Default | Description |
 |-----------|---------|-------------|
-| `source` | — (required) | The kind of source; `EventSource.QUEUE` for now |
-| `name` | — (required) | Name of the queue: 3 to 63 lowercase letters, digits and single hyphens, starting with a letter |
-| `create` | `true` | `true` creates the queue with the function; `false` connects to an existing one of that name |
+| `source` | — (required) | `EventSource.QUEUE` or `EventSource.STORAGE` |
+| `name` | — (required) | Name of the queue or bucket: 3 to 63 lowercase letters, digits and single hyphens, starting with a letter |
+| `create` | `true` | `true` creates the queue or bucket with the function; `false` connects to an existing one of that name |
+
+Delivery is **at least once**: when the function throws, the platform delivers
+the event again, so make the function tolerate duplicates. A parameter of type
+`EventMetadata` gives you the event id, source, time, delivery attempt and
+attributes; on invocations that are not events it is `null`.
+
+#### Queues
+
+For `EventSource.QUEUE`, the message body is deserialized from JSON into the
+body parameter, just like an HTTP request body.
 
 ```java
 @Function(name = "orderReceived")
@@ -96,8 +105,6 @@ public void onOrder(Order order, EventMetadata meta) {
 }
 ```
 
-Each target maps the queue to its native service:
-
 | Target | Queue | Notes |
 |--------|-------|-------|
 | `aws-terraform` | SQS queue | One message per invocation; failed messages are reported individually and delivered again |
@@ -105,10 +112,31 @@ Each target maps the queue to its native service:
 | `gcp-terraform` | Pub/Sub topic, delivered through Eventarc | Requires the Eventarc and Pub/Sub APIs in the project |
 | `springboot-http` | `POST /events/<function name>` | The body is the message; optional `ce-id`, `ce-source` and `ce-time` headers (CloudEvents) fill the metadata. Answers `204`, or an error status if the function throws |
 
-Delivery is **at least once**: when the function throws, the platform delivers
-the message again, so make the function tolerate duplicates. A parameter of type
-`EventMetadata` gives you the message id, source, time, delivery attempt and
-attributes; on invocations that are not events it is `null`.
+#### Storage buckets
+
+For `EventSource.STORAGE`, the function is invoked for every object created or
+overwritten in the bucket. Its body parameter, if it has one, must be a
+`StorageEvent`: bucket, key and size of the object. The function reads the
+content itself if it needs it, with the storage client of the platform.
+
+```java
+@Function(name = "invoiceUploaded")
+@EventTrigger(source = EventSource.STORAGE, name = "acme-invoices")
+public void onUpload(StorageEvent event) {
+    // event.getBucket(), event.getKey(), event.getSize()
+}
+```
+
+| Target | Bucket | Notes |
+|--------|--------|-------|
+| `aws-terraform` | S3 bucket with an event notification | The bucket is named `<cloudhopper_name_prefix><name>`. S3 keeps one notification configuration per bucket: with `create = false`, it replaces the notifications the bucket already has |
+| `azure-terraform` | Blob container in the function app's storage account | Event Grid puts the events on the storage queue `<name>-events`, which the function reads |
+| `gcp-terraform` | Cloud Storage bucket in `gcp_region`, delivered through Eventarc | Requires two one-time IAM grants, see [Storage triggers](../setup/gcp-prerequisites#storage-triggers) |
+| `springboot-http` | `POST /events/<function name>` | The body is `{"bucket": ..., "key": ..., "size": ...}`; `bucket` defaults to the name in the annotation |
+
+Bucket names on AWS and GCP are global across all accounts, so choose one that
+nobody else uses, for example one starting with your company name. Terraform
+does not delete a bucket that still contains objects.
 
 ### When a target does not support something
 

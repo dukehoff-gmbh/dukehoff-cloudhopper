@@ -50,6 +50,7 @@ import eu.cloudhopper.mc.annotations.HttpTrigger;
 import eu.cloudhopper.mc.annotations.PathParam;
 import eu.cloudhopper.mc.annotations.QueryParam;
 import eu.cloudhopper.mc.annotations.ScheduledTrigger;
+import eu.cloudhopper.mc.annotations.EventSource;
 import eu.cloudhopper.mc.annotations.EventTrigger;
 import java.util.regex.Pattern;
 import eu.cloudhopper.mc.deployment.config.generator.HandlerGenerator.MethodHandlerInfo;
@@ -77,6 +78,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
     private Elements elementUtils;
     private TypeMirror contextType;
     private TypeMirror eventMetadataType;
+    private TypeMirror storageEventType;
 
     /**
      * Event source names valid on every target: Azure queue names are the strictest
@@ -94,6 +96,9 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                 .asType();
         this.eventMetadataType = elementUtils
                 .getTypeElement("eu.cloudhopper.mc.runtime.EventMetadata")
+                .asType();
+        this.storageEventType = elementUtils
+                .getTypeElement("eu.cloudhopper.mc.runtime.StorageEvent")
                 .asType();
     }
 
@@ -147,7 +152,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                 }
             }
 
-            if (!validateParams(m, params) || (event != null && !validateEventTrigger(m, event))) {
+            if (!validateParams(m, params) || (event != null && !validateEventTrigger(m, event, params))) {
                 continue;
             }
             String pkg = elementUtils.getPackageOf(cls).getQualifiedName().toString();
@@ -217,13 +222,26 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
         return true;
     }
 
-    private boolean validateEventTrigger(ExecutableElement method, EventTrigger event) {
+    private boolean validateEventTrigger(ExecutableElement method, EventTrigger event, List<ParamInfo> params) {
         String name = event.name();
         if (name.length() < 3 || name.length() > 63 || !EVENT_SOURCE_NAME.matcher(name).matches()) {
             processingEnv.getMessager().printMessage(ERROR,
                     "@EventTrigger name '" + name + "' is not valid on every target: use 3 to 63 lowercase"
                     + " letters, digits and single hyphens, starting with a letter.", method);
             return false;
+        }
+        if (event.source() == EventSource.STORAGE) {
+            for (VariableElement p : method.getParameters()) {
+                boolean isBody = params.stream().anyMatch(pi -> pi.getType() == BODY
+                        && pi.getVarName().equals(p.getSimpleName().toString()));
+                if (isBody && !typeUtils.isSameType(p.asType(), storageEventType)) {
+                    processingEnv.getMessager().printMessage(ERROR,
+                            "A function with @EventTrigger(source = STORAGE) receives a"
+                            + " eu.cloudhopper.mc.runtime.StorageEvent; parameter '" + p.getSimpleName()
+                            + "' has type " + p.asType() + ".", p);
+                    return false;
+                }
+            }
         }
         return true;
     }

@@ -119,7 +119,7 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
             @Template(
                     phase = GenerationPhase.EVENT,
                     templateName = "queueFunction.ftl",
-                    description = "Generates a Function with @QueueTrigger",
+                    description = "Generates a Function with @QueueTrigger for queue messages and blob events",
                     outputFileExtension = "java",
                     outputSubDirectory = "",
                     javaFile = true
@@ -128,6 +128,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     phase = GenerationPhase.EVENT,
                     templateName = "queue.ftl",
                     description = "Generates the storage queue (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.EVENT,
+                    templateName = "storage.ftl",
+                    description = "Generates the blob container and its Event Grid subscription (Terraform)",
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
                     javaFile = false

@@ -18,7 +18,8 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
   </#if>
   environment {
     variables = {
-      # Add any environment variables your function needs
+      # lets the runtime report bucket and queue names without the prefix
+      CLOUDHOPPER_NAME_PREFIX = var.cloudhopper_name_prefix
     }
   }
 }
