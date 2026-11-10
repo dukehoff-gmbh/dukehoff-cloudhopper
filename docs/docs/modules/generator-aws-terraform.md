@@ -1,4 +1,4 @@
-# ☁️ AWS Terraform Generator
+# AWS Terraform Generator
 
 This module provides a Cloudhopper generator for deploying annotated Java functions as **AWS Lambda functions** using **Terraform**.
 
@@ -10,7 +10,7 @@ It generates:
 
 ---
 
-## 📦 How to Use
+## How to Use
 
 To enable this generator in your own project, you need to:
 
@@ -60,7 +60,7 @@ This setup enables Cloudhopper to generate AWS-specific Terraform and handler co
 
 ---
 
-## 📁 Templates
+## Templates
 
 Templates used by this generator are located under:
 
@@ -79,7 +79,7 @@ src/main/resources/templates/aws-terraform/
 
 ---
 
-## 🔌 Template Registration
+## Template Registration
 
 The generator is registered via:
 
@@ -106,7 +106,7 @@ Cloudhopper uses Java’s ServiceLoader (SPI) mechanism to discover and apply th
 
 ---
 
-## 📂 Output
+## Output
 
 | Artifact                       | Location                                 |
 |--------------------------------|------------------------------------------|
@@ -117,7 +117,7 @@ Cloudhopper uses Java’s ServiceLoader (SPI) mechanism to discover and apply th
 
 ---
 
-## 🛠️ Notes for Generator Developers
+## Notes for Generator Developers
 
 - Handler classes extend `AwsLambdaRequestHandler` from the `provider-aws` module
 - The generated infrastructure assumes the use of Terraform to deploy Lambda, IAM, and API Gateway resources
@@ -125,7 +125,7 @@ Cloudhopper uses Java’s ServiceLoader (SPI) mechanism to discover and apply th
 
 ---
 
-## 📚 Related Modules
+## Related Modules
 
 | Module              | Purpose                                               |
 |---------------------|-------------------------------------------------------|

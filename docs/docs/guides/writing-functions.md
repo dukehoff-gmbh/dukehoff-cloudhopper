@@ -2,7 +2,7 @@
 title: Writing Functions
 ---
 
-# ✍️ Writing Functions
+# Writing Functions
 
 With Cloudhopper you write **plain Java methods** and describe them with a few
 annotations. You never implement a cloud-specific interface: the annotation

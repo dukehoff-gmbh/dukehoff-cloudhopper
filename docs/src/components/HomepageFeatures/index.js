@@ -1,4 +1,3 @@
-import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import Heading from '@theme/Heading';
 import styles from './styles.module.css';
@@ -41,33 +40,24 @@ const FeatureList = [
 
 function Feature({Svg, title, description}) {
   return (
-    <div className={clsx('col col--4')}>
-      <div className="text--center">
-        <Svg className={styles.featureSvg} role="img" aria-hidden="true" />
-      </div>
-      <div className="text--center padding-horiz--md">
-        <Heading as="h3">{title}</Heading>
-        <p>{description}</p>
-      </div>
-    </div>
+    <li className={styles.card}>
+      <Svg className={styles.featureSvg} aria-hidden="true" />
+      <Heading as="h3" className={styles.cardTitle}>{title}</Heading>
+      <p className={styles.cardText}>{description}</p>
+    </li>
   );
 }
 
 export default function HomepageFeatures() {
   return (
-    <section className={styles.features}>
+    <section className={styles.features} aria-labelledby="why-title">
       <div className="container">
-        <div className="row">
-          {FeatureList.map((props, idx) => (
-            <Feature key={idx} {...props} />
+        <Heading as="h2" id="why-title" className={styles.title}>Why Cloudhopper</Heading>
+        <ul className={styles.grid}>
+          {FeatureList.map((props) => (
+            <Feature key={props.title} {...props} />
           ))}
-        </div>
-        <p className={clsx('text--center', styles.footnote)}>
-          Not every trigger exists on every target yet: the Spring Boot target
-          serves HTTP functions, scheduled functions run on the three clouds.
-          The <Link to="/docs/platforms/generator-overview">provider overview</Link> lists
-          the differences.
-        </p>
+        </ul>
       </div>
     </section>
   );

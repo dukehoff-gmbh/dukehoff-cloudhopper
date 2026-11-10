@@ -1,4 +1,4 @@
-# ☁️ provider-aws
+# provider-aws
 
 This module provides AWS-specific base classes for Cloudhopper functions. These classes act as bridges between the AWS Lambda runtime and the cloud-neutral `CloudRequestHandler<I, O>` interface.
 
@@ -11,7 +11,7 @@ They are used by generated handler classes in the `generator-aws-terraform` modu
 
 ---
 
-## 🚀 Purpose
+## Purpose
 
 These base classes enable Cloudhopper functions to:
 
@@ -22,7 +22,7 @@ These base classes enable Cloudhopper functions to:
 
 ---
 
-## 🔧 Available Base Classes
+## Available Base Classes
 
 | Class | Trigger Type | Input | Output | Used for |
 |-------|--------------|-------|--------|----------|
@@ -33,7 +33,7 @@ These base classes enable Cloudhopper functions to:
 
 ---
 
-## 🧪 Example Usage
+## Example Usage
 
 Generated handlers typically look like this:
 
@@ -74,7 +74,7 @@ handler = "com.example.AwsLambdaMyFunctionHandler$Auto::handleRequest"
 
 ---
 
-## 🧭 Scheduled Events
+## Scheduled Events
 
 Scheduled EventBridge or CloudWatch invocations will result in `input == null`. These are automatically routed to the `Plain` handler.
 
@@ -82,14 +82,14 @@ This behavior is consistent across cloud providers and allows developers to trea
 
 ---
 
-## 📦 Packaging
+## Packaging
 
 All base classes in this module must be available at runtime (e.g., in the shaded JAR).  
 They are required for dispatch, input parsing, and context adaptation.
 
 ---
 
-## 💡 For Generator Authors
+## For Generator Authors
 
 If you're building your own AWS generator module (like `generator-aws-terraform`), you should:
 
@@ -99,7 +99,7 @@ If you're building your own AWS generator module (like `generator-aws-terraform`
 
 ---
 
-## 📚 Related Modules
+## Related Modules
 
 | Module | Purpose |
 |--------|---------|

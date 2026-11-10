@@ -1,4 +1,4 @@
-# ☁️ GCP Terraform Generator
+# GCP Terraform Generator
 
 This module provides a Cloudhopper generator for deploying annotated Java functions as **Google Cloud Functions (HTTP-triggered)** using **Terraform**.
 
@@ -10,7 +10,7 @@ It is used by the Cloudhopper annotation processor to generate:
 
 ---
 
-## 📦 How to Use
+## How to Use
 
 To use this generator in your own project, follow these steps:
 
@@ -60,7 +60,7 @@ This configuration ensures that the correct templates are applied and the output
 
 ---
 
-## 📁 Templates
+## Templates
 
 Templates for this generator are located at:
 
@@ -83,7 +83,7 @@ src/main/resources/templates/gcp-terraform/
 
 ---
 
-## 🔌 Template Registration
+## Template Registration
 
 This generator registers itself using:
 
@@ -112,7 +112,7 @@ This registration is auto-discovered using Java’s SPI (`META-INF/services/...`
 
 ---
 
-## 📂 Output
+## Output
 
 | Artifact                        | Location                                 |
 |---------------------------------|------------------------------------------|
@@ -123,7 +123,7 @@ This registration is auto-discovered using Java’s SPI (`META-INF/services/...`
 
 ---
 
-## 🧩 What’s Special About GCP
+## What’s Special About GCP
 
 - **Handler Generation**: The generator produces a Java class that implements `com.google.cloud.functions.HttpFunction`.
 - **Context Mapping**: The handler uses `GcpCloudFunctionRequestHandler`, which adapts GCP’s request/response and environment into Cloudhopper's `CloudRequestHandler` interface.
@@ -131,7 +131,7 @@ This registration is auto-discovered using Java’s SPI (`META-INF/services/...`
 
 ---
 
-## 📚 Related Modules
+## Related Modules
 
 | Module              | Description                                                 |
 |---------------------|-------------------------------------------------------------|

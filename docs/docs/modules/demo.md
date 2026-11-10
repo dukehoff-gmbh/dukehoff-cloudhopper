@@ -5,11 +5,11 @@ This module demonstrates how to use Cloudhopper to generate deployment artifacts
 Please note that there are some properties in the pom.xml that need to be changed if you want to use the terraform tasks. Those are described in the section on **Terraform Integration**.
 
 ---
-## 🔧 Prerequisites
+## Prerequisites
 
 Before you can build and deploy the demo project, make sure the following tools are installed and available in your `PATH`.
 
-### 🧱 Build Tools 
+### Build Tools
 
 | Tool   | Required Version | Notes |
 |--------|------------------|-------|
@@ -25,7 +25,7 @@ mvn -v
 
 ---
 
-### 🛠️ Terraform
+### Terraform
 
 Terraform is used to apply the generated infrastructure configuration.
 
@@ -41,7 +41,7 @@ terraform version
 
 ---
 
-### ☁️ Cloud Provider CLIs
+### Cloud Provider CLIs
 
 Depending on the active Maven profile, you’ll need CLI tools for the cloud provider (or project type) you’re targeting:
 
@@ -129,7 +129,7 @@ Generated resources will be placed in the following directories based on the act
 
 ## Structure and Generated Files
 
-### 📁 `target/generated-sources/{generator.id}`
+### `target/generated-sources/{generator.id}`
 
 Contains provider-specific **function handlers** that wrap your annotated methods. For each `@Function` method the processor generates a core `<Class>_<method>_Handler` plus a provider wrapper. Example (AWS):
 
@@ -145,7 +145,7 @@ These are compiled and included in the shaded JAR for deployment.
 
 ---
 
-### 📁 `target/deployment/{generator.id}`
+### `target/deployment/{generator.id}`
 
 Contains:
 
@@ -171,7 +171,7 @@ These files are used by the Terraform CLI to deploy your function stack.
 
 ---
 
-### 📁 `src/main/resources/deployment/{generatorId}`
+### `src/main/resources/deployment/{generatorId}`
 
 Optional folder where you can place **manually created resources**. Its content is copied into the corresponding `target/deployment/{generatorID}` folder at build time.
 
@@ -231,11 +231,11 @@ public class ScheduledFunction {
 ```
 
 ---
-## ⚙️ How Code Generation Works
+## How Code Generation Works
 
 Cloudhopper uses annotation processors at **build time** to scan your Java classes for specific annotations (e.g. `@Function`, `@ScheduledTrigger`) and generate deployment metadata using pre-defined **Freemarker templates**.
 
-### 🧩 Annotation Processor Setup
+### Annotation Processor Setup
 
 The annotation processor is registered via:
 
@@ -259,7 +259,7 @@ Based on these, it looks up the correct **template set** and generates the follo
 
 ---
 
-### 📁 Where the Templates Are
+### Where the Templates Are
 
 Templates are organized by cloud provider in their respective generator modules:
 
@@ -280,7 +280,7 @@ Each folder contains files like:
 
 ---
 
-### 🧷 Template Registration
+### Template Registration
 
 Each generator module includes a `TemplateRegistration` class, which registers all the templates and features exposed by that provider.
 
@@ -303,7 +303,7 @@ These classes are auto-discovered via the standard `META-INF/services/...` SPI m
 
 ---
 
-### 📂 Output Structure
+### Output Structure
 
 The templates are rendered and written to:
 

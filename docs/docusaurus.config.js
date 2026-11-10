@@ -37,6 +37,9 @@ const config = {
         locales: ['en'],
     },
 
+    // Self-hosted fonts (no request to a font CDN)
+    clientModules: ['./src/fonts.js'],
+
     // Enable Mermaid support
     markdown: {
         mermaid: true,

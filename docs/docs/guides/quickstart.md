@@ -1,10 +1,10 @@
-# 🚀 Deploy Your First Cloud Function
+# Deploy Your First Cloud Function
 
 Want to see Cloudhopper in action? This guide walks you through generating, deploying, and testing a serverless function on your favorite cloud.
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
 You’ll need:
 
@@ -154,7 +154,7 @@ Terraform will create the function and related infrastructure.
 
 ---
 
-## 🔍 Step 6: Test Your Function
+## Step 6: Test Your Function
 
 Find the deployed URL in Terraform output or your cloud console, then test it:
 
@@ -169,7 +169,7 @@ Expected response:
 
 ---
 
-## 🧭 What’s Next?
+## What’s Next?
 
 - [Write your own functions →](writing-functions)
 - [Explore the Maven Archetype →](../modules/maven-archetype)

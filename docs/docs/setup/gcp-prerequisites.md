@@ -1,4 +1,4 @@
-# 🛠 Google Cloud Setup Guide
+# Google Cloud Setup Guide
 
 This guide prepares your environment for deploying Cloudhopper functions to
 **Google Cloud Functions** with the `gcp-terraform` generator.
