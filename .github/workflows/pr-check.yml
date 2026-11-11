@@ -121,6 +121,8 @@ jobs:
       with:
         file: test/system-tests/generator-azure-terraform/Dockerfile.dockerfile
         tags: cloudhopper-tck-azure
+        # the build containers could not resolve the Ubuntu mirrors (Nov 2026); use the runner's network and DNS
+        network: host
 
     - name: Run TCK for Azure
       uses: addnab/docker-run-action@v3
@@ -155,6 +157,8 @@ jobs:
       with:
         file: test/system-tests/generator-gcp-terraform/Dockerfile.dockerfile
         tags: cloudhopper-tck-gcp
+        # the build containers could not resolve the Ubuntu mirrors (Nov 2026); use the runner's network and DNS
+        network: host
 
     - name: Set up GCP credentials
       env:
@@ -189,6 +193,8 @@ jobs:
       with:
         file: test/system-tests/generator-aws-terraform/Dockerfile.dockerfile
         tags: cloudhopper-tck-aws
+        # the build containers could not resolve the Ubuntu mirrors (Nov 2026); use the runner's network and DNS
+        network: host
 
     - name: Run TCK for AWS
       uses: addnab/docker-run-action@v3
