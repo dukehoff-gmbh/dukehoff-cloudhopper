@@ -78,6 +78,22 @@ import eu.cloudhopper.mc.annotations.HttpTrigger;
             javaFile = true
         ),
         @Template(
+            phase = GenerationPhase.FUNCTION,
+            templateName = "function.ftl",
+            description = "Generates the direct invocation endpoint GET/POST /functions/<function> for every function",
+            outputFileExtension = "java",
+            outputSubDirectory = "generated",
+            javaFile = true
+        ),
+        @Template(
+            phase = GenerationPhase.EVENT,
+            templateName = "eventRoute.ftl",
+            description = "Records the event endpoint of an event-triggered function (properties)",
+            outputFileExtension = "properties",
+            outputSubDirectory = "",
+            javaFile = false
+        ),
+        @Template(
             phase = GenerationPhase.EVENT,
             templateName = "event.ftl",
             description = "Generates the Spring Boot endpoint POST /events/<function> for event-triggered functions",

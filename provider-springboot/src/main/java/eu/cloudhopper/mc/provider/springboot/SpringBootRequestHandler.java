@@ -29,6 +29,9 @@ package eu.cloudhopper.mc.provider.springboot;
 import eu.cloudhopper.mc.runtime.CloudRequestHandler;
 import eu.cloudhopper.mc.runtime.Headers;
 import eu.cloudhopper.mc.provider.http.LocalHandlerContext;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
@@ -44,6 +47,8 @@ import java.util.Objects;
  * @param <O> output type
  */
 public abstract class SpringBootRequestHandler<I, O> {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final CloudRequestHandler<I, O> handler;
 
@@ -74,6 +79,20 @@ public abstract class SpringBootRequestHandler<I, O> {
                                     Map<String, String> headers) {
         O output = handler.handleRequest(input, pathParams, queryParams, Headers.of(headers),
                 new LocalHandlerContext());
+        if (output instanceof CharSequence text) {
+            // Spring would write a String as plain text; every other target answers with JSON
+            // ("pong" becomes "\"pong\""), so a function behaves the same on all of them
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(toJson(text));
+        }
         return ResponseEntity.ok(output);
+    }
+
+    @SuppressWarnings("unchecked")
+    private O toJson(CharSequence text) {
+        try {
+            return (O) MAPPER.writeValueAsString(text.toString());
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Cannot serialize the result as JSON", e);
+        }
     }
 }

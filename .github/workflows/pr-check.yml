@@ -116,6 +116,12 @@ jobs:
     - name: Build with Maven
       run: mvn clean install
 
+    # The on-premise target needs no cloud account: run its TCK first, against the executable jar
+    # that "mvn clean install" just built (test/system-tests/generator-springboot)
+    - name: Run TCK for Spring Boot
+      working-directory: test/system-tests/generator-springboot
+      run: mvn -B -ntp exec:java
+
     - name: Build TCK image for Azure
       uses: docker/build-push-action@v7.4.0
       with:

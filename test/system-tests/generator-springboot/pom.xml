@@ -61,6 +61,18 @@
             <version>3.2.5</version> 
         </dependency>
         <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>test-tck-core</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>generator-bindings-springboot-http</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <version>3.2.5</version>
@@ -91,6 +103,32 @@
                             <sources>
                                 <source>src/main/springboot</source>
                             </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- mvn exec:java runs the TCK against the executable jar (after mvn package) -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>eu.cloudhopper.mc.test.system.tests.generator.springboot.TckLauncher</mainClass>
+                    <classpathScope>test</classpathScope>
+                </configuration>
+            </plugin>
+            <!-- the executable jar that the TCK binding starts, as a user would: java -jar ...-springboot.jar -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.2.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>${jar.classifier}</classifier>
                         </configuration>
                     </execution>
                 </executions>

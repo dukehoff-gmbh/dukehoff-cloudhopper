@@ -63,6 +63,13 @@
                 <include>**/*.java</include>
             </includes>
         </fileSet>
+        <!-- the Spring Boot entry point; compiled only by the springboot-http profile -->
+        <fileSet filtered="true" packaged="true">
+            <directory>src/main/springboot-http</directory>
+            <includes>
+                <include>**/*.java</include>
+            </includes>
+        </fileSet>
         <fileSet filtered="true" >
             <directory>src/main/resources/deployment</directory>
             <includes>

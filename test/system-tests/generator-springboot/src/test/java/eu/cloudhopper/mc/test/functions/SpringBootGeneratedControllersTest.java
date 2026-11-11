@@ -37,7 +37,6 @@ import java.util.logging.Logger;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
@@ -51,13 +50,8 @@ import org.springframework.http.ResponseEntity;
  * and calls them over HTTP: header (#13), path and query parameters (#15) must reach the function,
  * and queue and storage events posted to /events/<function> (#2) must invoke it.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = SpringBootGeneratedControllersTest.App.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = Application.class)
 class SpringBootGeneratedControllersTest {
-
-    @SpringBootApplication
-    static class App {
-    }
 
     @Autowired
     private TestRestTemplate rest;
@@ -110,7 +104,8 @@ class SpringBootGeneratedControllersTest {
                 new HttpEntity<>(headers), String.class);
 
         assertEquals(200, response.getStatusCode().value());
-        assertEquals("hello:3", response.getBody());
+        // a String result is JSON, as on every other target
+        assertEquals("\"hello:3\"", response.getBody());
     }
 
     @Test
@@ -163,4 +158,12 @@ class SpringBootGeneratedControllersTest {
         }
     }
 
+
+    @Test
+    void everyFunctionHasADirectEndpoint() {
+        // plainping has no trigger; on Spring Boot it is reachable like the HTTP route on Azure
+        ResponseEntity<String> response = rest.getForEntity("/functions/plainping", String.class);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("\"pong\"", response.getBody());
+    }
 }
