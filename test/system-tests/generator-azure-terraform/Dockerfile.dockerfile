@@ -1,15 +1,14 @@
+# Terraform is a single static binary; taking it from the official image needs no package
+# mirrors (apt inside the image build failed to resolve the Ubuntu mirrors on GitHub runners).
+FROM hashicorp/terraform:latest AS terraform
+
 FROM maven:3.9.6-eclipse-temurin-21
 
 LABEL maintainer="toni.epple@cloud-hopper.com"
 LABEL platform="azure"
 
-# Install Terraform
-RUN apt-get update && apt-get install -y wget unzip gnupg software-properties-common && \
-    wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor > /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list && \
-    apt-get update && apt-get install -y terraform
-
-# Install Azure CLI
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+# The TCK only runs terraform; the provider and the TCK bindings authenticate through
+# environment variables and SDKs, so no cloud CLI is needed.
+COPY --from=terraform /bin/terraform /usr/local/bin/terraform
 
 WORKDIR /workspace
