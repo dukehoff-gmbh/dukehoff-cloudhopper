@@ -46,7 +46,6 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     supportedAttributes = {
                         FunctionAttribute.NAME,
                         FunctionAttribute.MEMORY,
-                        FunctionAttribute.MIN_INSTANCES,
                         FunctionAttribute.TIMEOUT
                     }
             ),

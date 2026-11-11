@@ -1,5 +1,7 @@
 # Targets and What They Support
 
+import SupportMatrix from './_support-matrix.md';
+
 Cloudhopper deploys the same annotated functions to four targets. Each target is
 a **generator** (it writes handler classes, Terraform and API descriptions at
 compile time) plus a **provider** (the runtime library the generated handlers
@@ -16,43 +18,30 @@ call). You pick the target with a Maven profile:
 
 ## Support matrix
 
-What each target supports, taken from the generators' feature declarations.
-When you compile for a target, the build warns about every annotation or
-attribute that target ignores (see
-[When a target does not support something](../guides/writing-functions#when-a-target-does-not-support-something)).
+Every generator declares which annotations and attributes it supports. The
+same declarations drive the build and the
+compatibility tests (TCK): when you
+compile for a target, the build warns about every annotation or attribute it
+does not claim (see
+[When a target does not support something](../guides/writing-functions#when-a-target-does-not-support-something)),
+and the TCK certifies each target against the tests whose features it claims.
+The table below is generated from these declarations on every build of this
+site.
 
-### Triggers
+<SupportMatrix />
 
-| Trigger | AWS | Azure | GCP | Spring Boot |
-|---|:-:|:-:|:-:|:-:|
-| [`@HttpTrigger`](../guides/writing-functions#httptrigger) | ✓ | ✓ | ✓ | ✓ |
-| [`@ScheduledTrigger`](../guides/writing-functions#scheduledtrigger) | ✓ | ✓ | ✓ | – |
-| [`@EventTrigger`](../guides/writing-functions#eventtrigger) `QUEUE` | ✓ | ✓ | ✓ | ✓ ¹ |
-| [`@EventTrigger`](../guides/writing-functions#eventtrigger) `STORAGE` | ✓ | ✓ | ✓ | ✓ ¹ |
-| Without a trigger | Lambda invoke | HTTP route ² | Function URL | – |
+Notes on the event and trigger columns:
 
-¹ As the endpoint `POST /events/<function name>`; there is no broker binding yet.<br/>
-² Every function also gets the route `/api/<function name>_http_function_trigger`.
-
-### Attributes
-
-| Attribute | AWS | Azure | GCP | Spring Boot |
-|---|:-:|:-:|:-:|:-:|
-| `@Function` `name` | ✓ | ✓ | ✓ | ✓ |
-| `@Function` `memory` | ✓ | – | ✓ | – |
-| `@Function` `timeout` | ✓ | – | ✓ | – |
-| `@Function` `minInstances` | – ³ | – | – ³ | – |
-| `@HttpTrigger` `method`, `path`, `summary`, `description`, `operationId` | ✓ | ✓ | ✓ | ✓ |
-| `@ScheduledTrigger` `cron` | ✓ | ✓ | ✓ | – |
-| `@ScheduledTrigger` `timezone` | – | – | ✓ | – |
-| `@EventTrigger` `source`, `name`, `create` | ✓ | ✓ | ✓ | ✓ |
-
-³ Declared by the generator, but not yet applied to the generated function, so the
-build does not warn about it.
-
-Vendor-specific settings, such as the processor architecture on AWS, go
-through [`@Extension`](../guides/writing-functions#vendor-extensions) and are
-only read by the target they are meant for.
+- `@EventTrigger` covers both `EventSource.QUEUE` and `EventSource.STORAGE` on every
+  target that claims it. On Spring Boot it is the endpoint
+  `POST /events/<function name>`; there is no broker binding yet.
+- A function without a trigger can be invoked directly on AWS (Lambda
+  invoke). On Azure every function also gets the HTTP route
+  `/api/<function name>_http_function_trigger`, and on GCP every function has an
+  HTTPS URL. On Spring Boot it is not exposed.
+- Vendor-specific settings, such as the processor architecture on AWS, go
+  through [`@Extension`](../guides/writing-functions#vendor-extensions) and are
+  only read by the target they are meant for.
 
 ---
 
