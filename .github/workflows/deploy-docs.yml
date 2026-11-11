@@ -12,6 +12,27 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      # One Javadoc tree for all library modules, published under /api/
+      - name: Build Javadoc
+        run: |
+          LIBS=deployment-config-api,deployment-config-processor,deployment-config-generator-api,deployment-config-generator-generic,generator-aws-terraform,generator-azure-terraform,generator-gcp-terraform,generator-springboot,provider-aws,provider-azure,provider-gcp,provider-http,provider-springboot
+          mvn -B -ntp install -DskipTests -pl $LIBS -am
+          mvn -B -ntp -Papidocs javadoc:aggregate -pl .,$LIBS
+          rm -rf docs/static/api
+          cp -R target/site/apidocs docs/static/api
+          # the old per-module trees lived under /api/<module>/; send those links to the new tree
+          for m in $(echo $LIBS | tr , ' '); do
+            mkdir -p docs/static/api/$m
+            printf '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/api/index.html"><link rel="canonical" href="/api/index.html"><title>Moved</title><a href="/api/index.html">Dukehoff Cloudhopper API</a>\n' > docs/static/api/$m/index.html
+          done
+
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
