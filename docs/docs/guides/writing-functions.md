@@ -30,12 +30,15 @@ public class HelloFunction {
 Marks a method as a deployable function and carries provider-neutral deployment
 metadata. Only `name` is required.
 
+Which target applies which attribute is listed in the
+[support matrix](../platforms/generator-overview#support-matrix).
+
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `name` | `String` | — | Unique function name in the deployment target |
 | `memory` | `int` | `128` | Memory limit in MB |
 | `timeout` | `int` | `30` | Maximum run time in seconds |
-| `minInstances` | `int` | `0` | Instances kept warm to reduce cold starts |
+| `minInstances` | `int` | `0` | Instances kept warm to reduce cold starts; not applied by any target yet ([#26](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues/26)) |
 | `extensions` | `@Extension[]` | `{}` | Vendor-specific attributes (see [Vendor extensions](#vendor-extensions)) |
 
 ```java
