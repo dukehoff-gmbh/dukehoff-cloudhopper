@@ -43,9 +43,32 @@ gcloud auth application-default login
 
 The account needs permission to create Cloud Functions, storage buckets,
 API Gateway resources and, for scheduled functions, Cloud Scheduler jobs; for
-queue-triggered functions also Pub/Sub topics and Eventarc triggers.
+event-triggered functions also Pub/Sub topics and Eventarc triggers.
 Terraform reports any API that is not yet enabled in the project, together
 with the link to enable it.
+
+### Storage triggers
+
+Functions with `@EventTrigger(source = EventSource.STORAGE)` receive events
+directly from Cloud Storage through Eventarc. This needs two one-time grants in
+the project:
+
+```bash
+PROJECT_ID=<project-id>
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+
+# Cloud Storage publishes its events through Pub/Sub; the first command creates
+# the Cloud Storage service agent if the project does not have it yet
+gcloud storage service-agent --project=$PROJECT_ID
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:service-$PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com" \
+  --role="roles/pubsub.publisher"
+
+# The trigger's service account (cloudscheduler_service_account_email, see below) receives the events
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:<cloudscheduler_service_account_email>" \
+  --role="roles/eventarc.eventReceiver"
+```
 
 ---
 
@@ -64,7 +87,7 @@ declares these variables:
 | `cloudscheduler_service_account_email` | `scheduler@my-project-123.iam.gserviceaccount.com` |
 
 The last one is the service account Cloud Scheduler uses to call scheduled
-functions, and Eventarc to deliver queue messages; it is only used if your
+functions, and Eventarc to deliver queue messages and storage events; it is only used if your
 project contains a
 [`@ScheduledTrigger`](../guides/writing-functions#scheduledtrigger) or an
 [`@EventTrigger`](../guides/writing-functions#eventtrigger).

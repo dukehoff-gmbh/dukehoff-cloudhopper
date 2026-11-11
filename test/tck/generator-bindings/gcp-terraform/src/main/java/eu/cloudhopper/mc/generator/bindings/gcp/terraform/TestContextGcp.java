@@ -225,6 +225,47 @@ public class TestContextGcp implements TestContext {
         }
     }
 
+    /**
+     * Uploads an object with the Cloud Storage JSON API (simple upload).
+     */
+    @Override
+    public void uploadObject(String bucket, String key, String content) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://storage.googleapis.com/upload/storage/v1/b/" + bucket
+                            + "/o?uploadType=media&name=" + java.net.URLEncoder.encode(key, StandardCharsets.UTF_8)))
+                    .header("Authorization", "Bearer " + getAccessToken())
+                    .header("Content-Type", "text/plain")
+                    .POST(HttpRequest.BodyPublishers.ofString(content))
+                    .build();
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 300) {
+                throw new IllegalStateException("Upload returned " + response.statusCode() + ": " + response.body());
+            }
+            System.out.println("📤 Uploaded " + key + " to Cloud Storage bucket " + bucket);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload " + key + " to bucket " + bucket, e);
+        }
+    }
+
+    @Override
+    public void deleteObject(String bucket, String key) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://storage.googleapis.com/storage/v1/b/" + bucket
+                            + "/o/" + java.net.URLEncoder.encode(key, StandardCharsets.UTF_8)))
+                    .header("Authorization", "Bearer " + getAccessToken())
+                    .DELETE()
+                    .build();
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 300 && response.statusCode() != 404) {
+                throw new IllegalStateException("Delete returned " + response.statusCode() + ": " + response.body());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete " + key + " from bucket " + bucket, e);
+        }
+    }
+
     private String functionNameToOutputKey(String functionName) {
         return functionName.toLowerCase().replace("function", "") + "_url";
     }

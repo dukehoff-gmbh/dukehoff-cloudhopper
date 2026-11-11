@@ -133,6 +133,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
                     javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.EVENT,
+                    templateName = "storage.ftl",
+                    description = "Generates the S3 bucket and its event notification (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
             )
         }
 )

@@ -36,7 +36,7 @@ import java.util.Map;
 
 /**
  * Routes Lambda invocations to the appropriate handler based on input type: API Gateway
- * events, SQS events, schedules and direct calls.
+ * events, SQS and S3 events, schedules and direct calls.
  */
 public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Object> {
 
@@ -45,6 +45,7 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
     private final RequestHandler<APIGatewayV2ProxyRequestEvent, APIGatewayV2ProxyResponseEvent> proxy;
     private final RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> http;
     private final SqsEventHandler<I, O> sqs;
+    private final S3EventHandler<I, O> s3;
 
     public ApiGatewayEventRouter(
             RequestHandler<I, O> plain,
@@ -63,10 +64,25 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
             RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> http,
             SqsEventHandler<I, O> sqs
     ) {
+        this(plain, proxy, http, sqs, null);
+    }
+
+    /**
+     * @param sqs handles SQS events (queue triggers); {@code null} if the function has none
+     * @param s3  handles S3 events (storage triggers); {@code null} if the function has none
+     */
+    public ApiGatewayEventRouter(
+            RequestHandler<I, O> plain,
+            RequestHandler<APIGatewayV2ProxyRequestEvent, APIGatewayV2ProxyResponseEvent> proxy,
+            RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> http,
+            SqsEventHandler<I, O> sqs,
+            S3EventHandler<I, O> s3
+    ) {
         this.plain = plain;
         this.proxy = proxy;
         this.http = http;
         this.sqs = sqs;
+        this.s3 = s3;
     }
 
     @Override
@@ -83,6 +99,9 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
 
             if (sqs != null && SqsEventHandler.isSqsEvent(map)) {
                 return sqs.handle(map, context);
+            }
+            if (s3 != null && S3EventHandler.isS3Event(map)) {
+                return s3.handle(map, context);
             }
 
             if (map.containsKey("version") && map.containsKey("routeKey") && map.containsKey("rawPath")) {

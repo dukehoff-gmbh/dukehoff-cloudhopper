@@ -44,6 +44,10 @@ import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
@@ -195,6 +199,21 @@ public class TestContextAws implements TestContext {
             String url = sqs.getQueueUrl(GetQueueUrlRequest.builder().queueName(namePrefix + queueName).build()).queueUrl();
             String id = sqs.sendMessage(SendMessageRequest.builder().queueUrl(url).messageBody(message).build()).messageId();
             System.out.println("📨 Sent message " + id + " to SQS queue " + namePrefix + queueName);
+        }
+    }
+
+    @Override
+    public void uploadObject(String bucket, String key, String content) {
+        try (S3Client s3 = S3Client.create()) {
+            s3.putObject(PutObjectRequest.builder().bucket(namePrefix + bucket).key(key).build(), RequestBody.fromString(content));
+            System.out.println("📤 Uploaded " + key + " to S3 bucket " + namePrefix + bucket);
+        }
+    }
+
+    @Override
+    public void deleteObject(String bucket, String key) {
+        try (S3Client s3 = S3Client.create()) {
+            s3.deleteObject(DeleteObjectRequest.builder().bucket(namePrefix + bucket).key(key).build());
         }
     }
 

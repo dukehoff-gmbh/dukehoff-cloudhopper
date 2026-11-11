@@ -34,7 +34,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.cloudhopper.mc.runtime.EventHandlerContext;
 import eu.cloudhopper.mc.runtime.EventMetadata;
+import eu.cloudhopper.mc.runtime.StorageEvent;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
@@ -211,6 +215,54 @@ public abstract class AzureBaseFunctionWrapper<I, O> {
         }
         EventMetadata meta = new EventMetadata(id, queueName, parseTime(insertionTime), (int) dequeueCount, null);
         handler.handleRequest(input, new EventHandlerContext(new AzureContextAdapter(context), meta));
+    }
+
+    /**
+     * Handles a "blob created" event that Event Grid put on a storage queue (Event Grid schema),
+     * by invoking the function with a {@link StorageEvent}. If the function throws, the exception
+     * propagates and the queue delivers the event again.
+     *
+     * @param message      the queue message: one Event Grid event as JSON
+     * @param dequeueCount how often the message has been delivered
+     * @param context      the Azure execution context
+     */
+    @SuppressWarnings("unchecked")
+    protected void handleBlobCreatedEvent(String message, long dequeueCount, ExecutionContext context) {
+        JsonNode node;
+        try {
+            String json = message.trim();
+            if (!json.startsWith("{") && !json.startsWith("[")) {
+                // tolerate an additional Base64 layer
+                json = new String(Base64.getDecoder().decode(json), StandardCharsets.UTF_8);
+            }
+            node = objectMapper.readTree(json);
+        } catch (IOException | IllegalArgumentException e) {
+            throw new IllegalArgumentException("Storage event is not an Event Grid event: " + message, e);
+        }
+        for (JsonNode event : node.isArray() ? node : java.util.List.of(node)) {
+            // subject: /blobServices/default/containers/<container>/blobs/<blob name>
+            String subject = event.path("subject").asText();
+            String marker = "/containers/";
+            int c = subject.indexOf(marker);
+            int b = subject.indexOf("/blobs/");
+            if (c < 0 || b < c) {
+                throw new IllegalArgumentException("Unexpected storage event subject: " + subject);
+            }
+            String container = subject.substring(c + marker.length(), b);
+            String blob = subject.substring(b + "/blobs/".length());
+            long size = event.path("data").path("contentLength").asLong(-1);
+            StorageEvent storageEvent = new StorageEvent(container, blob, size, StorageEvent.Kind.CREATED);
+
+            Map<String, String> attributes = new HashMap<>();
+            attributes.put("eventType", event.path("eventType").asText());
+            if (event.path("data").hasNonNull("contentType")) {
+                attributes.put("contentType", event.path("data").path("contentType").asText());
+            }
+            EventMetadata meta = new EventMetadata(event.path("id").asText(null), event.path("topic").asText(null),
+                    parseTime(event.path("eventTime").asText(null)), (int) dequeueCount, attributes);
+            I input = inputType == StorageEvent.class ? (I) storageEvent : null;
+            handler.handleRequest(input, new EventHandlerContext(new AzureContextAdapter(context), meta));
+        }
     }
 
     private static Instant parseTime(String time) {

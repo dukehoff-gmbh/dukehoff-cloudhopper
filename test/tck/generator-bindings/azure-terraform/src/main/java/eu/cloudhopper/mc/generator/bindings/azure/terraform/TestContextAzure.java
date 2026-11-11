@@ -293,6 +293,79 @@ public class TestContextAzure implements TestContext {
         }
     }
 
+    @Override
+    public void uploadObject(String bucket, String key, String content) {
+        int status = blobRequest("PUT", bucket, key, content.getBytes(StandardCharsets.UTF_8));
+        if (status != 201) {
+            throw new IllegalStateException("Put Blob returned " + status);
+        }
+        System.out.println("📤 Uploaded " + key + " to blob container " + bucket);
+    }
+
+    @Override
+    public void deleteObject(String bucket, String key) {
+        int status = blobRequest("DELETE", bucket, key, null);
+        if (status != 202 && status != 404) {
+            throw new IllegalStateException("Delete Blob returned " + status);
+        }
+    }
+
+    /**
+     * Sends a Put Blob (with content) or Delete Blob request to the function app's storage
+     * account (Blob service REST API, Shared Key authorization).
+     */
+    private int blobRequest(String method, String container, String blob, byte[] content) {
+        try {
+            // read the outputs directly: TerraformUtil.getOutputString would print the account key
+            JsonNode outputs = TerraformUtil.readTerraformOutput(terraformDir);
+            String account = outputs.path("function_storage_name").path("value").asText();
+            String key = outputs.path("function_storage_primary_access_key").path("value").asText();
+
+            String date = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US)
+                    .format(ZonedDateTime.now(ZoneOffset.UTC));
+            String version = "2021-08-06";
+            boolean put = content != null;
+            String contentType = put ? "text/plain" : "";
+
+            String stringToSign = method + "\n"
+                    + "\n" // Content-Encoding
+                    + "\n" // Content-Language
+                    + (put ? String.valueOf(content.length) : "") + "\n"
+                    + "\n" // Content-MD5
+                    + contentType + "\n"
+                    + "\n" // Date (x-ms-date is used)
+                    + "\n\n\n\n" // If-Modified-Since, If-Match, If-None-Match, If-Unmodified-Since
+                    + "\n" // Range
+                    + (put ? "x-ms-blob-type:BlockBlob\n" : "")
+                    + "x-ms-date:" + date + "\n"
+                    + "x-ms-version:" + version + "\n"
+                    + "/" + account + "/" + container + "/" + blob;
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(Base64.getDecoder().decode(key), "HmacSHA256"));
+            String signature = Base64.getEncoder().encodeToString(mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8)));
+
+            HttpRequest.Builder request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://" + account + ".blob.core.windows.net/" + container + "/" + blob))
+                    .header("x-ms-date", date)
+                    .header("x-ms-version", version)
+                    .header("Authorization", "SharedKey " + account + ":" + signature);
+            if (put) {
+                request.header("x-ms-blob-type", "BlockBlob")
+                        .header("Content-Type", contentType)
+                        .PUT(HttpRequest.BodyPublishers.ofByteArray(content));
+            } else {
+                request.DELETE();
+            }
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request.build(), HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 300 && response.statusCode() != 404) {
+                System.out.println("Blob service answered " + response.statusCode() + ": " + response.body());
+            }
+            return response.statusCode();
+        } catch (Exception e) {
+            throw new RuntimeException("Blob request " + method + " " + container + "/" + blob + " failed", e);
+        }
+    }
+
     private String functionNameToOutputKey(String functionName) {
         return functionName.toLowerCase() + "_url";
     }

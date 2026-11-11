@@ -34,5 +34,12 @@ public enum EventSource {
      * A message queue. Each message is delivered to one invocation of the function; its body is
      * deserialized from JSON into the function's body parameter.
      */
-    QUEUE
+    QUEUE,
+
+    /**
+     * An object storage bucket (on Azure: a blob container). The function is invoked for each
+     * object created or overwritten in it and receives a
+     * {@link eu.cloudhopper.mc.runtime.StorageEvent} as its body parameter.
+     */
+    STORAGE
 }

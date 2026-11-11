@@ -43,4 +43,25 @@ public interface TestContext {
     default void sendQueueMessage(String queueName, String message) {
         throw new UnsupportedOperationException("This binding cannot send queue messages");
     }
+
+    /**
+     * Uploads an object to the bucket an {@code @EventTrigger(source = STORAGE)} function listens to.
+     *
+     * @param bucket  the name given in the annotation
+     * @param key     the object key
+     * @param content the object content
+     */
+    default void uploadObject(String bucket, String key, String content) {
+        throw new UnsupportedOperationException("This binding cannot upload objects");
+    }
+
+    /**
+     * Deletes an object uploaded with {@link #uploadObject}, so that the bucket can be destroyed.
+     *
+     * @param bucket the name given in the annotation
+     * @param key    the object key
+     */
+    default void deleteObject(String bucket, String key) {
+        throw new UnsupportedOperationException("This binding cannot delete objects");
+    }
 }

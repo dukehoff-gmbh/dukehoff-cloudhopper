@@ -36,6 +36,7 @@ import eu.cloudhopper.mc.runtime.Headers;
 import eu.cloudhopper.mc.runtime.EventHandlerContext;
 import eu.cloudhopper.mc.runtime.EventMetadata;
 import eu.cloudhopper.mc.runtime.HandlerContext;
+import eu.cloudhopper.mc.runtime.StorageEvent;
 import java.time.Instant;
 import java.io.IOException;
 import java.io.InputStream;
@@ -179,6 +180,39 @@ public class ServerlessFunctionProcessorTest {
                             + "}\n"));
             assertThat(compilation).hadErrorContaining("@EventTrigger name '" + name + "' is not valid on every target");
         }
+    }
+
+    @Test
+    public void storageFunctionsReceiveAStorageEvent() throws Exception {
+        CloudRequestHandler<StorageEvent, String> handler = compileAndLoad("com.example.UploadService", ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import eu.cloudhopper.mc.runtime.StorageEvent;\n"
+                + "public class UploadService {\n"
+                + "  @Function(name=\"uploads\")\n"
+                + "  @EventTrigger(source=EventSource.STORAGE, name=\"uploads\")\n"
+                + "  public String onUpload(StorageEvent event) {\n"
+                + "    return event.getBucket() + \"/\" + event.getKey() + \":\" + event.getSize();\n"
+                + "  }\n"
+                + "}\n",
+                "com.example.UploadService_onUpload_Handler");
+        assertEquals("uploads/a/b.txt:42",
+                handler.handleRequest(new StorageEvent("uploads", "a/b.txt", 42, StorageEvent.Kind.CREATED), null));
+    }
+
+    @Test
+    public void storageFunctionsCannotTakeOtherBodies() {
+        Compilation compilation = javac()
+                .withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.BadUpload", ""
+                        + "package com.example;\n"
+                        + "import eu.cloudhopper.mc.annotations.*;\n"
+                        + "public class BadUpload {\n"
+                        + "  @Function(name=\"bad\")\n"
+                        + "  @EventTrigger(source=EventSource.STORAGE, name=\"uploads\")\n"
+                        + "  public void on(String content) { }\n"
+                        + "}\n"));
+        assertThat(compilation).hadErrorContaining("receives a eu.cloudhopper.mc.runtime.StorageEvent");
     }
 
     /** A platform context with fixed values. */
