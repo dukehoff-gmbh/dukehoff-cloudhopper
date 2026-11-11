@@ -59,7 +59,7 @@ public @interface Function {
      *
      * These are intended for use by generator implementors when declaring which
      * attributes their generator supports in
-     * {@link eu.cloudhopper.mc.generator.api.annotations.GeneratorFeature}.
+     * {@code eu.cloudhopper.mc.generator.api.annotations.GeneratorFeature}.
      *
      * Example usage:
      * <pre>{@code
