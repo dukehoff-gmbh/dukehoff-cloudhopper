@@ -21,9 +21,9 @@ const EXAMPLE = `public class HelloFunction {
 }`;
 
 const TARGETS = [
-  {profile: 'aws-terraform', name: 'AWS Lambda', note: 'API Gateway, EventBridge'},
-  {profile: 'azure-terraform', name: 'Azure Functions', note: 'HTTP and timer triggers'},
-  {profile: 'gcp-terraform', name: 'Google Cloud Functions', note: 'API Gateway, Cloud Scheduler'},
+  {profile: 'aws-terraform', name: 'AWS Lambda', note: 'API Gateway, EventBridge, SQS, S3'},
+  {profile: 'azure-terraform', name: 'Azure Functions', note: 'HTTP, timer, queue and blob triggers'},
+  {profile: 'gcp-terraform', name: 'Google Cloud Functions', note: 'API Gateway, Cloud Scheduler, Pub/Sub, Cloud Storage'},
   {profile: 'springboot-http', name: 'Spring Boot', note: 'Your own servers'},
 ];
 

@@ -2,14 +2,13 @@
 
 This module provides a Cloudhopper generator that enables the deployment of annotated Java functions as **Azure Functions** using **Terraform** and **Java handler code generation**.
 
-Azure is unique in that Cloudhopper generates most of the glue code as Java classes. Only shared Terraform infrastructure (like the Function App and Storage Account) is generated as `.tf` files.
+Azure is unique in that triggers are Java annotations: Cloudhopper generates a Java class with `@HttpTrigger`, `@TimerTrigger` or `@QueueTrigger` per function. Terraform creates the infrastructure they bind to: the function app and storage account, and the queues, blob containers and Event Grid subscriptions of event-triggered functions.
 
 ---
 
 ## Documentation Notice:
 
-All Cloudhopper functions on Azure are exposed via HTTP under the `/api/{name}` route unless otherwise specified with an `@HttpTrigger(path="...")` annotation.
-- Functions without an @HttpTrigger will default to their `@Function(name)` value as the HTTP route.
+Every Cloudhopper function on Azure is exposed via HTTP under the route `/api/{name}_http_function_trigger`; functions with an `@HttpTrigger` are additionally served under their own path.
 - Direct invocation via SDK (like AWS Lambda invoke()) is not supported on Azure — Azure Functions require trigger bindings.
 
 Therefore, every Cloudhopper function in Azure is accessible via an HTTP call to its assigned route.
@@ -145,6 +144,9 @@ src/main/resources/templates/azure-terraform/
 | `output.ftl`             | Terraform   | URLs to call the generated functions               |
 | `schedule.ftl`           | Java        | Scheduled function handler                         |
 | `shared.ftl`             | Terraform   | Base infrastructure setup (Function App, etc.)     |
+| `queueFunction.ftl`      | Java        | `@QueueTrigger` function for queue messages and blob events |
+| `queue.ftl`              | Terraform   | Storage queue (`@EventTrigger` `QUEUE`)            |
+| `storage.ftl`            | Terraform   | Blob container, event queue, Event Grid subscription (`@EventTrigger` `STORAGE`) |
 
 ---
 
