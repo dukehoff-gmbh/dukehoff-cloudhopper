@@ -1,6 +1,6 @@
 # GCP Terraform Generator
 
-This module provides a Cloudhopper generator for deploying annotated Java functions as **Google Cloud Functions (HTTP-triggered)** using **Terraform**.
+This module provides a Cloudhopper generator for deploying annotated Java functions as **Google Cloud Functions (2nd gen)** using **Terraform**.
 
 It is used by the Cloudhopper annotation processor to generate:
 
@@ -78,6 +78,8 @@ src/main/resources/templates/gcp-terraform/
 | `apiRegistration.ftl`     | Terraform   | Generates a Terraform function registration            |
 | `schedule.ftl`            | Terraform   | Generates a `google_cloud_scheduler_job` resource      |
 | `api.ftl`                 | Terraform   | Generates a `google_api_gateway_api` resource          |
+| `queue.ftl`               | Terraform   | Pub/Sub topic and Eventarc trigger (`@EventTrigger` `QUEUE`) |
+| `storage.ftl`             | Terraform   | Cloud Storage bucket and Eventarc trigger (`@EventTrigger` `STORAGE`) |
 
 > ℹ️ The `doc/` folder in the template path is not used during generation. It may contain examples or template prototypes.
 

@@ -76,6 +76,8 @@ src/main/resources/templates/aws-terraform/
 | `api.ftl`              | Terraform        | OpenAPI definition for API Gateway                              |
 | `schedule.ftl`         | Terraform        | Scheduled (EventBridge/CloudWatch) trigger                      |
 | `shared.ftl`           | Terraform        | Shared infrastructure (IAM roles, Lambda layer, etc.)           |
+| `queue.ftl`            | Terraform        | SQS queue and event source mapping (`@EventTrigger` `QUEUE`)    |
+| `storage.ftl`          | Terraform        | S3 bucket and event notification (`@EventTrigger` `STORAGE`)    |
 
 ---
 

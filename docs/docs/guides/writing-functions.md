@@ -46,7 +46,12 @@ metadata. Only `name` is required.
 
 ## Triggers
 
-A function needs exactly one trigger annotation that decides how it is invoked.
+Trigger annotations decide how a function is invoked. A function may carry
+several, and Cloudhopper generates each of them; the compatibility tests cover
+each trigger on its own, so prefer one trigger per function. Without a
+trigger it can only be invoked directly, as far as the target allows; the
+[support matrix](../platforms/generator-overview#support-matrix) lists what
+each target offers.
 
 ### `@HttpTrigger`
 
