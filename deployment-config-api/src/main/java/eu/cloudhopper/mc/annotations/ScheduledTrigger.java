@@ -79,7 +79,7 @@ public @interface ScheduledTrigger {
      * <p>These are intended for use by code generators when declaring which
      * attributes they support via {@code @GeneratorFeature}.</p>
      *
-     * <h3>Example usage:</h3>
+     * <p>Example usage:</p>
      * <pre>{@code
      * @GeneratorFeature(
      *     supportedAnnotation = ScheduledTrigger.class,
