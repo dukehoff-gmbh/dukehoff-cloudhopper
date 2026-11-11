@@ -192,7 +192,34 @@
         </plugins>
     </build>
     
-    <profiles>  
+    <profiles>
+        <!--
+          mvn -Papidocs javadoc:aggregate -pl .,<library modules>: one Javadoc tree for the website,
+          written to target/site/apidocs. The docs workflow (.github/workflows/deploy-docs.yml) runs it
+          and publishes the result under https://cloudhopper.eu/api/.
+        -->
+        <profile>
+            <id>apidocs</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <doclint>none</doclint>
+                            <locale>en</locale>
+                            <additionalJOptions>
+                                <additionalJOption>-J-Duser.language=en</additionalJOption>
+                                <additionalJOption>-J-Duser.country=US</additionalJOption>
+                            </additionalJOptions>
+                            <doctitle>Dukehoff Cloudhopper API</doctitle>
+                            <windowtitle>Dukehoff Cloudhopper API</windowtitle>
+                            <bottom><![CDATA[Copyright &#169; 2024&#8211;2026 Dukehoff GmbH. Licensed under the GNU GPL v3 with the Classpath Exception.]]></bottom>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <!--
           mvn -Prelease deploy: sources and javadoc jars, GPG signatures, upload of all published modules,
           the archetype included, to Maven Central as one deployment.
