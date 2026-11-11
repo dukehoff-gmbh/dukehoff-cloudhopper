@@ -1,0 +1,15 @@
+eu.cloudhopper.mc.annotations
+eu.cloudhopper.mc.deployment.config.generator
+eu.cloudhopper.mc.generator.api
+eu.cloudhopper.mc.generator.api.annotations
+eu.cloudhopper.mc.generator.api.spi
+eu.cloudhopper.mc.generator.generic
+eu.cloudhopper.mc.generator.generic.annotations
+eu.cloudhopper.mc.generator.generic.internal
+eu.cloudhopper.mc.generator.springboot
+eu.cloudhopper.mc.provider.aws
+eu.cloudhopper.mc.provider.azure
+eu.cloudhopper.mc.provider.gcp
+eu.cloudhopper.mc.provider.http
+eu.cloudhopper.mc.provider.springboot
+eu.cloudhopper.mc.runtime
