@@ -27,7 +27,7 @@ Boot application, you need neither Terraform nor a cloud account.
 mvn archetype:generate \
   -DarchetypeGroupId=eu.cloudhopper.mc \
   -DarchetypeArtifactId=cloudhopper-maven-archetype-core \
-  -DarchetypeVersion=1.0.1 \
+  -DarchetypeVersion=1.1.0 \
   -DgroupId=com.example \
   -DartifactId=my-function \
   -Dversion=1.0-SNAPSHOT \
