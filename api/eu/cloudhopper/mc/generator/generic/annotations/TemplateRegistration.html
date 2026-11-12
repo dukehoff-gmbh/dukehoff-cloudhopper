@@ -41,7 +41,7 @@ loadScripts(document, 'script');</script>
 <ul>
 <li>Field</li>
 <li><a href="#annotation-interface-required-element-summary">Required</a></li>
-<li>Optional</li>
+<li><a href="#annotation-interface-optional-element-summary">Optional</a></li>
 </ul>
 </li>
 <li>
@@ -59,7 +59,7 @@ loadScripts(document, 'script');</script>
 <li>Summary:&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#annotation-interface-required-element-summary">Required</a>&nbsp;|&nbsp;</li>
-<li>Optional</li>
+<li><a href="#annotation-interface-optional-element-summary">Optional</a></li>
 </ul>
 <ul class="sub-nav-list">
 <li>Detail:&nbsp;</li>
@@ -119,6 +119,23 @@ loadScripts(document, 'script');</script>
 </div>
 </section>
 </li>
+<!-- =========== ANNOTATION INTERFACE OPTIONAL MEMBER SUMMARY =========== -->
+<li>
+<section class="member-summary" id="annotation-interface-optional-element-summary">
+<h2>Optional Element Summary</h2>
+<div class="caption"><span>Optional Elements</span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Optional Element</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color"><code><a href="#basedOn()" class="member-name-link">basedOn</a></code></div>
+<div class="col-last even-row-color">
+<div class="block">The ID of a generator this generator builds on, or empty.</div>
+</div>
+</div>
+</section>
+</li>
 </ul>
 </section>
 <section class="details" id="annotation-interface-element-detail">
@@ -149,6 +166,27 @@ loadScripts(document, 'script');</script>
 <dl class="notes">
 <dt>Returns:</dt>
 <dd>the template configuration</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="basedOn()">
+<h3>basedOn</h3>
+<div class="member-signature"><span class="return-type"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">basedOn</span></div>
+<div class="block">The ID of a generator this generator builds on, or empty. A generator
+ based on another one runs the other generator's templates as well as its
+ own; one of its own templates with the same name replaces the other
+ generator's template. Templates are looked up in this generator's
+ directory first, then in the other generator's directory. Example: the
+ <code>knative</code> generator builds on <code>springboot-http</code>, which
+ generates the application, and adds the Knative manifests.</div>
+<dl class="notes">
+<dt>Returns:</dt>
+<dd>the ID of the generator this one builds on, or an empty string</dd>
+</dl>
+<dl class="notes">
+<dt>Default:</dt>
+<dd><code>""</code></dd>
 </dl>
 </section>
 </li>

@@ -139,11 +139,21 @@ loadScripts(document, 'script');</script>
 <div class="block">Call this once during processor init.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#renderTemplate(eu.cloudhopper.mc.generator.generic.internal.TemplateDescriptor,java.lang.String,java.util.Map,java.lang.String)" class="member-name-link">renderTemplate</a><wbr>(<a href="TemplateDescriptor.html" title="class in eu.cloudhopper.mc.generator.generic.internal">TemplateDescriptor</a>&nbsp;templateDescriptor,
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#initTemplateLoaders(java.lang.Class,java.util.List,java.util.function.Function,javax.annotation.processing.ProcessingEnvironment)" class="member-name-link">initTemplateLoaders</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;?&gt;&nbsp;anchorClass,
+ <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;&nbsp;generatorIds,
+ <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/function/Function.html" title="class or interface in java.util.function" class="external-link">Function</a>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;&nbsp;classpathBase,
+ <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.compiler/javax/annotation/processing/ProcessingEnvironment.html" title="class or interface in javax.annotation.processing" class="external-link">ProcessingEnvironment</a>&nbsp;processingEnv)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="block">Looks templates up for several generators: for each generator in order, first the
+ project's override directory <code>cloudhopper-templates/&lt;generatorId&gt;</code>, then
+ the classpath.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#renderTemplate(eu.cloudhopper.mc.generator.generic.internal.TemplateDescriptor,java.lang.String,java.util.Map,java.lang.String)" class="member-name-link">renderTemplate</a><wbr>(<a href="TemplateDescriptor.html" title="class in eu.cloudhopper.mc.generator.generic.internal">TemplateDescriptor</a>&nbsp;templateDescriptor,
  <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;outputDirName,
  <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&gt;&nbsp;dataModel,
  <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;fileName)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -189,6 +199,25 @@ loadScripts(document, 'script');</script>
 <dd><code>classpathBase</code> - e.g. "/templates"</dd>
 <dd><code>processingEnv</code> - your ProcessingEnvironment</dd>
 <dd><code>generatorId</code> - the same id you used in @TemplateRegistration</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="initTemplateLoaders(java.lang.Class,java.util.List,java.util.function.Function,javax.annotation.processing.ProcessingEnvironment)">
+<h3>initTemplateLoaders</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">initTemplateLoaders</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html" title="class or interface in java.lang" class="external-link">Class</a>&lt;?&gt;&nbsp;anchorClass,
+ <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;&nbsp;generatorIds,
+ <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/function/Function.html" title="class or interface in java.util.function" class="external-link">Function</a>&lt;<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;&nbsp;classpathBase,
+ <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.compiler/javax/annotation/processing/ProcessingEnvironment.html" title="class or interface in javax.annotation.processing" class="external-link">ProcessingEnvironment</a>&nbsp;processingEnv)</span></div>
+<div class="block">Looks templates up for several generators: for each generator in order, first the
+ project's override directory <code>cloudhopper-templates/&lt;generatorId&gt;</code>, then
+ the classpath. Used by a generator that builds on another one.</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>anchorClass</code> - any class in your JAR so ClassTemplateLoader can find "/templates"</dd>
+<dd><code>generatorIds</code> - the generator IDs, the most specific first</dd>
+<dd><code>classpathBase</code> - maps a generator ID to its classpath directory</dd>
+<dd><code>processingEnv</code> - your ProcessingEnvironment</dd>
 </dl>
 </section>
 </li>

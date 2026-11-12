@@ -143,8 +143,13 @@ loadScripts(document, 'script');</script>
 <div class="block">Whether the rendered output is a Java source file.</div>
 </div>
 <div class="col-first even-row-color"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color"><code><a href="#outputSubDirectory()" class="member-name-link">outputSubDirectory</a></code></div>
+<div class="col-second even-row-color"><code><a href="#outputFileName()" class="member-name-link">outputFileName</a></code></div>
 <div class="col-last even-row-color">
+<div class="block">A fixed name for the output file, or empty.</div>
+</div>
+<div class="col-first odd-row-color"><code><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color"><code><a href="#outputSubDirectory()" class="member-name-link">outputSubDirectory</a></code></div>
+<div class="col-last odd-row-color">
 <div class="block">The relative subdirectory where this file should be written (e.g.,
  "deployment/aws").</div>
 </div>
@@ -242,6 +247,27 @@ loadScripts(document, 'script');</script>
 <dl class="notes">
 <dt>Default:</dt>
 <dd><code>false</code></dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="outputFileName()">
+<h3>outputFileName</h3>
+<div class="member-signature"><span class="return-type"><a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">outputFileName</span></div>
+<div class="block">A fixed name for the output file, or empty. By default the file is named
+ <code>&lt;base&gt;_&lt;templateName&gt;.&lt;outputFileExtension&gt;</code>, where the base is the
+ function or <code>shared-resources</code>. Some tools need an exact name, such as
+ Helm's <code>Chart.yaml</code>; set this only for templates of the
+ <a href="../../api/GenerationPhase.html#SHARED"><code>SHARED</code></a> and
+ <a href="../../api/GenerationPhase.html#FINALIZE"><code>FINALIZE</code></a>
+ phases, which run once. Ignored for Java files.</div>
+<dl class="notes">
+<dt>Returns:</dt>
+<dd>the output file name, or an empty string</dd>
+</dl>
+<dl class="notes">
+<dt>Default:</dt>
+<dd><code>""</code></dd>
 </dl>
 </section>
 </li>

@@ -251,92 +251,97 @@ loadScripts(document, 'script');</script>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">One Kafka listener container per queue-triggered function.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/provider/http/LocalHandlerContext.html" title="class in eu.cloudhopper.mc.provider.http">LocalHandlerContext</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/deployment/config/generator/MessagerUtil.html" title="class in eu.cloudhopper.mc.deployment.config.generator">MessagerUtil</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/runtime/ParamConverters.html" title="class in eu.cloudhopper.mc.runtime">ParamConverters</a></div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/knative/KnativeTemplateRegistration.html" title="class in eu.cloudhopper.mc.generator.knative">KnativeTemplateRegistration</a></div>
 <div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="block">The <code>knative</code> generator: the <code>springboot-http</code> application plus a Helm chart
+ that runs it on Knative.</div>
+</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/provider/http/LocalHandlerContext.html" title="class in eu.cloudhopper.mc.provider.http">LocalHandlerContext</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/deployment/config/generator/MessagerUtil.html" title="class in eu.cloudhopper.mc.deployment.config.generator">MessagerUtil</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/runtime/ParamConverters.html" title="class in eu.cloudhopper.mc.runtime">ParamConverters</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Utility methods for converting String parameters from path, query, or headers
  into typed values, with validation.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/annotations/PathParam.html" title="annotation interface in eu.cloudhopper.mc.annotations">PathParam</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab6">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/annotations/PathParam.html" title="annotation interface in eu.cloudhopper.mc.annotations">PathParam</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Binds a method parameter to a URI path template variable declared in the
  <a href="eu/cloudhopper/mc/annotations/HttpTrigger.html#path()"><code>HttpTrigger.path()</code></a> (e.g.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/annotations/QueryParam.html" title="annotation interface in eu.cloudhopper.mc.annotations">QueryParam</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab6">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/annotations/QueryParam.html" title="annotation interface in eu.cloudhopper.mc.annotations">QueryParam</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Binds a method parameter to a query string parameter.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/annotations/RequestBody.html" title="annotation interface in eu.cloudhopper.mc.annotations">RequestBody</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab6">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/annotations/RequestBody.html" title="annotation interface in eu.cloudhopper.mc.annotations">RequestBody</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Marks a method parameter as the deserialized request body.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/provider/aws/S3EventHandler.html" title="class in eu.cloudhopper.mc.provider.aws">S3EventHandler&lt;I,<wbr>O&gt;</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/provider/aws/S3EventHandler.html" title="class in eu.cloudhopper.mc.provider.aws">S3EventHandler&lt;I,<wbr>O&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Handles an S3 event notification by invoking the function once per record with a
  <a href="eu/cloudhopper/mc/runtime/StorageEvent.html" title="class in eu.cloudhopper.mc.runtime"><code>StorageEvent</code></a>.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/annotations/ScheduledTrigger.html" title="annotation interface in eu.cloudhopper.mc.annotations">ScheduledTrigger</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab6">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/annotations/ScheduledTrigger.html" title="annotation interface in eu.cloudhopper.mc.annotations">ScheduledTrigger</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Declares that the annotated function should be executed on a schedule.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/annotations/ScheduledTrigger.ScheduleAttribute.html" title="class in eu.cloudhopper.mc.annotations">ScheduledTrigger.ScheduleAttribute</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/annotations/ScheduledTrigger.ScheduleAttribute.html" title="class in eu.cloudhopper.mc.annotations">ScheduledTrigger.ScheduleAttribute</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Constants representing attribute names of <a href="eu/cloudhopper/mc/annotations/ScheduledTrigger.html" title="annotation interface in eu.cloudhopper.mc.annotations"><code>ScheduledTrigger</code></a>.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/deployment/config/generator/ServerlessFunctionProcessor.html" title="class in eu.cloudhopper.mc.deployment.config.generator">ServerlessFunctionProcessor</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler&lt;I,<wbr>O&gt;</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/deployment/config/generator/ServerlessFunctionProcessor.html" title="class in eu.cloudhopper.mc.deployment.config.generator">ServerlessFunctionProcessor</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler&lt;I,<wbr>O&gt;</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Base class for exposing an event-triggered Cloudhopper function as a Spring Boot endpoint,
  <code>POST /events/&lt;function name&gt;</code>.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/provider/springboot/SpringBootRequestHandler.html" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootRequestHandler&lt;I,<wbr>O&gt;</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/provider/springboot/SpringBootRequestHandler.html" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootRequestHandler&lt;I,<wbr>O&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Base class for exposing a Cloudhopper function as a Spring Boot HTTP endpoint.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/springboot/SpringBootTemplateRegistration.html" title="class in eu.cloudhopper.mc.generator.springboot">SpringBootTemplateRegistration</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/provider/aws/SqsEventHandler.html" title="class in eu.cloudhopper.mc.provider.aws">SqsEventHandler&lt;I,<wbr>O&gt;</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/springboot/SpringBootTemplateRegistration.html" title="class in eu.cloudhopper.mc.generator.springboot">SpringBootTemplateRegistration</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/provider/aws/SqsEventHandler.html" title="class in eu.cloudhopper.mc.provider.aws">SqsEventHandler&lt;I,<wbr>O&gt;</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Handles an SQS event (a batch of records) by invoking the function once per message.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/runtime/StorageEvent.html" title="class in eu.cloudhopper.mc.runtime">StorageEvent</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/runtime/StorageEvent.html" title="class in eu.cloudhopper.mc.runtime">StorageEvent</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
 <div class="block">An object was created in the bucket an <code>@EventTrigger(source = EventSource.STORAGE)</code>
  function listens to.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab3"><a href="eu/cloudhopper/mc/runtime/StorageEvent.Kind.html" title="enum class in eu.cloudhopper.mc.runtime">StorageEvent.Kind</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab3">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab3"><a href="eu/cloudhopper/mc/runtime/StorageEvent.Kind.html" title="enum class in eu.cloudhopper.mc.runtime">StorageEvent.Kind</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab3">
 <div class="block">What happened to the object.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/generator/generic/annotations/Template.html" title="annotation interface in eu.cloudhopper.mc.generator.generic.annotations">Template</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab6">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/generator/generic/annotations/Template.html" title="annotation interface in eu.cloudhopper.mc.generator.generic.annotations">Template</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Describes a single template to be rendered by the
  <a href="eu/cloudhopper/mc/generator/generic/GenericDeploymentConfigGenerator.html" title="class in eu.cloudhopper.mc.generator.generic"><code>GenericDeploymentConfigGenerator</code></a>.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/generic/internal/TemplateDescriptor.html" title="class in eu.cloudhopper.mc.generator.generic.internal">TemplateDescriptor</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/generic/internal/TemplateDescriptor.html" title="class in eu.cloudhopper.mc.generator.generic.internal">TemplateDescriptor</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Describes a single template file used by the <code>GenericDeploymentConfigGenerator</code>.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/generator/generic/annotations/TemplateRegistration.html" title="annotation interface in eu.cloudhopper.mc.generator.generic.annotations">TemplateRegistration</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab6">
+<div class="col-first even-row-color all-classes-table all-classes-table-tab6"><a href="eu/cloudhopper/mc/generator/generic/annotations/TemplateRegistration.html" title="annotation interface in eu.cloudhopper.mc.generator.generic.annotations">TemplateRegistration</a></div>
+<div class="col-last even-row-color all-classes-table all-classes-table-tab6">
 <div class="block">Declares a set of templates to be used by
  <a href="eu/cloudhopper/mc/generator/generic/GenericDeploymentConfigGenerator.html" title="class in eu.cloudhopper.mc.generator.generic"><code>GenericDeploymentConfigGenerator</code></a>.</div>
 </div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/generic/TemplateRegistrationProcessor.html" title="class in eu.cloudhopper.mc.generator.generic">TemplateRegistrationProcessor</a></div>
-<div class="col-last even-row-color all-classes-table all-classes-table-tab2">
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/generic/TemplateRegistrationProcessor.html" title="class in eu.cloudhopper.mc.generator.generic">TemplateRegistrationProcessor</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">
 <div class="block">Annotation processor that handles
  <a href="eu/cloudhopper/mc/generator/generic/annotations/TemplateRegistration.html" title="annotation interface in eu.cloudhopper.mc.generator.generic.annotations"><code>TemplateRegistration</code></a>
  and <a href="eu/cloudhopper/mc/generator/generic/annotations/Template.html" title="annotation interface in eu.cloudhopper.mc.generator.generic.annotations"><code>Template</code></a>
  declarations.</div>
 </div>
-<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/generic/internal/TemplateRenderer.html" title="class in eu.cloudhopper.mc.generator.generic.internal">TemplateRenderer</a></div>
-<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
-<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/generic/internal/TemplateValidator.html" title="class in eu.cloudhopper.mc.generator.generic.internal">TemplateValidator</a></div>
+<div class="col-first even-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/generic/internal/TemplateRenderer.html" title="class in eu.cloudhopper.mc.generator.generic.internal">TemplateRenderer</a></div>
 <div class="col-last even-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
+<div class="col-first odd-row-color all-classes-table all-classes-table-tab2"><a href="eu/cloudhopper/mc/generator/generic/internal/TemplateValidator.html" title="class in eu.cloudhopper.mc.generator.generic.internal">TemplateValidator</a></div>
+<div class="col-last odd-row-color all-classes-table all-classes-table-tab2">&nbsp;</div>
 </div>
 </div>
 </div>

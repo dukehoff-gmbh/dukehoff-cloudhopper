@@ -6,6 +6,7 @@ eu.cloudhopper.mc.generator.api.spi
 eu.cloudhopper.mc.generator.generic
 eu.cloudhopper.mc.generator.generic.annotations
 eu.cloudhopper.mc.generator.generic.internal
+eu.cloudhopper.mc.generator.knative
 eu.cloudhopper.mc.generator.springboot
 eu.cloudhopper.mc.provider.aws
 eu.cloudhopper.mc.provider.azure
