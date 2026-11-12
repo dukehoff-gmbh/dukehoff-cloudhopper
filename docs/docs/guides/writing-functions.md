@@ -132,7 +132,7 @@ public void onOrder(Order order, EventMetadata meta) {
 | `aws-terraform` | SQS queue | One message per invocation; failed messages are reported individually and delivered again |
 | `azure-terraform` | Storage queue in the function app's storage account | Messages must be Base64-encoded; after five failed attempts a message moves to `<name>-poison` |
 | `gcp-terraform` | Pub/Sub topic, delivered through Eventarc | Requires the Eventarc and Pub/Sub APIs in the project |
-| `springboot-http` | `POST /events/<function name>` | The body is the message; optional `ce-id`, `ce-source` and `ce-time` headers (CloudEvents) fill the metadata. Answers `204`, or an error status if the function throws |
+| `springboot-http` | `POST /events/<function name>`, or a Kafka topic | The body is the message; optional `ce-id`, `ce-source` and `ce-time` headers (CloudEvents) fill the metadata. Answers `204`, or an error status if the function throws. With `spring-kafka` and `cloudhopper.events.broker=kafka`, the function consumes the topic `<name>`; after five failed attempts a message moves to `<name>.DLT`, see [Queues from Kafka](../platforms/generator-overview#queues-from-kafka) |
 
 #### Storage buckets
 

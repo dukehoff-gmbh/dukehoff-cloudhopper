@@ -43,7 +43,8 @@ import java.lang.annotation.Target;
  *   <tr><td>AWS</td><td>SQS queue</td></tr>
  *   <tr><td>Azure</td><td>Storage queue in the function app's storage account</td></tr>
  *   <tr><td>GCP</td><td>Pub/Sub topic, delivered through Eventarc</td></tr>
- *   <tr><td>Spring Boot</td><td>{@code POST /events/<function name>}</td></tr>
+ *   <tr><td>Spring Boot</td><td>{@code POST /events/<function name>}; with {@code spring-kafka} and
+ *       {@code cloudhopper.events.broker=kafka} also the Kafka topic of that name</td></tr>
  * </table>
  *
  * <table>

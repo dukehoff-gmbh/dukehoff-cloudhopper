@@ -43,6 +43,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
 
 /**
  * TCK binding for the {@code springboot-http} target.
@@ -57,6 +63,10 @@ import java.util.stream.Stream;
  * <p>Routes come from the generator's output in {@code target/deployment/springboot-http}:
  * {@code META-INF/handler-info.properties} for HTTP functions and
  * {@code <function>_event_eventRoute.properties} for event-triggered functions.</p>
+ *
+ * <p>With the environment variable {@code CLOUDHOPPER_TCK_KAFKA} set to the bootstrap servers of a
+ * Kafka cluster, the service runs with {@code cloudhopper.events.broker=kafka} and queue messages
+ * are sent to the Kafka topic of the queue instead of being posted.</p>
  */
 public class TestContextSpringBoot implements TestContext {
 
@@ -69,6 +79,8 @@ public class TestContextSpringBoot implements TestContext {
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final ObjectMapper mapper = new ObjectMapper();
 
+    private final String kafka = System.getenv("CLOUDHOPPER_TCK_KAFKA");
+
     private Process process;
     private int port;
 
@@ -78,8 +90,14 @@ public class TestContextSpringBoot implements TestContext {
             Path jar = findExecutableJar();
             port = freePort();
             Files.deleteIfExists(logFile);
-            System.out.println("🚀 Starting " + moduleDir.relativize(jar) + " on port " + port);
-            process = new ProcessBuilder("java", "-jar", jar.toString(), "--server.port=" + port)
+            List<String> command = new ArrayList<>(List.of("java", "-jar", jar.toString(), "--server.port=" + port));
+            if (kafka != null && !kafka.isBlank()) {
+                command.add("--cloudhopper.events.broker=kafka");
+                command.add("--spring.kafka.bootstrap-servers=" + kafka);
+            }
+            System.out.println("🚀 Starting " + moduleDir.relativize(jar) + " on port " + port
+                    + (kafka == null || kafka.isBlank() ? "" : ", queues from Kafka at " + kafka));
+            process = new ProcessBuilder(command)
                     .redirectErrorStream(true)
                     .redirectOutput(logFile.toFile())
                     .start();
@@ -155,6 +173,10 @@ public class TestContextSpringBoot implements TestContext {
 
     @Override
     public void sendQueueMessage(String queueName, String message) {
+        if (kafka != null && !kafka.isBlank()) {
+            sendToKafka(queueName, message);
+            return;
+        }
         postEvent(route("QUEUE", queueName), message);
         System.out.println("📨 Posted message for queue " + queueName);
     }
@@ -175,6 +197,19 @@ public class TestContextSpringBoot implements TestContext {
     @Override
     public void deleteObject(String bucket, String key) {
         // nothing was stored
+    }
+
+    private void sendToKafka(String topic, String message) {
+        Properties config = new Properties();
+        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka);
+        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        try (KafkaProducer<String, String> producer = new KafkaProducer<>(config)) {
+            producer.send(new ProducerRecord<>(topic, message)).get(30, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send a message to the Kafka topic " + topic, e);
+        }
+        System.out.println("📨 Sent message to Kafka topic " + topic);
     }
 
     private String route(String source, String name) {
