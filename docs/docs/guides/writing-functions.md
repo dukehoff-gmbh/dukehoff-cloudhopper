@@ -85,6 +85,20 @@ public void cleanup() {
 }
 ```
 
+| Target | Schedule | Notes |
+|--------|----------|-------|
+| `aws-terraform` | EventBridge rule | Evaluated in UTC |
+| `azure-terraform` | Timer trigger | Evaluated in UTC |
+| `gcp-terraform` | Cloud Scheduler job | Evaluates `timezone` |
+| `springboot-http` | Spring `@Scheduled` in the service, and `POST /schedules/<function name>` | Evaluates `timezone`; see below |
+
+On Spring Boot every running instance fires the schedule on its own. That is
+right for a single instance. When the service runs with several replicas, or on
+a platform that scales to zero, set `cloudhopper.schedules.in-process=false` and
+let an external scheduler call `POST /schedules/<function name>` instead, for
+example a Kubernetes `CronJob` or the platform's cron trigger. Set
+`cloudhopper.schedules.endpoint=false` to switch the endpoints off.
+
 ### `@EventTrigger`
 
 Invokes the function once for each event from a queue or a storage bucket.
@@ -148,12 +162,12 @@ does not delete a bucket that still contains objects.
 
 ### When a target does not support something
 
-Not every target supports every trigger or attribute. The `springboot-http`
-target has no schedules, for example, and only GCP evaluates `timezone`. When
+Not every target supports every trigger or attribute. AWS and Azure ignore the
+`timezone` of a schedule, for example. When
 you compile for a target, Cloudhopper reports what that target ignores:
 
 ```
-[WARNING] ScheduledFunction.java:[40,5] @ScheduledTrigger is not supported by generator 'springboot-http'; it is ignored for this target.
+[WARNING] NightlyCleanup.java:[24,48] Attribute 'timezone' of @ScheduledTrigger is not supported by generator 'aws-terraform'; it is ignored for this target.
 [WARNING] ReportMemoryFunction.java:[32,40] Attribute 'memory' of @Function is not supported by generator 'azure-terraform'; it is ignored for this target.
 ```
 

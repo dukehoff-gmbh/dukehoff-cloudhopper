@@ -36,6 +36,8 @@ import eu.cloudhopper.mc.generator.api.annotations.GeneratorFeatures;
 import eu.cloudhopper.mc.generator.generic.annotations.Template;
 import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
 import eu.cloudhopper.mc.annotations.HttpTrigger;
+import eu.cloudhopper.mc.annotations.ScheduledTrigger;
+import eu.cloudhopper.mc.annotations.ScheduledTrigger.ScheduleAttribute;
 
 @GeneratorFeatures(
     generatorId = "springboot-http",
@@ -62,6 +64,13 @@ import eu.cloudhopper.mc.annotations.HttpTrigger;
                 HttpTriggerAttribute.OPERATION_ID,
                 HttpTriggerAttribute.PATH,
                 HttpTriggerAttribute.METHOD,
+            }
+        ),
+        @GeneratorFeature(
+            supportedAnnotation = ScheduledTrigger.class,
+            supportedAttributes = {
+                ScheduleAttribute.CRON,
+                ScheduleAttribute.TIMEZONE
             }
         )
     }
@@ -97,6 +106,22 @@ import eu.cloudhopper.mc.annotations.HttpTrigger;
             phase = GenerationPhase.EVENT,
             templateName = "event.ftl",
             description = "Generates the Spring Boot endpoint POST /events/<function> for event-triggered functions",
+            outputFileExtension = "java",
+            outputSubDirectory = "generated",
+            javaFile = true
+        ),
+        @Template(
+            phase = GenerationPhase.SCHEDULE,
+            templateName = "schedule.ftl",
+            description = "Generates the trigger endpoint POST /schedules/<function> for scheduled functions",
+            outputFileExtension = "java",
+            outputSubDirectory = "generated",
+            javaFile = true
+        ),
+        @Template(
+            phase = GenerationPhase.SCHEDULE,
+            templateName = "scheduleJob.ftl",
+            description = "Generates the in-process @Scheduled job for scheduled functions",
             outputFileExtension = "java",
             outputSubDirectory = "generated",
             javaFile = true
