@@ -12,4 +12,5 @@ eu.cloudhopper.mc.provider.azure
 eu.cloudhopper.mc.provider.gcp
 eu.cloudhopper.mc.provider.http
 eu.cloudhopper.mc.provider.springboot
+eu.cloudhopper.mc.provider.springboot.kafka
 eu.cloudhopper.mc.runtime

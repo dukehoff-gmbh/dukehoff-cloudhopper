@@ -31,6 +31,7 @@ loadScripts(document, 'script');</script>
 <li>Class</li>
 <li>Use</li>
 <li class="nav-bar-cell1-rev">Tree</li>
+<li><a href="deprecated-list.html">Deprecated</a></li>
 <li><a href="index-all.html">Index</a></li>
 <li><a href="help-doc.html#tree">Help</a></li>
 </ul>
@@ -66,6 +67,7 @@ loadScripts(document, 'script');</script>
 <li><a href="eu/cloudhopper/mc/provider/gcp/package-tree.html">eu.cloudhopper.mc.provider.gcp</a>, </li>
 <li><a href="eu/cloudhopper/mc/provider/http/package-tree.html">eu.cloudhopper.mc.provider.http</a>, </li>
 <li><a href="eu/cloudhopper/mc/provider/springboot/package-tree.html">eu.cloudhopper.mc.provider.springboot</a>, </li>
+<li><a href="eu/cloudhopper/mc/provider/springboot/kafka/package-tree.html">eu.cloudhopper.mc.provider.springboot.kafka</a>, </li>
 <li><a href="eu/cloudhopper/mc/runtime/package-tree.html">eu.cloudhopper.mc.runtime</a></li>
 </ul>
 <section class="hierarchy">
@@ -115,12 +117,14 @@ loadScripts(document, 'script');</script>
 <li class="circle">eu.cloudhopper.mc.generator.api.<a href="eu/cloudhopper/mc/generator/api/HandlerInfo.html" class="type-name-link" title="class in eu.cloudhopper.mc.generator.api">HandlerInfo</a></li>
 <li class="circle">eu.cloudhopper.mc.runtime.<a href="eu/cloudhopper/mc/runtime/Headers.html" class="type-name-link" title="class in eu.cloudhopper.mc.runtime">Headers</a></li>
 <li class="circle">eu.cloudhopper.mc.annotations.<a href="eu/cloudhopper/mc/annotations/HttpTrigger.HttpTriggerAttribute.html" class="type-name-link" title="class in eu.cloudhopper.mc.annotations">HttpTrigger.HttpTriggerAttribute</a></li>
+<li class="circle">eu.cloudhopper.mc.provider.springboot.kafka.<a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventDeliveryAutoConfiguration.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.springboot.kafka">KafkaEventDeliveryAutoConfiguration</a></li>
+<li class="circle">eu.cloudhopper.mc.provider.springboot.kafka.<a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventListeners.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.springboot.kafka">KafkaEventListeners</a> (implements org.springframework.context.SmartLifecycle)</li>
 <li class="circle">eu.cloudhopper.mc.provider.http.<a href="eu/cloudhopper/mc/provider/http/LocalHandlerContext.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.http">LocalHandlerContext</a> (implements eu.cloudhopper.mc.runtime.<a href="eu/cloudhopper/mc/runtime/HandlerContext.html" title="interface in eu.cloudhopper.mc.runtime">HandlerContext</a>)</li>
 <li class="circle">eu.cloudhopper.mc.deployment.config.generator.<a href="eu/cloudhopper/mc/deployment/config/generator/MessagerUtil.html" class="type-name-link" title="class in eu.cloudhopper.mc.deployment.config.generator">MessagerUtil</a></li>
 <li class="circle">eu.cloudhopper.mc.runtime.<a href="eu/cloudhopper/mc/runtime/ParamConverters.html" class="type-name-link" title="class in eu.cloudhopper.mc.runtime">ParamConverters</a></li>
 <li class="circle">eu.cloudhopper.mc.provider.aws.<a href="eu/cloudhopper/mc/provider/aws/S3EventHandler.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.aws">S3EventHandler</a>&lt;I,<wbr>O&gt;</li>
 <li class="circle">eu.cloudhopper.mc.annotations.<a href="eu/cloudhopper/mc/annotations/ScheduledTrigger.ScheduleAttribute.html" class="type-name-link" title="class in eu.cloudhopper.mc.annotations">ScheduledTrigger.ScheduleAttribute</a></li>
-<li class="circle">eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler</a>&lt;I,<wbr>O&gt;</li>
+<li class="circle">eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler</a>&lt;I,<wbr>O&gt; (implements eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html" title="interface in eu.cloudhopper.mc.provider.springboot">EventEndpoint</a>)</li>
 <li class="circle">eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/SpringBootRequestHandler.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootRequestHandler</a>&lt;I,<wbr>O&gt;</li>
 <li class="circle">eu.cloudhopper.mc.generator.springboot.<a href="eu/cloudhopper/mc/generator/springboot/SpringBootTemplateRegistration.html" class="type-name-link" title="class in eu.cloudhopper.mc.generator.springboot">SpringBootTemplateRegistration</a></li>
 <li class="circle">eu.cloudhopper.mc.provider.aws.<a href="eu/cloudhopper/mc/provider/aws/SqsEventHandler.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.aws">SqsEventHandler</a>&lt;I,<wbr>O&gt;</li>
@@ -146,6 +150,7 @@ loadScripts(document, 'script');</script>
 <ul>
 <li class="circle">eu.cloudhopper.mc.runtime.<a href="eu/cloudhopper/mc/runtime/CloudRequestHandler.html" class="type-name-link" title="interface in eu.cloudhopper.mc.runtime">CloudRequestHandler</a>&lt;I,<wbr>O&gt;</li>
 <li class="circle">eu.cloudhopper.mc.generator.api.spi.<a href="eu/cloudhopper/mc/generator/api/spi/DeploymentConfigGenerator.html" class="type-name-link" title="interface in eu.cloudhopper.mc.generator.api.spi">DeploymentConfigGenerator</a></li>
+<li class="circle">eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html" class="type-name-link" title="interface in eu.cloudhopper.mc.provider.springboot">EventEndpoint</a></li>
 <li class="circle">eu.cloudhopper.mc.runtime.<a href="eu/cloudhopper/mc/runtime/HandlerContext.html" class="type-name-link" title="interface in eu.cloudhopper.mc.runtime">HandlerContext</a></li>
 </ul>
 </section>

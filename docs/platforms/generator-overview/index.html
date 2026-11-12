@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.0">
 <title data-rh="true">Targets and What They Support | Dukehoff Cloudhopper</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://cloudhopper.eu/img/social-card.png"><meta data-rh="true" name="twitter:image" content="https://cloudhopper.eu/img/social-card.png"><meta data-rh="true" property="og:url" content="https://cloudhopper.eu/docs/platforms/generator-overview"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="Java, serverless, multi-cloud, AWS Lambda, Azure Functions, Google Cloud Functions, Terraform, OpenAPI, annotation processor"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Targets and What They Support | Dukehoff Cloudhopper"><meta data-rh="true" name="description" content="Cloudhopper deploys the same annotated functions to four targets. Each target is"><meta data-rh="true" property="og:description" content="Cloudhopper deploys the same annotated functions to four targets. Each target is"><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://cloudhopper.eu/docs/platforms/generator-overview"><link data-rh="true" rel="alternate" href="https://cloudhopper.eu/docs/platforms/generator-overview" hreflang="en"><link data-rh="true" rel="alternate" href="https://cloudhopper.eu/docs/platforms/generator-overview" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Targets and What They Support","item":"https://cloudhopper.eu/docs/platforms/generator-overview"}]}</script><link rel="stylesheet" href="/assets/css/styles.d76b75da.css">
-<script src="/assets/js/runtime~main.9a832b2b.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.14b3a626.js" defer="defer"></script>
 <script src="/assets/js/main.56d1b4c2.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -35,7 +35,8 @@ site.</p>
 <ul>
 <li><code>@EventTrigger</code> covers both <code>EventSource.QUEUE</code> and <code>EventSource.STORAGE</code> on every
 target that claims it. On Spring Boot it is the endpoint
-<code>POST /events/&lt;function name&gt;</code>; there is no broker binding yet.</li>
+<code>POST /events/&lt;function name&gt;</code>, and queues can also be consumed from Kafka
+(see below).</li>
 <li>A function without a trigger can be invoked directly on AWS (Lambda
 invoke). On Azure every function also gets the HTTP route
 <code>/api/&lt;function name&gt;_http_function_trigger</code>, and on GCP every function has an
@@ -62,6 +63,36 @@ creates the infrastructure they bind to.</p>
 in <code>src/main/springboot-http</code>), and the profile builds an executable jar,
 <code>&lt;artifactId&gt;-&lt;version&gt;-springboot-http.jar</code>, which the Dockerfile packages.
 Like on the other targets, a <code>String</code> result is returned as JSON (<code>&quot;pong&quot;</code>).</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="queues-from-kafka">Queues from Kafka<a href="#queues-from-kafka" class="hash-link" aria-label="Direct link to Queues from Kafka" title="Direct link to Queues from Kafka">​</a></h4>
+<p>On Spring Boot, <code>@EventTrigger(source = EventSource.QUEUE, name = &quot;&lt;queue&gt;&quot;)</code>
+always has the endpoint <code>POST /events/&lt;function name&gt;</code>. To consume the queue
+from Kafka instead, add <code>spring-kafka</code> to the project and set one property; the
+function code stays the same:</p>
+<div class="language-xml codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-xml codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token tag punctuation" style="color:#393A34">&lt;</span><span class="token tag" style="color:#00009f">dependency</span><span class="token tag punctuation" style="color:#393A34">&gt;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token tag punctuation" style="color:#393A34">&lt;</span><span class="token tag" style="color:#00009f">groupId</span><span class="token tag punctuation" style="color:#393A34">&gt;</span><span class="token plain">org.springframework.kafka</span><span class="token tag punctuation" style="color:#393A34">&lt;/</span><span class="token tag" style="color:#00009f">groupId</span><span class="token tag punctuation" style="color:#393A34">&gt;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token tag punctuation" style="color:#393A34">&lt;</span><span class="token tag" style="color:#00009f">artifactId</span><span class="token tag punctuation" style="color:#393A34">&gt;</span><span class="token plain">spring-kafka</span><span class="token tag punctuation" style="color:#393A34">&lt;/</span><span class="token tag" style="color:#00009f">artifactId</span><span class="token tag punctuation" style="color:#393A34">&gt;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token tag punctuation" style="color:#393A34">&lt;/</span><span class="token tag" style="color:#00009f">dependency</span><span class="token tag punctuation" style="color:#393A34">&gt;</span><br></span></code></pre></div></div>
+<div class="language-properties codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-properties codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">cloudhopper.events.broker=kafka</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">spring.kafka.bootstrap-servers=kafka:9092</span><br></span></code></pre></div></div>
+<p>Every queue-triggered function then consumes the topic <code>&lt;queue&gt;</code>:</p>
+<ul>
+<li>The consumer group is <code>cloudhopper-&lt;function id&gt;</code>, so the replicas of the
+service share the messages and each function sees each message once. Change
+the prefix with <code>cloudhopper.events.kafka.group-id-prefix</code>.</li>
+<li>A message is committed after the function returned. When the function throws,
+it is delivered again after <code>cloudhopper.events.kafka.backoff</code> (default <code>1s</code>),
+up to <code>cloudhopper.events.kafka.max-attempts</code> times (default <code>5</code>), and then
+published to the topic <code>&lt;queue&gt;.DLT</code>.</li>
+<li>A new consumer group starts with the oldest message in the topic, as a new
+queue subscription does on the cloud targets.</li>
+<li><code>EventMetadata</code> gets the CloudEvents attributes of the Kafka binding
+(<code>ce_id</code>, <code>ce_source</code>, <code>ce_time</code> headers); without them the id is
+<code>&lt;topic&gt;-&lt;partition&gt;-&lt;offset&gt;</code>, which stays the same when a message is
+delivered again, and the time is the record timestamp. Other headers become
+the attributes.</li>
+</ul>
+<p>Manage the versions with the Spring Boot BOM (<code>spring-boot-dependencies</code> or
+<code>spring-boot-starter-parent</code>). Without it, Maven may pick the SLF4J 1.7 that
+<code>kafka-clients</code> declares, and Spring Boot does not start.</p>
+<p>The endpoint follows the CloudEvents HTTP binding (<code>ce-id</code>, <code>ce-source</code>,
+<code>ce-time</code> headers), so a Knative <code>Trigger</code> or another CloudEvents sender can
+deliver to <code>POST /events/&lt;function name&gt;</code> without Kafka on the classpath.</p>
 <hr>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="maven-configuration">Maven configuration<a href="#maven-configuration" class="hash-link" aria-label="Direct link to Maven configuration" title="Direct link to Maven configuration">​</a></h2>
 <p>Projects created with the <a href="/docs/modules/maven-archetype">archetype</a> have a

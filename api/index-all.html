@@ -31,6 +31,7 @@ loadScripts(document, 'script');</script>
 <li>Class</li>
 <li>Use</li>
 <li><a href="overview-tree.html">Tree</a></li>
+<li><a href="deprecated-list.html">Deprecated</a></li>
 <li class="nav-bar-cell1-rev">Index</li>
 <li><a href="help-doc.html#index">Help</a></li>
 </ul>
@@ -173,6 +174,12 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:D">D</h2>
 <dl class="index">
+<dt><a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html#deliver(java.lang.String,java.util.Map,int)" class="member-name-link">deliver(String, Map&lt;String, String&gt;, int)</a> - Method in interface eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html" title="interface in eu.cloudhopper.mc.provider.springboot">EventEndpoint</a></dt>
+<dd>
+<div class="block">Invokes the function for one event.</div>
+</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html#deliver(java.lang.String,java.util.Map,int)" class="member-name-link">deliver(String, Map&lt;String, String&gt;, int)</a> - Method in class eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/generator/api/spi/DeploymentConfigGenerator.html" class="type-name-link" title="interface in eu.cloudhopper.mc.generator.api.spi">DeploymentConfigGenerator</a> - Interface in <a href="eu/cloudhopper/mc/generator/api/spi/package-summary.html">eu.cloudhopper.mc.generator.api.spi</a></dt>
 <dd>
 <div class="block">Service Provider Interface (SPI) for custom deployment configuration generators.</div>
@@ -236,6 +243,8 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/provider/springboot/package-summary.html">eu.cloudhopper.mc.provider.springboot</a> - package eu.cloudhopper.mc.provider.springboot</dt>
 <dd>&nbsp;</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/kafka/package-summary.html">eu.cloudhopper.mc.provider.springboot.kafka</a> - package eu.cloudhopper.mc.provider.springboot.kafka</dt>
+<dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/runtime/package-summary.html">eu.cloudhopper.mc.runtime</a> - package eu.cloudhopper.mc.runtime</dt>
 <dd>
 <div class="block">Defines the runtime interfaces used by cloud function implementations.</div>
@@ -244,6 +253,11 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/deployment/config/generator/HandlerGenerator.ParamInfo.ParamType.html#EVENT_METADATA" class="member-name-link">EVENT_METADATA</a> - Enum constant in enum class eu.cloudhopper.mc.deployment.config.generator.<a href="eu/cloudhopper/mc/deployment/config/generator/HandlerGenerator.ParamInfo.ParamType.html" title="enum class in eu.cloudhopper.mc.deployment.config.generator">HandlerGenerator.ParamInfo.ParamType</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html" class="type-name-link" title="interface in eu.cloudhopper.mc.provider.springboot">EventEndpoint</a> - Interface in <a href="eu/cloudhopper/mc/provider/springboot/package-summary.html">eu.cloudhopper.mc.provider.springboot</a></dt>
+<dd>
+<div class="block">An event-triggered function as the Spring Boot target exposes it: the generated
+ <code>POST /events/&lt;function&gt;</code> controller, and the endpoint a broker binding delivers to.</div>
+</dd>
 <dt><a href="eu/cloudhopper/mc/runtime/EventHandlerContext.html" class="type-name-link" title="class in eu.cloudhopper.mc.runtime">EventHandlerContext</a> - Class in <a href="eu/cloudhopper/mc/runtime/package-summary.html">eu.cloudhopper.mc.runtime</a></dt>
 <dd>
 <div class="block">A <a href="eu/cloudhopper/mc/runtime/HandlerContext.html" title="interface in eu.cloudhopper.mc.runtime"><code>HandlerContext</code></a> for an event invocation: it adds the <a href="eu/cloudhopper/mc/runtime/EventMetadata.html" title="class in eu.cloudhopper.mc.runtime"><code>EventMetadata</code></a> to the
@@ -352,6 +366,10 @@ loadScripts(document, 'script');</script>
 <div class="block">Constants representing the attribute names of <a href="eu/cloudhopper/mc/annotations/Function.html" title="annotation interface in eu.cloudhopper.mc.annotations"><code>Function</code></a>.</div>
 </dd>
 <dt><a href="eu/cloudhopper/mc/annotations/Function.FunctionAttribute.html#%3Cinit%3E()" class="member-name-link">FunctionAttribute()</a> - Constructor for class eu.cloudhopper.mc.annotations.<a href="eu/cloudhopper/mc/annotations/Function.FunctionAttribute.html" title="class in eu.cloudhopper.mc.annotations">Function.FunctionAttribute</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html#functionId()" class="member-name-link">functionId()</a> - Method in interface eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html" title="interface in eu.cloudhopper.mc.provider.springboot">EventEndpoint</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html#functionId()" class="member-name-link">functionId()</a> - Method in class eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler</a></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:G">G</h2>
@@ -793,6 +811,8 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="eu/cloudhopper/mc/generator/generic/internal/TemplateDescriptor.html#isJavaFile()" class="member-name-link">isJavaFile()</a> - Method in class eu.cloudhopper.mc.generator.generic.internal.<a href="eu/cloudhopper/mc/generator/generic/internal/TemplateDescriptor.html" title="class in eu.cloudhopper.mc.generator.generic.internal">TemplateDescriptor</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventListeners.html#isRunning()" class="member-name-link">isRunning()</a> - Method in class eu.cloudhopper.mc.provider.springboot.kafka.<a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventListeners.html" title="class in eu.cloudhopper.mc.provider.springboot.kafka">KafkaEventListeners</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/provider/aws/S3EventHandler.html#isS3Event(java.util.Map)" class="member-name-link">isS3Event(Map&lt;?, ?&gt;)</a> - Static method in class eu.cloudhopper.mc.provider.aws.<a href="eu/cloudhopper/mc/provider/aws/S3EventHandler.html" title="class in eu.cloudhopper.mc.provider.aws">S3EventHandler</a></dt>
 <dd>
 <div class="block">Checks whether a raw Lambda input is an S3 event notification.</div>
@@ -811,6 +831,18 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:K">K</h2>
 <dl class="index">
+<dt><a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventDeliveryAutoConfiguration.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.springboot.kafka">KafkaEventDeliveryAutoConfiguration</a> - Class in <a href="eu/cloudhopper/mc/provider/springboot/kafka/package-summary.html">eu.cloudhopper.mc.provider.springboot.kafka</a></dt>
+<dd>
+<div class="block">Delivers the messages of Kafka topics to the queue-triggered functions of a Spring Boot service.</div>
+</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventDeliveryAutoConfiguration.html#%3Cinit%3E()" class="member-name-link">KafkaEventDeliveryAutoConfiguration()</a> - Constructor for class eu.cloudhopper.mc.provider.springboot.kafka.<a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventDeliveryAutoConfiguration.html" title="class in eu.cloudhopper.mc.provider.springboot.kafka">KafkaEventDeliveryAutoConfiguration</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventListeners.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.springboot.kafka">KafkaEventListeners</a> - Class in <a href="eu/cloudhopper/mc/provider/springboot/kafka/package-summary.html">eu.cloudhopper.mc.provider.springboot.kafka</a></dt>
+<dd>
+<div class="block">One Kafka listener container per queue-triggered function.</div>
+</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventListeners.html#%3Cinit%3E(java.util.List,org.springframework.kafka.core.ConsumerFactory,org.springframework.kafka.core.KafkaOperations,java.lang.String,int,java.time.Duration)" class="member-name-link">KafkaEventListeners(List&lt;EventEndpoint&gt;, ConsumerFactory&lt;?, ?&gt;, KafkaOperations&lt;?, ?&gt;, String, int, Duration)</a> - Constructor for class eu.cloudhopper.mc.provider.springboot.kafka.<a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventListeners.html" title="class in eu.cloudhopper.mc.provider.springboot.kafka">KafkaEventListeners</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/annotations/ExtensionKeys.Aws.Architecture.html#KEY" class="member-name-link">KEY</a> - Static variable in class eu.cloudhopper.mc.annotations.<a href="eu/cloudhopper/mc/annotations/ExtensionKeys.Aws.Architecture.html" title="class in eu.cloudhopper.mc.annotations">ExtensionKeys.Aws.Architecture</a></dt>
 <dd>
 <div class="block">The key for specifying AWS function architecture:
@@ -873,6 +905,10 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">The unique name of the function in the deployment target.</div>
 </dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html#name()" class="member-name-link">name()</a> - Method in interface eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html" title="interface in eu.cloudhopper.mc.provider.springboot">EventEndpoint</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html#name()" class="member-name-link">name()</a> - Method in class eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/annotations/EventTrigger.EventTriggerAttribute.html#NAME" class="member-name-link">NAME</a> - Static variable in class eu.cloudhopper.mc.annotations.<a href="eu/cloudhopper/mc/annotations/EventTrigger.EventTriggerAttribute.html" title="class in eu.cloudhopper.mc.annotations">EventTrigger.EventTriggerAttribute</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/annotations/Function.FunctionAttribute.html#NAME" class="member-name-link">NAME</a> - Static variable in class eu.cloudhopper.mc.annotations.<a href="eu/cloudhopper/mc/annotations/Function.FunctionAttribute.html" title="class in eu.cloudhopper.mc.annotations">Function.FunctionAttribute</a></dt>
@@ -1016,6 +1052,10 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">The kind of event source.</div>
 </dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html#source()" class="member-name-link">source()</a> - Method in interface eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/EventEndpoint.html" title="interface in eu.cloudhopper.mc.provider.springboot">EventEndpoint</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html#source()" class="member-name-link">source()</a> - Method in class eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/annotations/EventTrigger.EventTriggerAttribute.html#SOURCE" class="member-name-link">SOURCE</a> - Static variable in class eu.cloudhopper.mc.annotations.<a href="eu/cloudhopper/mc/annotations/EventTrigger.EventTriggerAttribute.html" title="class in eu.cloudhopper.mc.annotations">EventTrigger.EventTriggerAttribute</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler&lt;I,<wbr>O&gt;</a> - Class in <a href="eu/cloudhopper/mc/provider/springboot/package-summary.html">eu.cloudhopper.mc.provider.springboot</a></dt>
@@ -1024,6 +1064,12 @@ loadScripts(document, 'script');</script>
  <code>POST /events/&lt;function name&gt;</code>.</div>
 </dd>
 <dt><a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html#%3Cinit%3E(eu.cloudhopper.mc.runtime.CloudRequestHandler,com.fasterxml.jackson.core.type.TypeReference)" class="member-name-link">SpringBootEventHandler(CloudRequestHandler&lt;I, O&gt;, TypeReference&lt;I&gt;)</a> - Constructor for class eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler</a></dt>
+<dd>
+<div class="deprecation-block"><span class="deprecated-label">Deprecated.</span>
+<div class="deprecation-comment">generated code passes function id, source and name</div>
+</div>
+</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html#%3Cinit%3E(eu.cloudhopper.mc.runtime.CloudRequestHandler,com.fasterxml.jackson.core.type.TypeReference,java.lang.String,eu.cloudhopper.mc.annotations.EventSource,java.lang.String)" class="member-name-link">SpringBootEventHandler(CloudRequestHandler&lt;I, O&gt;, TypeReference&lt;I&gt;, String, EventSource, String)</a> - Constructor for class eu.cloudhopper.mc.provider.springboot.<a href="eu/cloudhopper/mc/provider/springboot/SpringBootEventHandler.html" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootEventHandler</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/provider/springboot/SpringBootRequestHandler.html" class="type-name-link" title="class in eu.cloudhopper.mc.provider.springboot">SpringBootRequestHandler&lt;I,<wbr>O&gt;</a> - Class in <a href="eu/cloudhopper/mc/provider/springboot/package-summary.html">eu.cloudhopper.mc.provider.springboot</a></dt>
 <dd>
@@ -1040,6 +1086,10 @@ loadScripts(document, 'script');</script>
 <div class="block">Handles an SQS event (a batch of records) by invoking the function once per message.</div>
 </dd>
 <dt><a href="eu/cloudhopper/mc/provider/aws/SqsEventHandler.html#%3Cinit%3E(eu.cloudhopper.mc.runtime.CloudRequestHandler,java.lang.Class)" class="member-name-link">SqsEventHandler(CloudRequestHandler&lt;I, O&gt;, Class&lt;I&gt;)</a> - Constructor for class eu.cloudhopper.mc.provider.aws.<a href="eu/cloudhopper/mc/provider/aws/SqsEventHandler.html" title="class in eu.cloudhopper.mc.provider.aws">SqsEventHandler</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventListeners.html#start()" class="member-name-link">start()</a> - Method in class eu.cloudhopper.mc.provider.springboot.kafka.<a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventListeners.html" title="class in eu.cloudhopper.mc.provider.springboot.kafka">KafkaEventListeners</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventListeners.html#stop()" class="member-name-link">stop()</a> - Method in class eu.cloudhopper.mc.provider.springboot.kafka.<a href="eu/cloudhopper/mc/provider/springboot/kafka/KafkaEventListeners.html" title="class in eu.cloudhopper.mc.provider.springboot.kafka">KafkaEventListeners</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="eu/cloudhopper/mc/annotations/EventSource.html#STORAGE" class="member-name-link">STORAGE</a> - Enum constant in enum class eu.cloudhopper.mc.annotations.<a href="eu/cloudhopper/mc/annotations/EventSource.html" title="enum class in eu.cloudhopper.mc.annotations">EventSource</a></dt>
 <dd>
