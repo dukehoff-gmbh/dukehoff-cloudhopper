@@ -98,7 +98,7 @@ jobs:
             echo "::error::files outside the version folders (see above)"; exit 1
           fi
           artifacts=$(cut -d/ -f4 entries.txt | sort -u | tr '\n' ' ')
-          expected="cloudhopper-maven-archetype-core cloudhopper-parent deployment-config-api deployment-config-generator-api deployment-config-generator-generic deployment-config-processor deployment-config-processor-test-support generator-aws-terraform generator-azure-terraform generator-gcp-terraform generator-springboot provider-aws provider-azure provider-gcp provider-http provider-springboot test-tck-api "
+          expected="cloudhopper-maven-archetype-core cloudhopper-parent deployment-config-api deployment-config-generator-api deployment-config-generator-generic deployment-config-processor deployment-config-processor-test-support generator-aws-terraform generator-azure-terraform generator-gcp-terraform generator-knative generator-springboot provider-aws provider-azure provider-gcp provider-http provider-springboot test-tck-api "
           [ "$artifacts" = "$expected" ] || { echo "::error::unexpected artifacts: $artifacts"; exit 1; }
           # Central requires sources and javadoc for everything but the parent pom
           for a in $artifacts; do

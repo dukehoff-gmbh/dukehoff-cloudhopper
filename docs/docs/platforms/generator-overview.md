@@ -2,7 +2,7 @@
 
 import SupportMatrix from './_support-matrix.md';
 
-Cloudhopper deploys the same annotated functions to four targets. Each target is
+Cloudhopper deploys the same annotated functions to five targets. Each target is
 a **generator** (it writes handler classes, Terraform and API descriptions at
 compile time) plus a **provider** (the runtime library the generated handlers
 call). You pick the target with a Maven profile:
@@ -13,6 +13,7 @@ call). You pick the target with a Maven profile:
 | `azure-terraform` | Azure Functions | `generator-azure-terraform` | `provider-azure` |
 | `gcp-terraform` | Google Cloud Functions (2nd gen) | `generator-gcp-terraform` | `provider-gcp` |
 | `springboot-http` | Spring Boot service on any server | `generator-springboot` | `provider-springboot`, `provider-http` |
+| `knative` | Knative service on Kubernetes (Helm chart) | `generator-knative` | `provider-springboot`, `provider-http` |
 
 ---
 
@@ -35,11 +36,13 @@ Notes on the event and trigger columns:
 - `@EventTrigger` covers both `EventSource.QUEUE` and `EventSource.STORAGE` on every
   target that claims it. On Spring Boot it is the endpoint
   `POST /events/<function name>`, and queues can also be consumed from Kafka
-  (see below).
+  (see below). On Knative a queue is a Kafka topic; storage events have no
+  generated source and are posted to `POST /events/<function name>` like on
+  Spring Boot.
 - A function without a trigger can be invoked directly on AWS (Lambda
   invoke). On Azure every function also gets the HTTP route
   `/api/<function name>_http_function_trigger`, and on GCP every function has an
-  HTTPS URL. On Spring Boot every function gets the endpoint
+  HTTPS URL. On Spring Boot and Knative every function gets the endpoint
   `GET`/`POST /functions/<function name>`; set
   `cloudhopper.functions.direct-endpoint=false` to switch these off.
 - Vendor-specific settings, such as the processor architecture on AWS, go
@@ -155,6 +158,54 @@ The endpoint follows the CloudEvents HTTP binding (`ce-id`, `ce-source`,
 `ce-time` headers), so a Knative `Trigger` or another CloudEvents sender can
 deliver to `POST /events/<function name>` without Kafka on the classpath.
 
+### Knative (`knative`)
+
+:::note
+
+The `knative` target is not part of release 1.1.0. It ships with the next release.
+
+:::
+
+The `knative` generator builds on `springboot-http`: it generates the same
+Spring Boot application (all templates above) and adds a Helm chart under
+`target/deployment/knative/chart` that runs it as one Knative service. The
+cluster setup and the installation are described in the
+[Knative setup guide](../setup/knative-prerequisites).
+
+| Template | Output | Purpose |
+|---|---|---|
+| `chart.ftl` | `chart/Chart.yaml` | Chart metadata; the chart and app version follow the project version |
+| `values.ftl` | `chart/values.yaml` | Image, Kafka bootstrap servers, delivery, scaling, timeout, resources, environment |
+| `service.ftl` | `chart/templates/service.yaml` | Knative `Service`; starts the application with `cloudhopper.schedules.in-process=false` |
+| `pingSource.ftl` | `chart/templates/<function>_schedule_pingSource.yaml` | `PingSource` with `cron` and `timezone` that calls `POST /schedules/<function name>` |
+| `kafkaSource.ftl` | `chart/templates/<function>_event_kafkaSource.yaml` | For a queue: `KafkaSource` on the topic `<queue>` that delivers to `POST /events/<function name>`, and a `KafkaSink` for the dead-letter topic `<queue>.DLT` |
+
+The profile builds the executable jar `<artifactId>-<version>-knative.jar`,
+which the generated Dockerfile packages. The release name of the chart is the
+name of the service; the sources and sinks are named `<release>-<function>`.
+
+Schedules and queues reach the service through Knative Eventing, so they work
+while the service is scaled to zero:
+
+- **Schedules:** the `PingSource` fires once per schedule, independent of the
+  number of replicas, and evaluates `timezone`.
+- **Queues:** each queue function has its own consumer group,
+  `<kafka.consumerGroupPrefix><function>` (default `cloudhopper-<function>`).
+  A message is delivered at least once; when the function fails, it is
+  delivered again `delivery.retry` times (default 4) with exponential backoff
+  starting at `delivery.backoffDelay` (default `PT1S`), and then written to the
+  topic `<queue>.DLT` with the error code in the CloudEvents extensions
+  `knativeerrorcode` and `knativeerrordest`. Set `delivery.deadLetterTopic=false`
+  to drop failed messages instead. The topic itself must exist, or the Kafka
+  cluster must create topics automatically.
+- `EventMetadata` gets the CloudEvents attributes of the `KafkaSource`
+  (id `partition:<p>/offset:<o>`, the record time). The source does not report
+  the delivery attempt, so it is always 0.
+
+`@Function` settings for memory, timeout and instances are not claimed: all
+functions run in one container, so these are set for the whole service in
+`values.yaml` (`resources`, `timeoutSeconds`, `scaling`).
+
 ---
 
 ## Maven configuration
@@ -182,3 +233,4 @@ provider dependencies and passes the generator ID to the annotation processor:
 - [AWS generator](../modules/generator-aws-terraform) and [provider](../modules/provider-aws)
 - [Azure generator](../modules/generator-azure-terraform) and [provider](../modules/provider-azure)
 - [GCP generator](../modules/generator-gcp-terraform) and [provider](../modules/provider-gcp)
+- [Knative setup guide](../setup/knative-prerequisites)

@@ -4,16 +4,17 @@
 # $GITHUB_OUTPUT:
 #
 #   code=true|false        build, unit tests and archetype test
-#   <target>=true|false    TCK of that target (aws, azure, gcp, springboot)
+#   <target>=true|false    TCK of that target (aws, azure, gcp, springboot, knative)
 #
 # A path that belongs to exactly one target runs only that target's TCK. A path
 # that this table does not know runs everything, so a gap in the table costs
 # build minutes, never coverage.
 set -euo pipefail
 
-TARGETS=(aws azure gcp springboot)
+TARGETS=(aws azure gcp springboot knative)
 
-# path prefixes that belong to one target
+# path prefixes that belong to one target; knative builds on the springboot-http generator
+# and runs its application, so a Spring Boot change also affects knative
 target_of() {
   case "$1" in
     generator-aws-terraform/*|provider-aws/*|test/system-tests/generator-aws-terraform/*|test/tck/generator-bindings/aws-terraform/*)
@@ -23,7 +24,9 @@ target_of() {
     generator-gcp-terraform/*|provider-gcp/*|test/system-tests/generator-gcp-terraform/*|test/tck/generator-bindings/gcp-terraform/*)
       echo gcp ;;
     generator-springboot/*|provider-springboot/*|test/system-tests/generator-springboot/*|test/tck/generator-bindings/springboot-http/*)
-      echo springboot ;;
+      echo "springboot knative" ;;
+    generator-knative/*|test/knative/*|test/system-tests/generator-knative/*|test/tck/generator-bindings/knative/*)
+      echo knative ;;
     *) echo "" ;;
   esac
 }
