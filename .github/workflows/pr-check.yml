@@ -117,6 +117,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
+    # a single-node Kafka (KRaft) for the second Spring Boot TCK run; starts while Maven builds
+    - name: Start Kafka for the Spring Boot TCK
+      if: needs.changes.outputs.springboot == 'true'
+      run: docker run -d --name kafka -p 9092:9092 apache/kafka:3.8.0
+
     - name: Build with Maven
       run: mvn clean install
 
@@ -125,6 +130,14 @@ jobs:
     - name: Run TCK for Spring Boot
       if: needs.changes.outputs.springboot == 'true'
       working-directory: test/system-tests/generator-springboot
+      run: mvn -B -ntp exec:java
+
+    # the same TCK with the queues delivered from Kafka (cloudhopper.events.broker=kafka)
+    - name: Run TCK for Spring Boot with Kafka
+      if: needs.changes.outputs.springboot == 'true'
+      working-directory: test/system-tests/generator-springboot
+      env:
+        CLOUDHOPPER_TCK_KAFKA: localhost:9092
       run: mvn -B -ntp exec:java
 
   # The cloud TCKs deploy into shared cloud accounts, partly with fixed resource

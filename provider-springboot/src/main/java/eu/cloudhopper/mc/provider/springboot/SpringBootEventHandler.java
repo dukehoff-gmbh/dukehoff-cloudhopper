@@ -28,6 +28,7 @@ package eu.cloudhopper.mc.provider.springboot;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.cloudhopper.mc.annotations.EventSource;
 import eu.cloudhopper.mc.provider.http.LocalHandlerContext;
 import eu.cloudhopper.mc.runtime.CloudRequestHandler;
 import eu.cloudhopper.mc.runtime.EventHandlerContext;
@@ -62,17 +63,64 @@ import java.util.UUID;
  * @param <I> input type
  * @param <O> output type (ignored for events)
  */
-public abstract class SpringBootEventHandler<I, O> {
+public abstract class SpringBootEventHandler<I, O> implements EventEndpoint {
 
     private static final Set<String> CORE_ATTRIBUTES = Set.of("ce-id", "ce-source", "ce-time", "ce-type", "ce-specversion");
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final CloudRequestHandler<I, O> handler;
     private final JavaType inputType;
+    private final String functionId;
+    private final EventSource source;
+    private final String name;
 
-    protected SpringBootEventHandler(CloudRequestHandler<I, O> handler, TypeReference<I> inputType) {
+    /**
+     * @param handler    the function
+     * @param inputType  the type of the event data
+     * @param functionId the function id
+     * @param source     where the events come from
+     * @param name       the name of the queue or bucket
+     */
+    protected SpringBootEventHandler(CloudRequestHandler<I, O> handler, TypeReference<I> inputType,
+                                     String functionId, EventSource source, String name) {
         this.handler = Objects.requireNonNull(handler);
         this.inputType = objectMapper.getTypeFactory().constructType(inputType);
+        this.functionId = functionId;
+        this.source = source;
+        this.name = name;
+    }
+
+    /**
+     * Creates a handler that only serves its HTTP endpoint; broker bindings do not see it,
+     * because it does not know its queue.
+     *
+     * @param handler   the function
+     * @param inputType the type of the event data
+     * @deprecated generated code passes function id, source and name
+     */
+    @Deprecated
+    protected SpringBootEventHandler(CloudRequestHandler<I, O> handler, TypeReference<I> inputType) {
+        this(handler, inputType, null, null, null);
+    }
+
+    @Override
+    public String functionId() {
+        return functionId;
+    }
+
+    @Override
+    public EventSource source() {
+        return source;
+    }
+
+    @Override
+    public String name() {
+        return name;
+    }
+
+    @Override
+    public void deliver(String body, Map<String, String> headers, int deliveryAttempt) throws IOException {
+        invoke(body, headers, name, deliveryAttempt);
     }
 
     /**
@@ -86,6 +134,12 @@ public abstract class SpringBootEventHandler<I, O> {
      */
     public ResponseEntity<Void> handleEvent(String body, Map<String, String> headers, String defaultSource)
             throws IOException {
+        invoke(body, headers, defaultSource, 0);
+        return ResponseEntity.noContent().build();
+    }
+
+    private void invoke(String body, Map<String, String> headers, String defaultSource, int deliveryAttempt)
+            throws IOException {
         Map<String, String> h = Headers.of(headers);
         Map<String, String> attributes = new HashMap<>();
         h.forEach((name, value) -> {
@@ -98,10 +152,9 @@ public abstract class SpringBootEventHandler<I, O> {
                 h.getOrDefault("ce-id", UUID.randomUUID().toString()),
                 h.getOrDefault("ce-source", defaultSource),
                 parseTime(h.get("ce-time")),
-                0,
+                deliveryAttempt,
                 attributes);
         handler.handleRequest(parseBody(body, defaultSource), new EventHandlerContext(new LocalHandlerContext(), meta));
-        return ResponseEntity.noContent().build();
     }
 
     private static Instant parseTime(String time) {

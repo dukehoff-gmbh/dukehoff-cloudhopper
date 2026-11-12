@@ -34,7 +34,8 @@ Notes on the event and trigger columns:
 
 - `@EventTrigger` covers both `EventSource.QUEUE` and `EventSource.STORAGE` on every
   target that claims it. On Spring Boot it is the endpoint
-  `POST /events/<function name>`; there is no broker binding yet.
+  `POST /events/<function name>`, and queues can also be consumed from Kafka
+  (see below).
 - A function without a trigger can be invoked directly on AWS (Lambda
   invoke). On Azure every function also gets the HTTP route
   `/api/<function name>_http_function_trigger`, and on GCP every function has an
@@ -109,6 +110,50 @@ The project contains the `@SpringBootApplication` class (the archetype creates i
 in `src/main/springboot-http`), and the profile builds an executable jar,
 `<artifactId>-<version>-springboot-http.jar`, which the Dockerfile packages.
 Like on the other targets, a `String` result is returned as JSON (`"pong"`).
+
+#### Queues from Kafka
+
+On Spring Boot, `@EventTrigger(source = EventSource.QUEUE, name = "<queue>")`
+always has the endpoint `POST /events/<function name>`. To consume the queue
+from Kafka instead, add `spring-kafka` to the project and set one property; the
+function code stays the same:
+
+```xml
+<dependency>
+    <groupId>org.springframework.kafka</groupId>
+    <artifactId>spring-kafka</artifactId>
+</dependency>
+```
+
+```properties
+cloudhopper.events.broker=kafka
+spring.kafka.bootstrap-servers=kafka:9092
+```
+
+Every queue-triggered function then consumes the topic `<queue>`:
+
+- The consumer group is `cloudhopper-<function id>`, so the replicas of the
+  service share the messages and each function sees each message once. Change
+  the prefix with `cloudhopper.events.kafka.group-id-prefix`.
+- A message is committed after the function returned. When the function throws,
+  it is delivered again after `cloudhopper.events.kafka.backoff` (default `1s`),
+  up to `cloudhopper.events.kafka.max-attempts` times (default `5`), and then
+  published to the topic `<queue>.DLT`.
+- A new consumer group starts with the oldest message in the topic, as a new
+  queue subscription does on the cloud targets.
+- `EventMetadata` gets the CloudEvents attributes of the Kafka binding
+  (`ce_id`, `ce_source`, `ce_time` headers); without them the id is
+  `<topic>-<partition>-<offset>`, which stays the same when a message is
+  delivered again, and the time is the record timestamp. Other headers become
+  the attributes.
+
+Manage the versions with the Spring Boot BOM (`spring-boot-dependencies` or
+`spring-boot-starter-parent`). Without it, Maven may pick the SLF4J 1.7 that
+`kafka-clients` declares, and Spring Boot does not start.
+
+The endpoint follows the CloudEvents HTTP binding (`ce-id`, `ce-source`,
+`ce-time` headers), so a Knative `Trigger` or another CloudEvents sender can
+deliver to `POST /events/<function name>` without Kafka on the classpath.
 
 ---
 

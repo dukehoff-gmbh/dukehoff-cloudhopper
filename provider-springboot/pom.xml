@@ -12,6 +12,18 @@
     <properties>
         <license.header.path>${project.parent.basedir}/src/license/header.txt</license.header.path>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <!-- align Spring, Kafka, SLF4J and Logback with the Spring Boot version -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>3.2.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
@@ -30,6 +42,26 @@
             <artifactId>spring-boot-starter-web</artifactId>
             <version>3.2.5</version> <!-- or your preferred Spring Boot version -->
             <scope>provided</scope> <!-- assuming it's part of the user's app -->
+        </dependency>
+        <!-- optional: the Kafka binding is active when the application has spring-kafka and sets
+             cloudhopper.events.broker=kafka -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <version>3.1.4</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>3.2.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
+            <version>3.1.4</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

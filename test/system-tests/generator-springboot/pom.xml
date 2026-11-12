@@ -16,6 +16,18 @@
         <jar.classifier>springboot</jar.classifier>
         <main.class>eu.cloudhopper.mc.demo.Application</main.class>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <!-- align Spring, Kafka, SLF4J and Logback with the Spring Boot version -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>3.2.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>        
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
@@ -59,6 +71,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
             <version>3.2.5</version> 
+        </dependency>
+        <!-- the Kafka binding of provider-springboot; active with cloudhopper.events.broker=kafka -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
         </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
