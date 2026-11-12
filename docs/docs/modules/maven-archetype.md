@@ -50,6 +50,7 @@ You can specify one or more `generatorIds` (comma-separated) to activate support
 | `gcp-terraform`     | GCP Cloud Functions via Terraform    |
 | `azure-terraform`   | Azure Functions via Terraform        |
 | `springboot-http`   | Local Spring Boot HTTP runtime       |
+| `knative`           | Knative service on Kubernetes (Helm chart); not in release 1.1.0 |
 
 ---
 
@@ -129,6 +130,10 @@ curl localhost:8080/hello/world
 ```
 
 The generated `Dockerfile` in `target/deployment/springboot-http` packages the same jar.
+
+For `knative` the project uses the same entry point and builds `<artifactId>-<version>-knative.jar`.
+`target/deployment/knative` contains the Dockerfile and a Helm chart; see the
+[Knative setup guide](../setup/knative-prerequisites).
 
 ## Deploy with Terraform
 

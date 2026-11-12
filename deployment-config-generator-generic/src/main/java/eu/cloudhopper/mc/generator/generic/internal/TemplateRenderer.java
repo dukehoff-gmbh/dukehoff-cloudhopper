@@ -69,12 +69,32 @@ public class TemplateRenderer {
         ProcessingEnvironment processingEnv,
         String generatorId
     ) {
+        initTemplateLoaders(anchorClass, List.of(generatorId), id -> classpathBase, processingEnv);
+    }
+
+    /**
+     * Looks templates up for several generators: for each generator in order, first the
+     * project's override directory {@code cloudhopper-templates/<generatorId>}, then
+     * the classpath. Used by a generator that builds on another one.
+     *
+     * @param anchorClass   any class in your JAR so ClassTemplateLoader can find "/templates"
+     * @param generatorIds  the generator IDs, the most specific first
+     * @param classpathBase maps a generator ID to its classpath directory
+     * @param processingEnv your ProcessingEnvironment
+     */
+    public void initTemplateLoaders(
+        Class<?> anchorClass,
+        List<String> generatorIds,
+        java.util.function.Function<String, String> classpathBase,
+        ProcessingEnvironment processingEnv
+    ) {
         List<TemplateLoader> loaders = new ArrayList<>();
-
-        String overrideBase = "cloudhopper-templates/" + generatorId;
-        loaders.add(new FilerTemplateLoader(processingEnv.getFiler(), overrideBase));
-
-        loaders.add(new ClassTemplateLoader(anchorClass, classpathBase));
+        for (String id : generatorIds) {
+            loaders.add(new FilerTemplateLoader(processingEnv.getFiler(), "cloudhopper-templates/" + id));
+        }
+        for (String id : generatorIds) {
+            loaders.add(new ClassTemplateLoader(anchorClass, classpathBase.apply(id)));
+        }
 
         freemarkerConfig.setTemplateLoader(new MultiTemplateLoader(loaders.toArray(new TemplateLoader[0])));
     }
@@ -92,8 +112,9 @@ public class TemplateRenderer {
             Path outputDir = Path.of(outputDirName, templateDescriptor.getOutputSubDirectory());
             Files.createDirectories(outputDir);
 
-            String baseFileName = fileName + "." + templateDescriptor.getOutputFileExtension();
-            String outputFileName = baseFileName;
+            String outputFileName = templateDescriptor.getOutputFileName() != null
+                    ? templateDescriptor.getOutputFileName()
+                    : fileName + "." + templateDescriptor.getOutputFileExtension();
 
             Path outputPath = outputDir.resolve(outputFileName);
 

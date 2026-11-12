@@ -22,7 +22,7 @@ jobs:
       # One Javadoc tree for all library modules, published under /api/
       - name: Build Javadoc
         run: |
-          LIBS=deployment-config-api,deployment-config-processor,deployment-config-generator-api,deployment-config-generator-generic,generator-aws-terraform,generator-azure-terraform,generator-gcp-terraform,generator-springboot,provider-aws,provider-azure,provider-gcp,provider-http,provider-springboot
+          LIBS=deployment-config-api,deployment-config-processor,deployment-config-generator-api,deployment-config-generator-generic,generator-aws-terraform,generator-azure-terraform,generator-gcp-terraform,generator-springboot,generator-knative,provider-aws,provider-azure,provider-gcp,provider-http,provider-springboot
           mvn -B -ntp install -DskipTests -pl $LIBS -am
           mvn -B -ntp -Papidocs javadoc:aggregate -pl .,$LIBS
           rm -rf docs/static/api

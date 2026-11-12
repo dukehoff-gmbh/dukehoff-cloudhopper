@@ -56,5 +56,18 @@ public @interface TemplateRegistration {
      * @return the template configuration
      */
     Template[] templates();
+
+    /**
+     * The ID of a generator this generator builds on, or empty. A generator
+     * based on another one runs the other generator's templates as well as its
+     * own; one of its own templates with the same name replaces the other
+     * generator's template. Templates are looked up in this generator's
+     * directory first, then in the other generator's directory. Example: the
+     * {@code knative} generator builds on {@code springboot-http}, which
+     * generates the application, and adds the Knative manifests.
+     *
+     * @return the ID of the generator this one builds on, or an empty string
+     */
+    String basedOn() default "";
     
 }

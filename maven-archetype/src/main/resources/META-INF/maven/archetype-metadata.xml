@@ -41,7 +41,7 @@
             <defaultValue>aws-terraform</defaultValue>
             <description>
                 Comma-separated list of target clouds.  
-                Options: aws-terraform, gcp-terraform, azure-terraform, springboot-http
+                Options: aws-terraform, gcp-terraform, azure-terraform, springboot-http, knative
             </description>
         </requiredProperty>
         <requiredProperty key="includeTerraformProfile">
@@ -63,7 +63,7 @@
                 <include>**/*.java</include>
             </includes>
         </fileSet>
-        <!-- the Spring Boot entry point; compiled only by the springboot-http profile -->
+        <!-- the Spring Boot entry point; compiled only by the springboot-http and knative profiles -->
         <fileSet filtered="true" packaged="true">
             <directory>src/main/springboot-http</directory>
             <includes>

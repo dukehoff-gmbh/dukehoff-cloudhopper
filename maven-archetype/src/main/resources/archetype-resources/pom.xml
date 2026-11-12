@@ -89,7 +89,8 @@
 #end
                     <version>${cloudhopper.version}</version>
                 </dependency>
-#if($generator == "springboot-http")
+## knative runs the springboot-http application on Knative: same dependencies, same executable jar
+#if($generator == "springboot-http" || $generator == "knative")
                 <dependency>
                     <groupId>eu.cloudhopper.mc</groupId>
                     <artifactId>provider-springboot</artifactId>
@@ -114,7 +115,7 @@
                 </dependency>
 #end
             </dependencies>
-#if($generator == "springboot-http")
+#if($generator == "springboot-http" || $generator == "knative")
             <build>
                 <plugins>
                     <plugin>
@@ -137,7 +138,7 @@
                         </executions>
                     </plugin>
                     <!-- the executable jar next to the plain one, under the name the generated Dockerfile expects:
-                         java -jar target/<artifactId>-<version>-springboot-http.jar -->
+                         java -jar target/<artifactId>-<version>-<generator>.jar -->
                     <plugin>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-maven-plugin</artifactId>

@@ -46,6 +46,7 @@ public class TemplateDescriptor {
     private String outputFileExtension;
     private String outputSubDirectory;
     private boolean javaFile;
+    private String outputFileName;
 
     /**
      * Constructs an empty descriptor.
@@ -106,6 +107,24 @@ public class TemplateDescriptor {
     }
 
     /**
+     * @return the fixed output file name, or {@code null} for the default name
+     */
+    public String getOutputFileName() {
+        return outputFileName;
+    }
+
+    /**
+     * Sets a fixed output file name.
+     *
+     * @param outputFileName the file name, or {@code null} or empty for the default name
+     * @return this descriptor
+     */
+    public TemplateDescriptor withOutputFileName(String outputFileName) {
+        this.outputFileName = outputFileName == null || outputFileName.isBlank() ? null : outputFileName.trim();
+        return this;
+    }
+
+    /**
      * @return true if the output should be treated as a Java source file
      */
     public boolean isJavaFile() {
@@ -120,6 +139,7 @@ public class TemplateDescriptor {
                ", outputFileExtension='" + outputFileExtension + '\'' +
                ", outputSubDirectory='" + outputSubDirectory + '\'' +
                ", javaFile=" + javaFile +
+               ", outputFileName='" + outputFileName + '\'' +
                '}';
     }
 }

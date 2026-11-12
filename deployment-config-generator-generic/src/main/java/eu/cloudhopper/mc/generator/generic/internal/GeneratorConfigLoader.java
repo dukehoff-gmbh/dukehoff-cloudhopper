@@ -38,11 +38,23 @@ import java.util.stream.Collectors;
 public class GeneratorConfigLoader {
 
     public static GeneratorConfig loadGeneratorConfig(ProcessingEnvironment processingEnv, String fileName) {
+        return loadGeneratorConfig(processingEnv, fileName,
+                processingEnv.getOptions().getOrDefault("generatorId", "").trim());
+    }
+
+    /**
+     * Loads the template configuration of the generator with the given ID.
+     *
+     * @param processingEnv the processing environment
+     * @param fileName the resource name of the configuration
+     * @param expectedId the generator ID
+     * @return the configuration, or {@code null} after reporting an error
+     */
+    public static GeneratorConfig loadGeneratorConfig(ProcessingEnvironment processingEnv, String fileName, String expectedId) {
         System.err.println("Load generator config");
 
         Messager messager = processingEnv.getMessager();
 
-        String expectedId = processingEnv.getOptions().getOrDefault("generatorId", "").trim();
         if (expectedId.isEmpty()) {
             System.err.println("No generatorId specified");
 

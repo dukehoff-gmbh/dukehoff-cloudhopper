@@ -22,6 +22,7 @@ const sidebars = {
                         'setup/aws-prerequisites',
                         'setup/gcp-prerequisites',
                         'setup/azure-prerequisites',
+                        'setup/knative-prerequisites',
                     ],
                 }
             ],

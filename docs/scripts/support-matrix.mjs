@@ -18,6 +18,7 @@ const TARGETS = [
   {id: 'azure-terraform', label: 'Azure', module: 'generator-azure-terraform'},
   {id: 'gcp-terraform', label: 'GCP', module: 'generator-gcp-terraform'},
   {id: 'springboot-http', label: 'Spring Boot', module: 'generator-springboot'},
+  {id: 'knative', label: 'Knative', module: 'generator-knative'},
 ];
 
 // Annotations the feature system covers, in the order they appear in the guide

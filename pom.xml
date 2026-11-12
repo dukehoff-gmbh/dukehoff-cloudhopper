@@ -71,6 +71,7 @@
         <module>generator-azure-terraform</module>
         <module>generator-aws-terraform</module>
         <module>generator-springboot</module>
+        <module>generator-knative</module>
         <module>provider-aws</module>
         <module>provider-azure</module>
         <module>provider-gcp</module>
@@ -83,6 +84,7 @@
         <module>test/system-tests/generator-azure-terraform</module>
         <module>test/system-tests/generator-gcp-terraform</module>
         <module>test/system-tests/generator-springboot</module>
+        <module>test/system-tests/generator-knative</module>
         <module>test/test-support</module>
         <module>test/tck/core/test-tck-core</module>
         <module>test/system-tests/test-domain</module>
@@ -90,6 +92,7 @@
         <module>test/tck/generator-bindings/gcp-terraform</module>
         <module>test/tck/generator-bindings/azure-terraform</module>
         <module>test/tck/generator-bindings/springboot-http</module>
+        <module>test/tck/generator-bindings/knative</module>
         <module>maven-archetype</module>
     </modules>
     <build>
@@ -301,10 +304,12 @@
                                 <excludeArtifact>system-tests-generator-azure-terraform</excludeArtifact>
                                 <excludeArtifact>system-tests-generator-gcp-terraform</excludeArtifact>
                                 <excludeArtifact>system-tests-generator-springboot</excludeArtifact>
+                                <excludeArtifact>system-tests-generator-knative</excludeArtifact>
                                 <excludeArtifact>generator-bindings-aws-terraform</excludeArtifact>
                                 <excludeArtifact>generator-bindings-azure-terraform</excludeArtifact>
                                 <excludeArtifact>generator-bindings-gcp-terraform</excludeArtifact>
                                 <excludeArtifact>generator-bindings-springboot-http</excludeArtifact>
+                                <excludeArtifact>generator-bindings-knative</excludeArtifact>
                             </excludeArtifacts>
                         </configuration>
                     </plugin>

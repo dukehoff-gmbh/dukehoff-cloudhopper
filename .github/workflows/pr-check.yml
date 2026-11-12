@@ -21,6 +21,7 @@ jobs:
       azure: ${{ steps.diff.outputs.azure }}
       gcp: ${{ steps.diff.outputs.gcp }}
       springboot: ${{ steps.diff.outputs.springboot }}
+      knative: ${{ steps.diff.outputs.knative }}
     steps:
     - name: Check out code
       uses: actions/checkout@v7
@@ -39,7 +40,7 @@ jobs:
           cat changed.txt
           .github/scripts/affected-targets.sh < changed.txt > result.txt
         else
-          printf 'code=true\naws=true\nazure=true\ngcp=true\nspringboot=true\n' > result.txt
+          printf 'code=true\naws=true\nazure=true\ngcp=true\nspringboot=true\nknative=true\n' > result.txt
         fi
         cat result.txt
         cat result.txt >> "$GITHUB_OUTPUT"
@@ -139,6 +140,62 @@ jobs:
       env:
         CLOUDHOPPER_TCK_KAFKA: localhost:9092
       run: mvn -B -ntp exec:java
+
+  # Knative needs no cloud account either: a kind cluster on the runner with Knative
+  # Serving, Eventing, the Kafka source and sink and a single-node Kafka
+  # (test/knative/kind-setup.sh); the TCK installs the generated Helm chart there.
+  tck-knative:
+    name: TCK knative
+    needs: [changes, build-and-validate]
+    if: needs.changes.outputs.knative == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v7
+
+    - name: Set up Java
+      uses: actions/setup-java@v6
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Cache Maven packages
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Install kind
+      run: |
+        curl -sSLo kind https://kind.sigs.k8s.io/dl/v0.33.0/kind-linux-amd64
+        sudo install kind /usr/local/bin/kind
+        kind version; helm version --short; kubectl version --client
+
+    # the Knative ingress answers http://<service>.<namespace>.localhost:31080; make sure the
+    # service's host name resolves to the loopback address on the runner
+    - name: Resolve the service host name
+      run: echo '127.0.0.1 cloudhopper-tck.default.localhost' | sudo tee -a /etc/hosts
+
+    - name: Create the Knative cluster
+      run: test/knative/kind-setup.sh
+
+    - name: Install the modules the TCK needs
+      run: mvn -B -ntp install -DskipTests -pl test/system-tests/generator-knative -am
+
+    - name: Run TCK for Knative
+      working-directory: test/system-tests/generator-knative
+      run: mvn -B -ntp exec:java
+
+    - name: Show the cluster state
+      if: failure()
+      run: |
+        kubectl get ksvc,revision,pingsource,kafkasource,kafkasink,pods -A
+        kubectl describe kafkasource,pingsource -A | tail -80
+        kubectl logs -n knative-eventing -l app=kafka-source-dispatcher --tail=100 || true
 
   # The cloud TCKs deploy into shared cloud accounts, partly with fixed resource
   # names: at most one run per cloud at a time (a newer run waits), but different

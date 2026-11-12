@@ -91,6 +91,7 @@ public void cleanup() {
 | `azure-terraform` | Timer trigger | Evaluated in UTC |
 | `gcp-terraform` | Cloud Scheduler job | Evaluates `timezone` |
 | `springboot-http` | Spring `@Scheduled` in the service, and `POST /schedules/<function name>` | Evaluates `timezone`; see below |
+| `knative` | `PingSource` that calls `POST /schedules/<function name>` | Evaluates `timezone`; fires once, also when the service is scaled to zero |
 
 On Spring Boot every running instance fires the schedule on its own. That is
 right for a single instance. When the service runs with several replicas, or on
@@ -133,6 +134,7 @@ public void onOrder(Order order, EventMetadata meta) {
 | `azure-terraform` | Storage queue in the function app's storage account | Messages must be Base64-encoded; after five failed attempts a message moves to `<name>-poison` |
 | `gcp-terraform` | Pub/Sub topic, delivered through Eventarc | Requires the Eventarc and Pub/Sub APIs in the project |
 | `springboot-http` | `POST /events/<function name>`, or a Kafka topic | The body is the message; optional `ce-id`, `ce-source` and `ce-time` headers (CloudEvents) fill the metadata. Answers `204`, or an error status if the function throws. With `spring-kafka` and `cloudhopper.events.broker=kafka`, the function consumes the topic `<name>`; after five failed attempts a message moves to `<name>.DLT`, see [Queues from Kafka](../platforms/generator-overview#queues-from-kafka) |
+| `knative` | Kafka topic `<name>`, delivered by a `KafkaSource` | Delivered again up to four times with exponential backoff, then written to `<name>.DLT`; see [Knative](../platforms/generator-overview#knative-knative) |
 
 #### Storage buckets
 
@@ -155,6 +157,7 @@ public void onUpload(StorageEvent event) {
 | `azure-terraform` | Blob container in the function app's storage account | Event Grid puts the events on the storage queue `<name>-events`, which the function reads |
 | `gcp-terraform` | Cloud Storage bucket in `gcp_region`, delivered through Eventarc | Requires two one-time IAM grants, see [Storage triggers](../setup/gcp-prerequisites#storage-triggers) |
 | `springboot-http` | `POST /events/<function name>` | The body is `{"bucket": ..., "key": ..., "size": ...}`; `bucket` defaults to the name in the annotation |
+| `knative` | `POST /events/<function name>` | No storage source is generated; a CloudEvents sender, for example an S3-compatible store's webhook notification, posts the body `{"bucket": ..., "key": ..., "size": ...}` |
 
 Bucket names on AWS and GCP are global across all accounts, so choose one that
 nobody else uses, for example one starting with your company name. Terraform

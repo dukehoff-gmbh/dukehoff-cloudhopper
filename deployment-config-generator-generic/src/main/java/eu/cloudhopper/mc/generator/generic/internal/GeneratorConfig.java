@@ -31,6 +31,7 @@ import java.util.Map;
 public class GeneratorConfig {
     private String generatorId;
     private Map<String, List<TemplateDescriptor>> phases;
+    private String basedOn;
 
     public GeneratorConfig() {
         // needed for Jackson
@@ -52,10 +53,24 @@ public class GeneratorConfig {
         this.phases = phases;
     }
 
+    /**
+     * The ID of the generator this one builds on, or {@code null}.
+     *
+     * @return the ID of the base generator
+     */
+    public String getBasedOn() {
+        return basedOn;
+    }
+
+    public void setBasedOn(String basedOn) {
+        this.basedOn = basedOn;
+    }
+
     @Override
     public String toString() {
         return "GeneratorConfig{" +
                 "generatorId='" + generatorId + '\'' +
+                ", basedOn='" + basedOn + '\'' +
                 ", phases=" + phases +
                 '}';
     }
