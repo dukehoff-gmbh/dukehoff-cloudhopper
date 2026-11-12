@@ -4,35 +4,45 @@ on:
   pull_request:
     branches:
       - main
+  # runs everything, e.g. before a release
+  workflow_dispatch:
 
 jobs:
-  # Decides whether the PR touches anything outside docs/. A docs-only PR skips
-  # the jobs below via their `if`; skipped jobs report success, so the required
-  # checks still pass (a workflow-level paths-ignore would leave them pending).
+  # Decides what the PR needs (.github/scripts/affected-targets.sh): a docs-only PR
+  # skips the jobs below, a PR that touches one target runs only that target's TCK.
+  # Skipped jobs report success, so the required checks still pass (a workflow-level
+  # paths-ignore would leave them pending).
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.diff.outputs.code }}
+      aws: ${{ steps.diff.outputs.aws }}
+      azure: ${{ steps.diff.outputs.azure }}
+      gcp: ${{ steps.diff.outputs.gcp }}
+      springboot: ${{ steps.diff.outputs.springboot }}
     steps:
     - name: Check out code
       uses: actions/checkout@v7
       with:
         fetch-depth: 0
 
-    - name: Look for changes outside docs/
+    - name: Find the affected targets
       id: diff
       env:
+        EVENT: ${{ github.event_name }}
         BASE_SHA: ${{ github.event.pull_request.base.sha }}
         HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       run: |
-        changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA")
-        echo "$changed"
-        if echo "$changed" | grep -qv '^docs/'; then
-          echo "code=true" >> "$GITHUB_OUTPUT"
+        if [ "$EVENT" = "pull_request" ]; then
+          git diff --name-only "$BASE_SHA...$HEAD_SHA" > changed.txt
+          cat changed.txt
+          .github/scripts/affected-targets.sh < changed.txt > result.txt
         else
-          echo "code=false" >> "$GITHUB_OUTPUT"
+          printf 'code=true\naws=true\nazure=true\ngcp=true\nspringboot=true\n' > result.txt
         fi
+        cat result.txt
+        cat result.txt >> "$GITHUB_OUTPUT"
 
   archetype-test:
     name: Test Archetype with Terraform
@@ -88,12 +98,6 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
-    # The TCK steps deploy into shared cloud accounts, partly with fixed resource
-    # names. Run at most one of them at a time; a newer run waits instead.
-    concurrency:
-      group: cloud-tck
-      cancel-in-progress: false
-
     steps:
     - name: Check out code
       uses: actions/checkout@v7
@@ -119,8 +123,44 @@ jobs:
     # The on-premise target needs no cloud account: run its TCK first, against the executable jar
     # that "mvn clean install" just built (test/system-tests/generator-springboot)
     - name: Run TCK for Spring Boot
+      if: needs.changes.outputs.springboot == 'true'
       working-directory: test/system-tests/generator-springboot
       run: mvn -B -ntp exec:java
+
+  # The cloud TCKs deploy into shared cloud accounts, partly with fixed resource
+  # names: at most one run per cloud at a time (a newer run waits), but different
+  # clouds run in parallel.
+  tck-azure:
+    name: TCK azure-terraform
+    needs: [changes, build-and-validate]
+    if: needs.changes.outputs.azure == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cloud-tck-azure
+      cancel-in-progress: false
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v7
+
+    - name: Set up Java
+      uses: actions/setup-java@v6
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Cache Maven packages
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    # the TCK container builds only the system test; install what it depends on
+    - name: Install the modules the TCK needs
+      run: mvn -B -ntp install -DskipTests -pl test/system-tests/generator-azure-terraform -am
 
     - name: Build TCK image for Azure
       uses: docker/build-push-action@v7.4.0
@@ -156,6 +196,41 @@ jobs:
             -Dexec.mainClass=eu.cloudhopper.mc.test.system.tests.generator.azure.terraform.TckLauncher \
             -Dexec.classpathScope=test
 
+  # The cloud TCKs deploy into shared cloud accounts, partly with fixed resource
+  # names: at most one run per cloud at a time (a newer run waits), but different
+  # clouds run in parallel.
+  tck-gcp:
+    name: TCK gcp-terraform
+    needs: [changes, build-and-validate]
+    if: needs.changes.outputs.gcp == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cloud-tck-gcp
+      cancel-in-progress: false
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v7
+
+    - name: Set up Java
+      uses: actions/setup-java@v6
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Cache Maven packages
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    # the TCK container builds only the system test; install what it depends on
+    - name: Install the modules the TCK needs
+      run: mvn -B -ntp install -DskipTests -pl test/system-tests/generator-gcp-terraform -am
+
     - name: Build TCK image for GCP
       uses: docker/build-push-action@v7.4.0
       with:
@@ -189,6 +264,41 @@ jobs:
           mvn exec:java \
             -Dexec.mainClass=eu.cloudhopper.mc.test.system.tests.generator.gcp.terraform.TckLauncher \
             -Dexec.classpathScope=test
+
+  # The cloud TCKs deploy into shared cloud accounts, partly with fixed resource
+  # names: at most one run per cloud at a time (a newer run waits), but different
+  # clouds run in parallel.
+  tck-aws:
+    name: TCK aws-terraform
+    needs: [changes, build-and-validate]
+    if: needs.changes.outputs.aws == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cloud-tck-aws
+      cancel-in-progress: false
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v7
+
+    - name: Set up Java
+      uses: actions/setup-java@v6
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Cache Maven packages
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    # the TCK container builds only the system test; install what it depends on
+    - name: Install the modules the TCK needs
+      run: mvn -B -ntp install -DskipTests -pl test/system-tests/generator-aws-terraform -am
 
     - name: Build TCK image for AWS
       uses: docker/build-push-action@v7.4.0
