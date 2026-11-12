@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -123,8 +124,36 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         this.templateRenderer = new TemplateRenderer();
         this.sharedConfigGenerated = false;
         generatorId = processingEnv.getOptions().getOrDefault("generatorId", "").trim();
-        this.templateRenderer.initTemplateLoaders(this.getClass(), getTemplateDirectory(generatorId), processingEnv, generatorId);
         generatorConfig = GeneratorConfigLoader.loadGeneratorConfig(processingEnv, GENERATOR_CONFIG_DIR + generatorId + "-templates.json");
+        List<String> generatorIds = new ArrayList<>(List.of(generatorId));
+        if (generatorConfig != null && generatorConfig.getBasedOn() != null) {
+            String baseId = generatorConfig.getBasedOn();
+            GeneratorConfig base = GeneratorConfigLoader.loadGeneratorConfig(processingEnv, GENERATOR_CONFIG_DIR + baseId + "-templates.json", baseId);
+            if (base != null) {
+                generatorConfig.setPhases(mergePhases(base.getPhases(), generatorConfig.getPhases()));
+                generatorIds.add(baseId);
+            }
+        }
+        this.templateRenderer.initTemplateLoaders(this.getClass(), generatorIds, this::getTemplateDirectory, processingEnv);
+    }
+
+    /**
+     * The base generator's templates followed by the generator's own; an own template
+     * with the same name replaces the base generator's template.
+     */
+    static Map<String, List<TemplateDescriptor>> mergePhases(Map<String, List<TemplateDescriptor>> base,
+            Map<String, List<TemplateDescriptor>> own) {
+        Map<String, List<TemplateDescriptor>> safeOwn = own == null ? Map.of() : own;
+        Set<String> ownNames = safeOwn.values().stream().flatMap(List::stream)
+                .map(TemplateDescriptor::getTemplateName).collect(Collectors.toSet());
+        Map<String, List<TemplateDescriptor>> merged = new HashMap<>();
+        if (base != null) {
+            base.forEach((phase, templates) -> templates.stream()
+                    .filter(t -> !ownNames.contains(t.getTemplateName()))
+                    .forEach(t -> merged.computeIfAbsent(phase, k -> new ArrayList<>()).add(t)));
+        }
+        safeOwn.forEach((phase, templates) -> merged.computeIfAbsent(phase, k -> new ArrayList<>()).addAll(templates));
+        return merged;
     }
 
     @Override

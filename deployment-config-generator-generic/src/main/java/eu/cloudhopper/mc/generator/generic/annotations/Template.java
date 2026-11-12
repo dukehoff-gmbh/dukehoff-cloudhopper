@@ -88,5 +88,18 @@ public @interface Template {
      * @return true if the template generates a Java file
      */
     boolean javaFile() default false;
+
+    /**
+     * A fixed name for the output file, or empty. By default the file is named
+     * {@code <base>_<templateName>.<outputFileExtension>}, where the base is the
+     * function or {@code shared-resources}. Some tools need an exact name, such as
+     * Helm's {@code Chart.yaml}; set this only for templates of the
+     * {@link eu.cloudhopper.mc.generator.api.GenerationPhase#SHARED SHARED} and
+     * {@link eu.cloudhopper.mc.generator.api.GenerationPhase#FINALIZE FINALIZE}
+     * phases, which run once. Ignored for Java files.
+     *
+     * @return the output file name, or an empty string
+     */
+    String outputFileName() default "";
     
 }

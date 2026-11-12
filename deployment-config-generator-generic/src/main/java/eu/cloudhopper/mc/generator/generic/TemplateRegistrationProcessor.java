@@ -118,7 +118,7 @@ public class TemplateRegistrationProcessor extends AbstractProcessor {
                         template.outputFileExtension(),
                         template.outputSubDirectory(),
                         template.javaFile()
-                );
+                ).withOutputFileName(template.outputFileName());
 
                 phaseMap.computeIfAbsent(phaseKey, k -> new ArrayList<>()).add(descriptor);
             }
@@ -126,6 +126,9 @@ public class TemplateRegistrationProcessor extends AbstractProcessor {
             GeneratorConfig config = new GeneratorConfig();
             config.setGeneratorId(generatorId);
             config.setPhases(phaseMap);
+            if (!registration.basedOn().isBlank()) {
+                config.setBasedOn(registration.basedOn().trim());
+            }
 
             String jsonOutput;
             try {
