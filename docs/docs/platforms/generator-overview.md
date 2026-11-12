@@ -38,7 +38,9 @@ Notes on the event and trigger columns:
 - A function without a trigger can be invoked directly on AWS (Lambda
   invoke). On Azure every function also gets the HTTP route
   `/api/<function name>_http_function_trigger`, and on GCP every function has an
-  HTTPS URL. On Spring Boot it is not exposed.
+  HTTPS URL. On Spring Boot every function gets the endpoint
+  `GET`/`POST /functions/<function name>`; set
+  `cloudhopper.functions.direct-endpoint=false` to switch these off.
 - Vendor-specific settings, such as the processor architecture on AWS, go
   through [`@Extension`](../guides/writing-functions#vendor-extensions) and are
   only read by the target they are meant for.
@@ -96,8 +98,15 @@ creates the infrastructure they bind to.
 | Template | Output | Purpose |
 |---|---|---|
 | `handler.ftl` | Java | `@RestController` per HTTP function |
+| `function.ftl` | Java | `@RestController` with `GET`/`POST /functions/<function name>` per function (direct invocation) |
 | `event.ftl` | Java | `@RestController` with `POST /events/<function name>` per event-triggered function |
+| `eventRoute.ftl` | properties | Where an event-triggered function accepts its events, for tools such as the TCK binding |
 | `dockerfile.ftl` | Dockerfile | Container image for the service |
+
+The project contains the `@SpringBootApplication` class (the archetype creates it
+in `src/main/springboot-http`), and the profile builds an executable jar,
+`<artifactId>-<version>-springboot-http.jar`, which the Dockerfile packages.
+Like on the other targets, a `String` result is returned as JSON (`"pong"`).
 
 ---
 

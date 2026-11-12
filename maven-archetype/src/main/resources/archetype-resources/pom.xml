@@ -136,6 +136,23 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <!-- the executable jar next to the plain one, under the name the generated Dockerfile expects:
+                         java -jar target/<artifactId>-<version>-springboot-http.jar -->
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>3.2.5</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>repackage</goal>
+                                </goals>
+                                <configuration>
+                                    <classifier>\${jar.classifier}</classifier>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
 #end

@@ -89,6 +89,7 @@
         <module>test/tck/generator-bindings/aws-terraform</module>
         <module>test/tck/generator-bindings/gcp-terraform</module>
         <module>test/tck/generator-bindings/azure-terraform</module>
+        <module>test/tck/generator-bindings/springboot-http</module>
         <module>maven-archetype</module>
     </modules>
     <build>
@@ -303,6 +304,7 @@
                                 <excludeArtifact>generator-bindings-aws-terraform</excludeArtifact>
                                 <excludeArtifact>generator-bindings-azure-terraform</excludeArtifact>
                                 <excludeArtifact>generator-bindings-gcp-terraform</excludeArtifact>
+                                <excludeArtifact>generator-bindings-springboot-http</excludeArtifact>
                             </excludeArtifacts>
                         </configuration>
                     </plugin>

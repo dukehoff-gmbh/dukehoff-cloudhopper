@@ -119,6 +119,17 @@ the generated function JAR in your own terraform project, or use terraform direc
 
 You need to provide additional variables for the deployment. Please check the generator documentation for details. 
 
+For `springboot-http` the project contains the entry point `src/main/springboot-http/.../Application.java`,
+and the profile builds an executable jar. Start the service and call the example function:
+
+```bash
+mvn clean package -Pspringboot-http
+java -jar target/<artifactId>-<version>-springboot-http.jar
+curl localhost:8080/hello/world
+```
+
+The generated `Dockerfile` in `target/deployment/springboot-http` packages the same jar.
+
 ## Deploy with Terraform
 
 If the generator is terraform based, the .tf files are generated in target/deployment/`{generatorId}`.
