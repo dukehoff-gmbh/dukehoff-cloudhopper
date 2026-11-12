@@ -166,4 +166,11 @@ class SpringBootGeneratedControllersTest {
         assertEquals(200, response.getStatusCode().value());
         assertEquals("\"pong\"", response.getBody());
     }
+
+    @Test
+    void scheduledFunctionsHaveATriggerEndpoint() {
+        // an external scheduler (a Kubernetes CronJob, say) runs the function through this endpoint
+        ResponseEntity<Void> response = rest.postForEntity("/schedules/scheduled", null, Void.class);
+        assertEquals(204, response.getStatusCode().value());
+    }
 }

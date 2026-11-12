@@ -101,6 +101,8 @@ creates the infrastructure they bind to.
 | `function.ftl` | Java | `@RestController` with `GET`/`POST /functions/<function name>` per function (direct invocation) |
 | `event.ftl` | Java | `@RestController` with `POST /events/<function name>` per event-triggered function |
 | `eventRoute.ftl` | properties | Where an event-triggered function accepts its events, for tools such as the TCK binding |
+| `schedule.ftl` | Java | `@RestController` with `POST /schedules/<function name>` per scheduled function, for an external scheduler |
+| `scheduleJob.ftl` | Java | In-process `@Scheduled` job per scheduled function (`cloudhopper.schedules.in-process`) |
 | `dockerfile.ftl` | Dockerfile | Container image for the service |
 
 The project contains the `@SpringBootApplication` class (the archetype creates it

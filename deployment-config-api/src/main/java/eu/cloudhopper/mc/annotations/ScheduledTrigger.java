@@ -36,7 +36,8 @@ import java.lang.annotation.Target;
  * <p>This annotation can be used in combination with {@link Function} to define
  * time-based triggers using cron expressions. It enables the generation of scheduled
  * tasks for serverless platforms that support them (AWS EventBridge, Azure timer triggers,
- * GCP Cloud Scheduler). The Spring Boot target has no schedules.</p>
+ * GCP Cloud Scheduler). On the Spring Boot target the function runs in-process with
+ * Spring's {@code @Scheduled} and can also be triggered with {@code POST /schedules/<function>}.</p>
  *
  * <h2>Example</h2>
  * <pre>{@code
@@ -64,7 +65,7 @@ public @interface ScheduledTrigger {
     /**
      * The IANA time zone in which the cron expression should be evaluated.
      * <p>Defaults to {@code "UTC"} if not specified.</p>
-     * <p>Only the GCP target evaluates this attribute. AWS and Azure always evaluate the cron
+     * <p>The GCP and Spring Boot targets evaluate this attribute. AWS and Azure always evaluate the cron
      * expression in UTC; when you set a time zone and build for one of them, the build warns
      * that the attribute is ignored (or fails with {@code -Acloudhopper.strictFeatureCheck=true}).
      * The support matrix in the documentation lists the attributes per target.</p>
