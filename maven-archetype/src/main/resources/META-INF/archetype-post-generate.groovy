@@ -12,7 +12,7 @@ def projectDir = new File(basedir, artifactId)
 println "Project directory is: $projectDir"
 
 // 4) Now prune each un-picked provider folder under that projectDir:
-['aws-terraform','gcp-terraform','azure-terraform'].each { p ->
+['aws-terraform','gcp-terraform','azure-terraform','scaleway-terraform'].each { p ->
   def tfDir = new File(projectDir, "src/main/resources/deployment/${p}")
   println " → Checking ${tfDir}: exists=${tfDir.exists()}"
   if (!picked.contains(p) && tfDir.exists()) {

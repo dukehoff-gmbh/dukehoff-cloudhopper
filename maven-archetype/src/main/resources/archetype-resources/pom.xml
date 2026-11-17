@@ -89,8 +89,8 @@
 #end
                     <version>${cloudhopper.version}</version>
                 </dependency>
-## knative runs the springboot-http application on Knative: same dependencies, same executable jar
-#if($generator == "springboot-http" || $generator == "knative")
+## knative and scaleway-terraform run the springboot-http application: same dependencies, same executable jar
+#if($generator == "springboot-http" || $generator == "knative" || $generator == "scaleway-terraform")
                 <dependency>
                     <groupId>eu.cloudhopper.mc</groupId>
                     <artifactId>provider-springboot</artifactId>
@@ -115,7 +115,7 @@
                 </dependency>
 #end
             </dependencies>
-#if($generator == "springboot-http" || $generator == "knative")
+#if($generator == "springboot-http" || $generator == "knative" || $generator == "scaleway-terraform")
             <build>
                 <plugins>
                     <plugin>

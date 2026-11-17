@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>eu.cloudhopper.mc</groupId>
+        <artifactId>cloudhopper-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../../../../pom.xml</relativePath>
+    </parent>
+    <artifactId>generator-bindings-scaleway-terraform</artifactId>
+    <packaging>jar</packaging>
+    <name>generator-bindings-scaleway-terraform</name>
+    <description>TCK binding for the scaleway-terraform target: pushes the image and applies the generated Terraform in a Scaleway project</description>
+    <properties>
+        <license.header.path>${project.parent.basedir}/src/license/header.txt</license.header.path>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>2.31.33</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>test-tck-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.16.2</version>
+        </dependency>
+        <!-- Scaleway Queues speak the SQS API -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sqs</artifactId>
+        </dependency>
+    </dependencies>
+</project>
