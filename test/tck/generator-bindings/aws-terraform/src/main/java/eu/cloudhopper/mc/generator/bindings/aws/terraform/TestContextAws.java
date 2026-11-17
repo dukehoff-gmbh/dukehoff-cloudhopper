@@ -54,7 +54,10 @@ import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.PutBucketTaggingRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.Tag;
+import software.amazon.awssdk.services.s3.model.Tagging;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
@@ -68,6 +71,8 @@ public class TestContextAws implements TestContext {
     private final CloudWatchLogsClient logsClient = CloudWatchLogsClient.create();
     private final Path terraformDir = Path.of(System.getProperty("user.dir"), "target", "deployment", "aws-terraform");
     private final Set<String> usedFunctions = new HashSet<>();
+    // the tag the TCK's main.tf sets as default_tags: cost filter and daily leftover check
+    private static final java.util.Map<String, String> TCK_TAGS = java.util.Map.of("cloudhopper-purpose", "tck");
     // Same value Terraform reads as var.cloudhopper_name_prefix, so the TCK
     // resolves the prefixed Lambda names that were actually deployed.
     private final String namePrefix = System.getenv().getOrDefault("TF_VAR_cloudhopper_name_prefix", "");
@@ -116,7 +121,7 @@ public class TestContextAws implements TestContext {
     private void createExistingResources() throws IOException {
         try (SqsClient sqs = SqsClient.create()) {
             for (String queue : existingQueues()) {
-                sqs.createQueue(CreateQueueRequest.builder().queueName(queue).build());
+                sqs.createQueue(CreateQueueRequest.builder().queueName(queue).tags(TCK_TAGS).build());
                 System.out.println("📦 Created the existing queue " + queue);
             }
         }
@@ -132,6 +137,10 @@ public class TestContextAws implements TestContext {
                 } catch (BucketAlreadyOwnedByYouException e) {
                     // left over from an earlier run
                 }
+                s3.putBucketTagging(PutBucketTaggingRequest.builder().bucket(bucket)
+                        .tagging(Tagging.builder().tagSet(TCK_TAGS.entrySet().stream()
+                                .map(t -> Tag.builder().key(t.getKey()).value(t.getValue()).build()).toList()).build())
+                        .build());
                 System.out.println("📦 Created the existing bucket " + bucket);
             }
         }
