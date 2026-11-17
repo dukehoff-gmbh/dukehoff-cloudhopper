@@ -31,6 +31,7 @@ import eu.cloudhopper.mc.generator.api.GeneratorFeatureInfo;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,6 +59,8 @@ public class AnnotationFeatureValidator {
     private final boolean strictMode;
     private final String generatorId;
     private final Map<String, Set<String>> supportedFeatures;
+    private final Map<String, GeneratorFeatureInfo.FeatureEntry> entries;
+    private final Elements elements;
 
     public AnnotationFeatureValidator(ProcessingEnvironment processingEnv, GeneratorFeatureInfo generatorFeatureInfo) {
         this.messager = processingEnv.getMessager();
@@ -67,6 +70,9 @@ public class AnnotationFeatureValidator {
                 GeneratorFeatureInfo.FeatureEntry::getSupportedAnnotation,
                 f -> new HashSet<>(f.getSupportedAttributes())
         ));
+        this.entries = generatorFeatureInfo.getFeatures().stream().collect(Collectors.toMap(
+                GeneratorFeatureInfo.FeatureEntry::getSupportedAnnotation, f -> f));
+        this.elements = processingEnv.getElementUtils();
     }
 
     /**
@@ -100,8 +106,31 @@ public class AnnotationFeatureValidator {
                     supported = false;
                 }
             }
+
+            // values of supported attributes, including defaults, against the generator's restrictions
+            GeneratorFeatureInfo.FeatureEntry feature = entries.get(annotation);
+            for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
+                    : elements.getElementValuesWithDefaults(mirror).entrySet()) {
+                String attribute = entry.getKey().getSimpleName().toString();
+                if (!feature.getSupportedValues().containsKey(attribute) || !supportedAttributes.contains(attribute)) {
+                    continue;
+                }
+                String value = valueName(entry.getValue());
+                if (!feature.supportsValue(attribute, value)) {
+                    report(String.format("@%s(%s = %s) is not supported by generator '%s'; it supports %s. It is ignored for this target.",
+                            simpleName, attribute, value, generatorId, String.join(", ", feature.getSupportedValues().get(attribute))),
+                            element, mirror, mirror.getElementValues().get(entry.getKey()));
+                    supported = false;
+                }
+            }
         }
         return supported;
+    }
+
+    /** The name of an enum constant, or the value as text. */
+    private static String valueName(AnnotationValue value) {
+        Object v = value.getValue();
+        return v instanceof VariableElement ? ((VariableElement) v).getSimpleName().toString() : String.valueOf(v);
     }
 
     private void report(String message, Element element, AnnotationMirror mirror, AnnotationValue value) {

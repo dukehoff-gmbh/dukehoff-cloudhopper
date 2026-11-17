@@ -33,6 +33,7 @@ import eu.cloudhopper.mc.annotations.Function.FunctionAttribute;
 import eu.cloudhopper.mc.generator.api.GenerationPhase;
 import eu.cloudhopper.mc.generator.api.annotations.GeneratorFeature;
 import eu.cloudhopper.mc.generator.api.annotations.GeneratorFeatures;
+import eu.cloudhopper.mc.generator.api.annotations.SupportedValues;
 import eu.cloudhopper.mc.generator.generic.annotations.Template;
 import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
 import eu.cloudhopper.mc.annotations.HttpTrigger;
@@ -53,7 +54,11 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger.ScheduleAttribute;
             supportedAttributes = {
                 EventTriggerAttribute.SOURCE,
                 EventTriggerAttribute.NAME
-            }
+            },
+            supportedValues = @SupportedValues(
+                attribute = EventTriggerAttribute.SOURCE,
+                values = {"QUEUE", "STORAGE"}
+            )
         ),
         @GeneratorFeature(
             supportedAnnotation = HttpTrigger.class,

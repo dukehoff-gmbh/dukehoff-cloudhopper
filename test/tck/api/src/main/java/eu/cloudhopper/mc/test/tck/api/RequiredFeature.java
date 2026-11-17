@@ -26,7 +26,29 @@ package eu.cloudhopper.mc.test.tck.api;
  */
 
 import java.util.List;
+import java.util.Map;
 
-public record RequiredFeature(String annotationFqcn, List<String> requiredAttributes) {
+/**
+ * What a TCK test needs from a generator: an annotation, some of its attributes and, for
+ * attributes a generator may restrict to some values, the values the test uses.
+ *
+ * @param annotationFqcn     the annotation type
+ * @param requiredAttributes the attributes the test sets
+ * @param requiredValues     attribute name to the values the test uses, e.g. {@code source} to {@code QUEUE}
+ */
+public record RequiredFeature(String annotationFqcn, List<String> requiredAttributes, Map<String, List<String>> requiredValues) {
 
+    public RequiredFeature {
+        requiredValues = requiredValues == null ? Map.of() : Map.copyOf(requiredValues);
+    }
+
+    /**
+     * A feature without value requirements.
+     *
+     * @param annotationFqcn     the annotation type
+     * @param requiredAttributes the attributes the test sets
+     */
+    public RequiredFeature(String annotationFqcn, List<String> requiredAttributes) {
+        this(annotationFqcn, requiredAttributes, Map.of());
+    }
 }

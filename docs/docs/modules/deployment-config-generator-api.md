@@ -32,6 +32,11 @@ This module is intended for:
   Declares the generator ID and supported features.
 - `@GeneratorFeature`:  
   Describes which annotations and attributes a generator supports.
+- `@SupportedValues`:  
+  Restricts a supported attribute to some of its values, e.g. the event sources:
+  `supportedValues = @SupportedValues(attribute = EventTriggerAttribute.SOURCE, values = {"QUEUE", "STORAGE"})`.
+  An attribute without it supports every value. The build warns about values a
+  generator does not list, and the TCK selects tests by them.
 
 ### Support Types
 
