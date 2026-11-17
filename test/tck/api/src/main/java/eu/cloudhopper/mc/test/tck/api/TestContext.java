@@ -75,4 +75,24 @@ public interface TestContext {
     default int getDeployedMinInstances(String functionName) {
         throw new UnsupportedOperationException("This binding cannot read the minimum number of instances");
     }
+
+    /**
+     * The time zone in which the platform evaluates the schedule of a deployed
+     * {@code @ScheduledTrigger} function, as the platform reports it after the deployment.
+     *
+     * @param functionName the name given in {@code @Function}
+     * @return the time zone ID, e.g. {@code Europe/Berlin}
+     */
+    default String getDeployedScheduleTimezone(String functionName) {
+        throw new UnsupportedOperationException("This binding cannot read the time zone of a schedule");
+    }
+
+    /**
+     * The OpenAPI description the HTTP functions are deployed with.
+     *
+     * @return the OpenAPI document as text
+     */
+    default String getApiDescription() {
+        throw new UnsupportedOperationException("This binding cannot read the API description");
+    }
 }

@@ -172,6 +172,20 @@ public class TestContextSpringBoot implements TestContext {
     }
 
     @Override
+    public String getDeployedScheduleTimezone(String functionName) {
+        // the in-process job logs the cron expression and time zone it is registered with
+        java.util.regex.Pattern line = java.util.regex.Pattern.compile(
+                "Cloudhopper schedule " + java.util.regex.Pattern.quote(functionName) + ": cron .* in time zone (\\S+)");
+        for (String log : fetchLogs(functionName)) {
+            java.util.regex.Matcher matcher = line.matcher(log);
+            if (matcher.find()) {
+                return matcher.group(1);
+            }
+        }
+        throw new IllegalStateException("The service did not log the schedule of " + functionName + "; see " + logFile);
+    }
+
+    @Override
     public void sendQueueMessage(String queueName, String message) {
         if (kafka != null && !kafka.isBlank()) {
             sendToKafka(queueName, message);

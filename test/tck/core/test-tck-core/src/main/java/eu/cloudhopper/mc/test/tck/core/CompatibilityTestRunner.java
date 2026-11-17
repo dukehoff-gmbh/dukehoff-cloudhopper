@@ -56,6 +56,8 @@ public class CompatibilityTestRunner {
                 new HttpGetMatchCompatibilityTest(),
                 new HttpSearchPlayersCompatibilityTest(),
                 new HttpHeaderParamCompatibilityTest(),
+                new HttpApiDescriptionCompatibilityTest(),
+                new ScheduleTimezoneCompatibilityTest(),
                 new EventQueueCompatibilityTest(),
                 new EventStorageCompatibilityTest(),
                 new ScheduledFunctionCompatibilityTest() // This should be last test to later give us a chance to delete the log group.

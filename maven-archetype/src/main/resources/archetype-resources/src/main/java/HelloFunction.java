@@ -10,12 +10,7 @@ import java.util.Map;
 public class HelloFunction  {
 
     @Function(name = "hello")
-    @HttpTrigger(
-        method      = "GET",
-        path        = "/hello/{name}",
-        summary     = "Say Hello",
-        description = "Returns a friendly greeting"
-    )
+    @HttpTrigger(method = "GET", path = "/hello/{name}")
     public String handleRequest(@PathParam String name) {
         return "hello "+name;
     }

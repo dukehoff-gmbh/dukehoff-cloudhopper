@@ -208,6 +208,20 @@ public class TestContextKnative implements TestContext {
         // nothing was stored
     }
 
+    @Override
+    public String getDeployedScheduleTimezone(String functionName) {
+        // the PingSource of the function, named <release>-<function> like the chart names it
+        String name = (RELEASE + "-" + functionName.toLowerCase().replaceAll("[^a-z0-9-]", "-"));
+        name = name.length() > 63 ? name.substring(0, 63) : name;
+        name = name.replaceAll("-+$", "");
+        try {
+            return run(moduleDir, "kubectl", "get", "pingsource", name, "--namespace", namespace,
+                    "--output", "jsonpath={.spec.timezone}").trim();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read the PingSource " + name, e);
+        }
+    }
+
     private String route(String source, String name) {
         try (Stream<Path> files = Files.list(deploymentDir)) {
             List<Path> routes = files.filter(p -> p.getFileName().toString().endsWith("_eventRoute.properties")).toList();

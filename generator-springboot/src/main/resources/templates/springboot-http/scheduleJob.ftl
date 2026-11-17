@@ -5,6 +5,7 @@ import ${handlerInfo.handlerFullyQualifiedName};
 import ${handlerInfo.inputTypeImport};
 import ${handlerInfo.outputTypeImport};
 
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -31,6 +32,7 @@ public class ${handlerInfo.handlerClassName}ScheduledJob extends SpringBootReque
 
     public ${handlerInfo.handlerClassName}ScheduledJob() {
         super(new ${handlerInfo.handlerClassName}());
+        LoggerFactory.getLogger(getClass()).info("Cloudhopper schedule ${handlerInfo.functionId}: cron ${springCron} in time zone ${scheduleTimezone}");
     }
 
     @Scheduled(cron = "${springCron}", zone = "${scheduleTimezone}")

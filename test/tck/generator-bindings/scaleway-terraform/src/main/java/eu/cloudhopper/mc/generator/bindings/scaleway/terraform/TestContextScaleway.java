@@ -248,6 +248,12 @@ public class TestContextScaleway implements TestContext {
         // nothing was stored
     }
 
+    @Override
+    public String getDeployedScheduleTimezone(String functionName) {
+        // read back from the cron trigger after apply
+        return output(functionName.toLowerCase().replaceAll("[^a-z0-9_]", "_") + "_schedule_timezone");
+    }
+
     /** The Terraform arguments with the TCK's variables. */
     private String[] variables(String image, String... command) {
         List<String> args = new ArrayList<>(List.of(command));

@@ -15,3 +15,7 @@ resource "scaleway_container_trigger" "${fid}_schedule" {
     http_method = "post"
   }
 }
+
+output "${fid}_schedule_timezone" {
+  value = scaleway_container_trigger.${fid}_schedule.cron[0].timezone
+}
