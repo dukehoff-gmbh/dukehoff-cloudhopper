@@ -97,6 +97,27 @@ public class TestContextGcp implements TestContext {
         }
     }
 
+    @Override
+    public String getDeployedScheduleTimezone(String functionName) {
+        usedFunctions.add(functionName);
+        try {
+            // read back from the Cloud Scheduler job after apply
+            return TerraformUtil.getOutputString(terraformDir, functionName + "_schedule_time_zone").trim();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read the time zone of " + functionName + " from the Terraform output", e);
+        }
+    }
+
+    @Override
+    public String getApiDescription() {
+        try {
+            // the OpenAPI description the API Gateway config was created from
+            return TerraformUtil.getOutputString(terraformDir, "api_openapi_description");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read the OpenAPI description from the Terraform output", e);
+        }
+    }
+
     private static String fetchIdToken(String targetUrl) throws IOException {
         IdTokenCredentials credentials = IdTokenCredentials.newBuilder()
                 .setIdTokenProvider((IdTokenProvider) GoogleCredentials.getApplicationDefault())

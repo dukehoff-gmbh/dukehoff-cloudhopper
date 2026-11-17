@@ -52,15 +52,12 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger.ScheduleAttribute;
             supportedAnnotation = EventTrigger.class,
             supportedAttributes = {
                 EventTriggerAttribute.SOURCE,
-                EventTriggerAttribute.NAME,
-                EventTriggerAttribute.CREATE
+                EventTriggerAttribute.NAME
             }
         ),
         @GeneratorFeature(
             supportedAnnotation = HttpTrigger.class,
             supportedAttributes = {
-                HttpTriggerAttribute.SUMMARY,
-                HttpTriggerAttribute.DESCRIPTION,
                 HttpTriggerAttribute.OPERATION_ID,
                 HttpTriggerAttribute.PATH,
                 HttpTriggerAttribute.METHOD,

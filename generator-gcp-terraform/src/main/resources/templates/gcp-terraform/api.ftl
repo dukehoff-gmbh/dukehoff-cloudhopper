@@ -31,6 +31,11 @@ locals {
 EOF
 }
 
+# the OpenAPI description the API config is created from
+output "api_openapi_description" {
+  value = local.openapi_description
+}
+
 resource "local_file" "openapi_debug" {
   content  = local.openapi_description
   filename = "./openapi-debug.json"

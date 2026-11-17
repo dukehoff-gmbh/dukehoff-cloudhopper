@@ -65,7 +65,7 @@ Exposes the function through an HTTP API gateway.
 | `method` | HTTP method, e.g. `"GET"`, `"POST"` |
 | `path` | Route, may contain path variables, e.g. `/player/{id}` |
 | `operationId` | Operation id used in the generated OpenAPI document |
-| `summary` / `description` | Human-readable API metadata |
+| `summary` / `description` | Human-readable API metadata; written into the OpenAPI description of the API Gateway on GCP, ignored by the other targets |
 
 ### `@ScheduledTrigger`
 
@@ -109,7 +109,7 @@ Invokes the function once for each event from a queue or a storage bucket.
 |-----------|---------|-------------|
 | `source` | — (required) | `EventSource.QUEUE` or `EventSource.STORAGE` |
 | `name` | — (required) | Name of the queue or bucket: 3 to 63 lowercase letters, digits and single hyphens, starting with a letter |
-| `create` | `true` | `true` creates the queue or bucket with the function; `false` connects to an existing one of that name |
+| `create` | `true` | `true` creates the queue or bucket with the function; `false` connects to an existing one of that name (AWS and GCP; the other targets ignore it) |
 
 Delivery is **at least once**: when the function throws, the platform delivers
 the event again, so make the function tolerate duplicates. A parameter of type

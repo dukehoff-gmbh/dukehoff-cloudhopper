@@ -13,3 +13,7 @@ resource "google_cloud_scheduler_job" "${handlerInfo.functionId}_schedule" {
     }
   }
 }
+
+output "${handlerInfo.functionId}_schedule_time_zone" {
+  value = google_cloud_scheduler_job.${handlerInfo.functionId}_schedule.time_zone
+}

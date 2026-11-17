@@ -64,8 +64,6 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
             @GeneratorFeature(
                     supportedAnnotation = HttpTrigger.class,
                     supportedAttributes = {
-                        HttpTrigger.HttpTriggerAttribute.SUMMARY,
-                        HttpTrigger.HttpTriggerAttribute.DESCRIPTION,
                         HttpTrigger.HttpTriggerAttribute.OPERATION_ID,
                         HttpTrigger.HttpTriggerAttribute.PATH,
                         HttpTrigger.HttpTriggerAttribute.METHOD,

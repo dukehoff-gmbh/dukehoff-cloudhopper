@@ -65,8 +65,6 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
         @GeneratorFeature(
             supportedAnnotation = HttpTrigger.class,
             supportedAttributes = {
-                HttpTriggerAttribute.SUMMARY,
-                HttpTriggerAttribute.DESCRIPTION,
                 HttpTriggerAttribute.OPERATION_ID,
                 HttpTriggerAttribute.PATH,
                 HttpTriggerAttribute.METHOD,

@@ -1,5 +1,12 @@
  {
     "operationId": "${operationId}",
+<#-- the JSON goes through templatefile(), so ${ and %{ in the texts are escaped -->
+<#if summary?has_content>
+    "summary": "${summary?json_string?replace(r"${", r"$${")?replace(r"%{", r"%%{")}",
+</#if>
+<#if description?has_content>
+    "description": "${description?json_string?replace(r"${", r"$${")?replace(r"%{", r"%%{")}",
+</#if>
 <#if parameters?has_content>
     "parameters": [
       <#list parameters as param>
