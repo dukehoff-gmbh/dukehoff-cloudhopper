@@ -24,6 +24,7 @@ package eu.cloudhopper.mc.generator.bindings.gcp.terraform;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import eu.cloudhopper.mc.test.support.TerraformDataSources;
 import eu.cloudhopper.mc.test.support.TerraformDeployer;
 import eu.cloudhopper.mc.test.support.TerraformUtil;
 import eu.cloudhopper.mc.test.tck.api.TestContext;
@@ -56,6 +57,7 @@ public class TestContextGcp implements TestContext {
         try {
             System.out.println("🌍 CWD (user.dir): " + System.getProperty("user.dir"));
             System.out.println("📁 Terraform dir: " + terraformDir.toAbsolutePath());
+            createExistingResources();
             TerraformDeployer deployer = new TerraformDeployer(terraformDir);
             deployer.init();
             deployer.apply();
@@ -71,6 +73,68 @@ public class TestContextGcp implements TestContext {
         } catch (Exception e) {
             throw new RuntimeException("Failed to destroy deployed functions", e);
         }
+        deleteExistingResources();
+    }
+
+    /**
+     * Creates the topics and buckets of {@code @EventTrigger(create = false)} functions, which the
+     * generated Terraform reads with data sources. Buckets go to the region the functions use.
+     */
+    private void createExistingResources() throws Exception {
+        String project = ServiceOptions.getDefaultProjectId();
+        for (String topic : TerraformDataSources.names(terraformDir, "google_pubsub_topic", "name")) {
+            HttpResponse<String> response = googleApi("PUT",
+                    "https://pubsub.googleapis.com/v1/projects/" + project + "/topics/" + topic, "{}");
+            if (response.statusCode() >= 300 && response.statusCode() != 409) {
+                throw new IllegalStateException("Creating topic " + topic + " returned " + response.statusCode() + ": " + response.body());
+            }
+            System.out.println("📦 Created the existing topic " + topic);
+        }
+        String region = System.getenv().getOrDefault("GCP_REGION", "us-central1");
+        for (String bucket : TerraformDataSources.names(terraformDir, "google_storage_bucket", "name")) {
+            ObjectNode body = new ObjectMapper().createObjectNode().put("name", bucket).put("location", region);
+            body.putObject("iamConfiguration").putObject("uniformBucketLevelAccess").put("enabled", true);
+            HttpResponse<String> response = googleApi("POST",
+                    "https://storage.googleapis.com/storage/v1/b?project=" + project, body.toString());
+            if (response.statusCode() >= 300 && response.statusCode() != 409) {
+                throw new IllegalStateException("Creating bucket " + bucket + " returned " + response.statusCode() + ": " + response.body());
+            }
+            System.out.println("📦 Created the existing bucket " + bucket);
+        }
+    }
+
+    private void deleteExistingResources() {
+        try {
+            String project = ServiceOptions.getDefaultProjectId();
+            for (String topic : TerraformDataSources.names(terraformDir, "google_pubsub_topic", "name")) {
+                googleApi("DELETE", "https://pubsub.googleapis.com/v1/projects/" + project + "/topics/" + topic, null);
+                System.out.println("🧹 Deleted the existing topic " + topic);
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            for (String bucket : TerraformDataSources.names(terraformDir, "google_storage_bucket", "name")) {
+                HttpResponse<String> objects = googleApi("GET", "https://storage.googleapis.com/storage/v1/b/" + bucket + "/o", null);
+                if (objects.statusCode() == 200) {
+                    for (JsonNode item : mapper.readTree(objects.body()).path("items")) {
+                        googleApi("DELETE", "https://storage.googleapis.com/storage/v1/b/" + bucket + "/o/"
+                                + java.net.URLEncoder.encode(item.path("name").asText(), StandardCharsets.UTF_8), null);
+                    }
+                }
+                googleApi("DELETE", "https://storage.googleapis.com/storage/v1/b/" + bucket, null);
+                System.out.println("🧹 Deleted the existing bucket " + bucket);
+            }
+        } catch (Exception e) {
+            System.out.println("❗ Could not delete the existing resources: " + e.getMessage());
+        }
+    }
+
+    private HttpResponse<String> googleApi(String method, String url, String body) throws Exception {
+        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(url))
+                .header("Authorization", "Bearer " + getAccessToken());
+        if (body != null) {
+            request.header("Content-Type", "application/json");
+        }
+        request.method(method, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(body));
+        return HttpClient.newHttpClient().send(request.build(), HttpResponse.BodyHandlers.ofString());
     }
 
     @Override
