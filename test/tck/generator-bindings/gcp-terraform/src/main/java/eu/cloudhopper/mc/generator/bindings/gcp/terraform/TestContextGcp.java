@@ -107,8 +107,9 @@ public class TestContextGcp implements TestContext {
         try {
             String project = ServiceOptions.getDefaultProjectId();
             for (String topic : TerraformDataSources.names(terraformDir, "google_pubsub_topic", "name")) {
-                googleApi("DELETE", "https://pubsub.googleapis.com/v1/projects/" + project + "/topics/" + topic, null);
-                System.out.println("🧹 Deleted the existing topic " + topic);
+                if (googleApi("DELETE", "https://pubsub.googleapis.com/v1/projects/" + project + "/topics/" + topic, null).statusCode() < 300) {
+                    System.out.println("🧹 Deleted the existing topic " + topic);
+                }
             }
             ObjectMapper mapper = new ObjectMapper();
             for (String bucket : TerraformDataSources.names(terraformDir, "google_storage_bucket", "name")) {
@@ -119,8 +120,9 @@ public class TestContextGcp implements TestContext {
                                 + java.net.URLEncoder.encode(item.path("name").asText(), StandardCharsets.UTF_8), null);
                     }
                 }
-                googleApi("DELETE", "https://storage.googleapis.com/storage/v1/b/" + bucket, null);
-                System.out.println("🧹 Deleted the existing bucket " + bucket);
+                if (googleApi("DELETE", "https://storage.googleapis.com/storage/v1/b/" + bucket, null).statusCode() < 300) {
+                    System.out.println("🧹 Deleted the existing bucket " + bucket);
+                }
             }
         } catch (Exception e) {
             System.out.println("❗ Could not delete the existing resources: " + e.getMessage());

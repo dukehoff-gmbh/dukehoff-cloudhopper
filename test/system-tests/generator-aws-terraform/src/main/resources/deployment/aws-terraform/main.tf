@@ -1,6 +1,14 @@
 # Configure the AWS Provider
 provider "aws" {
   region = var.aws_region
+
+  # every TCK resource carries this tag: its cost can be filtered in the shared account
+  # (activate it as a cost allocation tag), and the daily leftover check finds it
+  default_tags {
+    tags = {
+      cloudhopper-purpose = "tck"
+    }
+  }
 }
 
 # Variables

@@ -1,0 +1,54 @@
+name: TCK leftovers
+
+# Once a day, lists cloud resources that a TCK run left behind (an aborted run, a failed
+# destroy). Read-only: the job fails and lists what it found; deleting stays a manual step.
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  leftovers:
+    name: Check for leftover TCK resources
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v7
+
+    # a running PR check deploys on purpose; its resources are not leftovers
+    - name: Skip while a TCK runs
+      id: busy
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        running=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow pr-check.yml --json status \
+          -q '[.[] | select(.status != "completed")] | length')
+        echo "running=$running" >> "$GITHUB_OUTPUT"
+        if [ "$running" != "0" ]; then echo "::notice::$running PR check run(s) in progress; skipping"; fi
+
+    - name: Write the GCP key
+      if: steps.busy.outputs.running == '0'
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+      run: echo "$GOOGLE_APPLICATION_CREDENTIALS" > "$RUNNER_TEMP/gcp-key.json"
+
+    - name: List leftover resources
+      if: steps.busy.outputs.running == '0'
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ vars.AWS_REGION }}
+        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        GCP_KEY_FILE: ${{ runner.temp }}/gcp-key.json
+        GCP_PROJECT_ID: cloudhopper-tck
+        GCP_REGION: us-central1
+        SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+        SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+      run: .github/scripts/tck-leftovers.sh
