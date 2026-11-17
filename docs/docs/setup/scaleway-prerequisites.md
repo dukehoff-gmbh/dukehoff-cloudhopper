@@ -6,12 +6,6 @@ functions as one Scaleway Serverless Container; see
 [Scaleway (`scaleway-terraform`)](../platforms/generator-overview#scaleway-scaleway-terraform)
 for what it contains.
 
-:::note
-
-The `scaleway-terraform` target is not part of release 1.1.0. It ships with the next release.
-
-:::
-
 ---
 
 ## What you need

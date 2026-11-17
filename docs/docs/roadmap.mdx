@@ -13,12 +13,25 @@ timeline
   title Dukehoff Cloudhopper Roadmap
   Released : v1.0 on Maven Central
            : v1.1 queue and storage events, Spring Boot schedules and Kafka, generated support matrix
-  Next : Knative target
-  Then : Scaleway target
+           : v1.2 Knative and Scaleway targets
   Later : Quarkus support
 ```
 
 ## Released
+
+### 1.2
+
+- New target `knative`: a Helm chart for any Kubernetes cluster with Knative
+  Serving and Eventing; schedules as `PingSource`, queues from Kafka with a
+  dead-letter topic
+- New target `scaleway-terraform`: Scaleway Serverless Containers via
+  Terraform; cron triggers and Scaleway Queues with a dead-letter queue
+- Both new targets run the Spring Boot application and are certified by the TCK
+- GCP applies `@Function(minInstances)`
+- The TCK now checks every attribute a target claims; claims without an
+  implementation were removed, so the build warns about them
+- Targets can claim single values of an attribute, such as
+  `@EventTrigger(source = QUEUE)`; the support matrix shows them
 
 ### 1.1
 

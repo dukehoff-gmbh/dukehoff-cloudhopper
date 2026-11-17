@@ -162,12 +162,6 @@ deliver to `POST /events/<function name>` without Kafka on the classpath.
 
 ### Knative (`knative`)
 
-:::note
-
-The `knative` target is not part of release 1.1.0. It ships with the next release.
-
-:::
-
 The `knative` generator builds on `springboot-http`: it generates the same
 Spring Boot application (all templates above) and adds a Helm chart under
 `target/deployment/knative/chart` that runs it as one Knative service. The
@@ -209,12 +203,6 @@ functions run in one container, so these are set for the whole service in
 `values.yaml` (`resources`, `timeoutSeconds`, `scaling`).
 
 ### Scaleway (`scaleway-terraform`)
-
-:::note
-
-The `scaleway-terraform` target is not part of release 1.1.0. It ships with the next release.
-
-:::
 
 The `scaleway-terraform` generator builds on `springboot-http`: it generates the
 same Spring Boot application and adds Terraform under

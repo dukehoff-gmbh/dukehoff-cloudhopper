@@ -5,12 +5,6 @@ This guide prepares a Kubernetes cluster for Cloudhopper functions built with th
 one Knative service; see [Knative (`knative`)](../platforms/generator-overview#knative-knative)
 for what the chart contains.
 
-:::note
-
-The `knative` target is not part of release 1.1.0. It ships with the next release.
-
-:::
-
 ---
 
 ## What the cluster needs

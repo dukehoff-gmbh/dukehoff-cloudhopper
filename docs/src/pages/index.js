@@ -9,7 +9,7 @@ import HopSvg from '@site/static/img/hop.svg';
 
 import styles from './index.module.css';
 
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 
 const EXAMPLE = `public class HelloFunction {
 
@@ -24,6 +24,8 @@ const TARGETS = [
   {profile: 'aws-terraform', name: 'AWS Lambda', note: 'API Gateway, EventBridge, SQS, S3'},
   {profile: 'azure-terraform', name: 'Azure Functions', note: 'HTTP, timer, queue and blob triggers'},
   {profile: 'gcp-terraform', name: 'Google Cloud Functions', note: 'API Gateway, Cloud Scheduler, Pub/Sub, Cloud Storage'},
+  {profile: 'scaleway-terraform', name: 'Scaleway', note: 'Serverless Containers, cron and SQS triggers'},
+  {profile: 'knative', name: 'Knative', note: 'Helm chart, PingSource, Kafka'},
   {profile: 'springboot-http', name: 'Spring Boot', note: 'Your own servers'},
 ];
 
@@ -109,7 +111,7 @@ function Targets() {
   return (
     <section className={styles.targets} aria-labelledby="targets-title">
       <div className="container">
-        <p id="targets-title" className={styles.kicker}>One codebase, four targets</p>
+        <p id="targets-title" className={styles.kicker}>One codebase, six targets</p>
         <ul className={styles.targetList}>
           {TARGETS.map((t) => (
             <li key={t.profile} className={styles.target}>

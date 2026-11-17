@@ -18,7 +18,7 @@ If you want to use Maven to deploy your functions, the archetype can optionally 
     mvn archetype:generate \
       -DarchetypeGroupId=eu.cloudhopper.mc \
       -DarchetypeArtifactId=cloudhopper-maven-archetype-core \
-      -DarchetypeVersion=1.1.0
+      -DarchetypeVersion=1.2.0
 ```
 
 ### Non-interactive (fully scripted)
@@ -27,7 +27,7 @@ If you want to use Maven to deploy your functions, the archetype can optionally 
     mvn archetype:generate \
       -DarchetypeGroupId=eu.cloudhopper.mc \
       -DarchetypeArtifactId=cloudhopper-maven-archetype-core \
-      -DarchetypeVersion=1.1.0 \
+      -DarchetypeVersion=1.2.0 \
       -DgroupId=com.example \
       -DartifactId=my-function \
       -Dversion=1.0-SNAPSHOT \
@@ -50,8 +50,8 @@ You can specify one or more `generatorIds` (comma-separated) to activate support
 | `gcp-terraform`     | GCP Cloud Functions via Terraform    |
 | `azure-terraform`   | Azure Functions via Terraform        |
 | `springboot-http`   | Local Spring Boot HTTP runtime       |
-| `knative`           | Knative service on Kubernetes (Helm chart); not in release 1.1.0 |
-| `scaleway-terraform` | Scaleway Serverless Containers via Terraform; not in release 1.1.0 |
+| `knative`           | Knative service on Kubernetes (Helm chart) |
+| `scaleway-terraform` | Scaleway Serverless Containers via Terraform |
 
 ---
 
@@ -151,7 +151,7 @@ the path to your terraform executable in the pom's properties:
 ```xml
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <cloudhopper.version>1.1.0</cloudhopper.version>
+        <cloudhopper.version>1.2.0</cloudhopper.version>
         <!-- add the path to your terraform executable here -->
         <terraform.executable>terraform</terraform.executable>
         <path.extras></path.extras>
