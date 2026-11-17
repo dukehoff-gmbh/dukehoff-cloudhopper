@@ -38,8 +38,11 @@ hit=" "   # targets with a change, space separated
 while IFS= read -r path; do
   [ -z "$path" ] && continue
   case "$path" in
-    # documentation only: the site and Markdown files at the top level
+    # documentation only: the site, Markdown files at the top level and the
+    # short README of each module (deeper READMEs, e.g. in the archetype, are code)
     docs/*) continue ;;
+    */*/*) ;;
+    */README.md) continue ;;
     */*) ;;
     *.md) continue ;;
   esac

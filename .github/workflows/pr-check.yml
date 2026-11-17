@@ -28,6 +28,9 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Check the documentation layout
+      run: .github/scripts/check-docs-layout.sh
+
     - name: Find the affected targets
       id: diff
       env:
