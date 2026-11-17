@@ -61,7 +61,7 @@ class KnativeGeneratedChartTest {
     @Test
     void theApplicationComesFromTheSpringBootTemplates() throws IOException {
         String dockerfile = read(DEPLOYMENT.resolve("shared-resources_dockerfile..dockerfile"));
-        assertTrue(dockerfile.contains("system-tests-generator-knative-1.0-SNAPSHOT-knative.jar"), dockerfile);
+        assertTrue(dockerfile.matches("(?s).*target/system-tests-generator-knative-[^ /]+-knative\\.jar app\\.jar.*"), dockerfile);
         assertTrue(read(DEPLOYMENT.resolve("queuemessage_event_eventRoute.properties")).contains("path=/events/queuemessage"));
     }
 
