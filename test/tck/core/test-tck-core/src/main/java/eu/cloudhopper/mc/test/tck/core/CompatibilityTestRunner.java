@@ -47,6 +47,7 @@ public class CompatibilityTestRunner {
                 new DirectCallToAPIFunctionCompatibilityTest(),
                 new MemoryFunctionCompatibilityTest(),
                 new TimeoutFunctionCompatibilityTest(),
+                new MinInstancesFunctionCompatibilityTest(),
                 new HttpFunctionCompatibilityTest(),
                 new HttpGetPlayerCompatibilityTest(),
                 new HttpRegisterPlayerCompatibilityTest(),

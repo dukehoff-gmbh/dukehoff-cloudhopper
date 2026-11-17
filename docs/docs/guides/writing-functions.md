@@ -38,7 +38,7 @@ Which target applies which attribute is listed in the
 | `name` | `String` | — | Unique function name in the deployment target |
 | `memory` | `int` | `128` | Memory limit in MB |
 | `timeout` | `int` | `30` | Maximum run time in seconds |
-| `minInstances` | `int` | `0` | Instances kept warm to reduce cold starts; not applied by any target yet ([#26](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues/26)) |
+| `minInstances` | `int` | `0` | Instances kept warm to reduce cold starts. GCP sets `min_instance_count`; warm instances are billed while idle. Not applied on the other targets yet (AWS: [#48](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues/48)) |
 | `extensions` | `@Extension[]` | `{}` | Vendor-specific attributes (see [Vendor extensions](#vendor-extensions)) |
 
 ```java

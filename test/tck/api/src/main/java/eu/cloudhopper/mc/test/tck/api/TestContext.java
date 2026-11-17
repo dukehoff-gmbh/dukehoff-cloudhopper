@@ -64,4 +64,15 @@ public interface TestContext {
     default void deleteObject(String bucket, String key) {
         throw new UnsupportedOperationException("This binding cannot delete objects");
     }
+
+    /**
+     * The minimum number of instances the platform keeps for a deployed function, as the
+     * platform reports it after the deployment (not as the generated configuration requests it).
+     *
+     * @param functionName the name given in {@code @Function}
+     * @return the minimum number of instances
+     */
+    default int getDeployedMinInstances(String functionName) {
+        throw new UnsupportedOperationException("This binding cannot read the minimum number of instances");
+    }
 }
