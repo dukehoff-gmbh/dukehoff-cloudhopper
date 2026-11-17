@@ -24,6 +24,7 @@ package eu.cloudhopper.mc.generator.bindings.aws.terraform;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import eu.cloudhopper.mc.test.support.TerraformDataSources;
 import eu.cloudhopper.mc.test.support.TerraformDeployer;
 import eu.cloudhopper.mc.test.support.TerraformUtil;
 import eu.cloudhopper.mc.test.tck.api.TestContext;
@@ -46,10 +47,20 @@ import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
+import software.amazon.awssdk.services.s3.model.CreateBucketConfiguration;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
+import software.amazon.awssdk.services.sqs.model.DeleteQueueRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.QueueDoesNotExistException;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 public class TestContextAws implements TestContext {
@@ -66,6 +77,7 @@ public class TestContextAws implements TestContext {
         try {
             System.out.println("🌍 CWD (user.dir): " + System.getProperty("user.dir"));
             System.out.println("📁 Terraform dir: " + terraformDir.toAbsolutePath());
+            createExistingResources();
             TerraformDeployer deployer = new TerraformDeployer(terraformDir);
             deployer.init();
             deployer.apply();
@@ -94,6 +106,75 @@ public class TestContextAws implements TestContext {
         } catch (Exception e) {
             throw new RuntimeException("Failed to destroy deployed functions", e);
         }
+        deleteExistingResources();
+    }
+
+    /**
+     * Creates the queues and buckets of {@code @EventTrigger(create = false)} functions: the
+     * generated Terraform reads them with data sources, under their names without prefix.
+     */
+    private void createExistingResources() throws IOException {
+        try (SqsClient sqs = SqsClient.create()) {
+            for (String queue : existingQueues()) {
+                sqs.createQueue(CreateQueueRequest.builder().queueName(queue).build());
+                System.out.println("📦 Created the existing queue " + queue);
+            }
+        }
+        try (S3Client s3 = S3Client.create()) {
+            String region = s3.serviceClientConfiguration().region().id();
+            for (String bucket : existingBuckets()) {
+                CreateBucketRequest.Builder request = CreateBucketRequest.builder().bucket(bucket);
+                if (!"us-east-1".equals(region)) {
+                    request.createBucketConfiguration(CreateBucketConfiguration.builder().locationConstraint(region).build());
+                }
+                try {
+                    s3.createBucket(request.build());
+                } catch (BucketAlreadyOwnedByYouException e) {
+                    // left over from an earlier run
+                }
+                System.out.println("📦 Created the existing bucket " + bucket);
+            }
+        }
+    }
+
+    private void deleteExistingResources() {
+        try (SqsClient sqs = SqsClient.create(); S3Client s3 = S3Client.create()) {
+            for (String queue : existingQueues()) {
+                try {
+                    String url = sqs.getQueueUrl(GetQueueUrlRequest.builder().queueName(queue).build()).queueUrl();
+                    sqs.deleteQueue(DeleteQueueRequest.builder().queueUrl(url).build());
+                    System.out.println("🧹 Deleted the existing queue " + queue);
+                } catch (QueueDoesNotExistException e) {
+                    // nothing to delete
+                }
+            }
+            for (String bucket : existingBuckets()) {
+                try {
+                    for (S3Object object : s3.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucket).build()).contents()) {
+                        s3.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(object.key()).build());
+                    }
+                    s3.deleteBucket(DeleteBucketRequest.builder().bucket(bucket).build());
+                    System.out.println("🧹 Deleted the existing bucket " + bucket);
+                } catch (NoSuchBucketException e) {
+                    // nothing to delete
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("❗ Could not read the existing resources: " + e.getMessage());
+        }
+    }
+
+    private List<String> existingQueues() throws IOException {
+        return TerraformDataSources.names(terraformDir, "aws_sqs_queue", "name");
+    }
+
+    private List<String> existingBuckets() throws IOException {
+        return TerraformDataSources.names(terraformDir, "aws_s3_bucket", "bucket");
+    }
+
+    /** Existing resources have no prefix: the generated data sources look them up by their plain name. */
+    private String deployedName(String name, List<String> existing) {
+        return existing.contains(name) ? name : namePrefix + name;
     }
 
     @Override
@@ -196,24 +277,32 @@ public class TestContextAws implements TestContext {
     @Override
     public void sendQueueMessage(String queueName, String message) {
         try (SqsClient sqs = SqsClient.create()) {
-            String url = sqs.getQueueUrl(GetQueueUrlRequest.builder().queueName(namePrefix + queueName).build()).queueUrl();
+            String name = deployedName(queueName, existingQueues());
+            String url = sqs.getQueueUrl(GetQueueUrlRequest.builder().queueName(name).build()).queueUrl();
             String id = sqs.sendMessage(SendMessageRequest.builder().queueUrl(url).messageBody(message).build()).messageId();
-            System.out.println("📨 Sent message " + id + " to SQS queue " + namePrefix + queueName);
+            System.out.println("📨 Sent message " + id + " to SQS queue " + name);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public void uploadObject(String bucket, String key, String content) {
         try (S3Client s3 = S3Client.create()) {
-            s3.putObject(PutObjectRequest.builder().bucket(namePrefix + bucket).key(key).build(), RequestBody.fromString(content));
-            System.out.println("📤 Uploaded " + key + " to S3 bucket " + namePrefix + bucket);
+            String name = deployedName(bucket, existingBuckets());
+            s3.putObject(PutObjectRequest.builder().bucket(name).key(key).build(), RequestBody.fromString(content));
+            System.out.println("📤 Uploaded " + key + " to S3 bucket " + name);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public void deleteObject(String bucket, String key) {
         try (S3Client s3 = S3Client.create()) {
-            s3.deleteObject(DeleteObjectRequest.builder().bucket(namePrefix + bucket).key(key).build());
+            s3.deleteObject(DeleteObjectRequest.builder().bucket(deployedName(bucket, existingBuckets())).key(key).build());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
