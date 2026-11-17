@@ -1,0 +1,47 @@
+# === Cloudhopper Terraform Bootstrap (main.tf.disabled) ===
+# Rename this file to main.tf, or copy the parts you need into your own root module.
+# The generated *.tf files already declare the scaleway provider requirement; do not
+# repeat it here.
+
+# -----------------------------
+# Backend (optional)
+# -----------------------------
+# Keep the state in a Scaleway Object Storage bucket instead of the local directory:
+#
+# terraform {
+#   backend "s3" {
+#     bucket                      = "my-terraform-state"
+#     key                         = "cloudhopper/terraform.tfstate"
+#     region                      = "fr-par"
+#     endpoints                   = { s3 = "https://s3.fr-par.scw.cloud" }
+#     skip_credentials_validation = true
+#     skip_region_validation      = true
+#     skip_requesting_account_id  = true
+#   }
+# }
+
+# -----------------------------
+# Provider
+# -----------------------------
+# Credentials and the project come from ~/.config/scw/config.yaml (scw init) or from
+# SCW_ACCESS_KEY, SCW_SECRET_KEY and SCW_DEFAULT_PROJECT_ID.
+provider "scaleway" {
+  region = "fr-par"
+  zone   = "fr-par-1"
+}
+
+# -----------------------------
+# Registry for the image (optional)
+# -----------------------------
+# The container pulls the image given in var.image. A private Scaleway registry namespace
+# can live here; create it first (terraform apply -target=scaleway_registry_namespace.app),
+# push the image, then apply the rest.
+#
+# resource "scaleway_registry_namespace" "app" {
+#   name      = "my-registry-namespace"   # unique across Scaleway
+#   is_public = false
+# }
+#
+# output "registry_endpoint" {
+#   value = scaleway_registry_namespace.app.endpoint
+# }

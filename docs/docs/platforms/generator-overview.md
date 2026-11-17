@@ -2,7 +2,7 @@
 
 import SupportMatrix from './_support-matrix.md';
 
-Cloudhopper deploys the same annotated functions to five targets. Each target is
+Cloudhopper deploys the same annotated functions to six targets. Each target is
 a **generator** (it writes handler classes, Terraform and API descriptions at
 compile time) plus a **provider** (the runtime library the generated handlers
 call). You pick the target with a Maven profile:
@@ -14,6 +14,7 @@ call). You pick the target with a Maven profile:
 | `gcp-terraform` | Google Cloud Functions (2nd gen) | `generator-gcp-terraform` | `provider-gcp` |
 | `springboot-http` | Spring Boot service on any server | `generator-springboot` | `provider-springboot`, `provider-http` |
 | `knative` | Knative service on Kubernetes (Helm chart) | `generator-knative` | `provider-springboot`, `provider-http` |
+| `scaleway-terraform` | Scaleway Serverless Containers | `generator-scaleway-terraform` | `provider-springboot`, `provider-http` |
 
 ---
 
@@ -38,11 +39,12 @@ Notes on the event and trigger columns:
   `POST /events/<function name>`, and queues can also be consumed from Kafka
   (see below). On Knative a queue is a Kafka topic; storage events have no
   generated source and are posted to `POST /events/<function name>` like on
-  Spring Boot.
+  Spring Boot. On Scaleway a queue is a Scaleway Queue (SQS); storage events
+  have no trigger there either.
 - A function without a trigger can be invoked directly on AWS (Lambda
   invoke). On Azure every function also gets the HTTP route
   `/api/<function name>_http_function_trigger`, and on GCP every function has an
-  HTTPS URL. On Spring Boot and Knative every function gets the endpoint
+  HTTPS URL. On Spring Boot, Knative and Scaleway every function gets the endpoint
   `GET`/`POST /functions/<function name>`; set
   `cloudhopper.functions.direct-endpoint=false` to switch these off.
 - Vendor-specific settings, such as the processor architecture on AWS, go
@@ -206,6 +208,49 @@ while the service is scaled to zero:
 functions run in one container, so these are set for the whole service in
 `values.yaml` (`resources`, `timeoutSeconds`, `scaling`).
 
+### Scaleway (`scaleway-terraform`)
+
+:::note
+
+The `scaleway-terraform` target is not part of release 1.1.0. It ships with the next release.
+
+:::
+
+The `scaleway-terraform` generator builds on `springboot-http`: it generates the
+same Spring Boot application and adds Terraform under
+`target/deployment/scaleway-terraform` that runs it as one Scaleway Serverless
+Container. The account setup and the deployment are described in the
+[Scaleway setup guide](../setup/scaleway-prerequisites).
+
+| Template | Output | Purpose |
+|---|---|---|
+| `container.ftl` | `container.tf` | Container namespace and container; variables for the image, scaling, memory, CPU, timeout, privacy, environment and the queues; starts the application with `cloudhopper.schedules.in-process=false` |
+| `cronTrigger.ftl` | `<function>_schedule_cronTrigger.tf` | Cron trigger with `schedule` and `timezone` that calls `POST /schedules/<function name>` |
+| `queueTrigger.ftl` | `<function>_event_queueTrigger.tf` | For a queue: the queue `<cloudhopper_name_prefix><queue>`, the dead-letter queue `<cloudhopper_name_prefix><queue>-dlq` and a trigger that delivers to `POST /events/<function name>` |
+| `sqs.ftl` | `sqs.tf` | Activates Scaleway Queues in the project and creates the credentials of the queues and triggers; written once for all event functions |
+
+The container pulls the image given in the variable `image`. Build it from the
+generated Dockerfile for `linux/amd64` and push it to a registry first; the
+profile builds the executable jar `<artifactId>-<version>-scaleway-terraform.jar`
+that the Dockerfile packages.
+
+Schedules and queues reach the container through Scaleway triggers, so they work
+while the container is scaled to zero:
+
+- **Schedules:** the cron trigger fires once per schedule, independent of the
+  number of instances, and evaluates `timezone`.
+- **Queues:** the trigger calls the function with the message as the body. When
+  the function fails, the trigger calls it again, up to four times 30 seconds
+  apart, and then returns the message to the queue. After
+  `queue_max_receive_count` receives (default 1) the message moves to the
+  dead-letter queue. The trigger sends no message ID and no attempt count, so
+  `EventMetadata` stays empty and the attempt is always 0.
+
+`@Function` settings for memory, timeout and instances are not claimed: all
+functions run in one container, so these are set for the whole container with
+the variables `memory_limit_bytes`, `cpu_limit`, `timeout`, `min_scale` and
+`max_scale`.
+
 ---
 
 ## Maven configuration
@@ -234,3 +279,4 @@ provider dependencies and passes the generator ID to the annotation processor:
 - [Azure generator](../modules/generator-azure-terraform) and [provider](../modules/provider-azure)
 - [GCP generator](../modules/generator-gcp-terraform) and [provider](../modules/provider-gcp)
 - [Knative setup guide](../setup/knative-prerequisites)
+- [Scaleway setup guide](../setup/scaleway-prerequisites)

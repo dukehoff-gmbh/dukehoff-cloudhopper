@@ -93,10 +93,13 @@ public @interface Template {
      * A fixed name for the output file, or empty. By default the file is named
      * {@code <base>_<templateName>.<outputFileExtension>}, where the base is the
      * function or {@code shared-resources}. Some tools need an exact name, such as
-     * Helm's {@code Chart.yaml}; set this only for templates of the
+     * Helm's {@code Chart.yaml}. The
      * {@link eu.cloudhopper.mc.generator.api.GenerationPhase#SHARED SHARED} and
      * {@link eu.cloudhopper.mc.generator.api.GenerationPhase#FINALIZE FINALIZE}
-     * phases, which run once. Ignored for Java files.
+     * phases run once. In the other phases every function writes the same file
+     * and the last one wins, so use a fixed name there only for output that is the
+     * same for every function, e.g. a resource that exists once when at least one
+     * function needs it. Ignored for Java files.
      *
      * @return the output file name, or an empty string
      */

@@ -23,6 +23,7 @@ const sidebars = {
                         'setup/gcp-prerequisites',
                         'setup/azure-prerequisites',
                         'setup/knative-prerequisites',
+                        'setup/scaleway-prerequisites',
                     ],
                 }
             ],

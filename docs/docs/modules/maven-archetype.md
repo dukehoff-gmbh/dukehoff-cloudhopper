@@ -51,6 +51,7 @@ You can specify one or more `generatorIds` (comma-separated) to activate support
 | `azure-terraform`   | Azure Functions via Terraform        |
 | `springboot-http`   | Local Spring Boot HTTP runtime       |
 | `knative`           | Knative service on Kubernetes (Helm chart); not in release 1.1.0 |
+| `scaleway-terraform` | Scaleway Serverless Containers via Terraform; not in release 1.1.0 |
 
 ---
 
@@ -134,6 +135,11 @@ The generated `Dockerfile` in `target/deployment/springboot-http` packages the s
 For `knative` the project uses the same entry point and builds `<artifactId>-<version>-knative.jar`.
 `target/deployment/knative` contains the Dockerfile and a Helm chart; see the
 [Knative setup guide](../setup/knative-prerequisites).
+
+For `scaleway-terraform` the project also uses this entry point and builds
+`<artifactId>-<version>-scaleway-terraform.jar`. `target/deployment/scaleway-terraform`
+contains the Dockerfile and the Terraform; see the
+[Scaleway setup guide](../setup/scaleway-prerequisites).
 
 ## Deploy with Terraform
 

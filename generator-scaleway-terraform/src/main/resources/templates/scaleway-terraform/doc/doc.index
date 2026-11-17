@@ -1,0 +1,3 @@
+# files copied into target/deployment/scaleway-terraform
+README.md
+main.tf.disabled
