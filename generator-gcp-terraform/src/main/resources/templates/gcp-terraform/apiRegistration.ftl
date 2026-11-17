@@ -18,6 +18,7 @@ resource "google_cloudfunctions2_function" "${handlerInfo.functionId}_api" {
   service_config {
     available_memory   = "${handlerInfo.memory}Mi"
     timeout_seconds    = ${handlerInfo.timeout}
+    min_instance_count = ${handlerInfo.minInstances?c}
     environment_variables = {
       FUNCTION_MEMORY_MB       = ${handlerInfo.memory}
       FUNCTION_TIMEOUT_SECONDS = ${handlerInfo.timeout}

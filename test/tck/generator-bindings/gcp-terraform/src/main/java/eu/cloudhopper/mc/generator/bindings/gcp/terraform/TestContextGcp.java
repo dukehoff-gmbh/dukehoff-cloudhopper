@@ -85,6 +85,18 @@ public class TestContextGcp implements TestContext {
         }
     }
 
+    @Override
+    public int getDeployedMinInstances(String functionName) {
+        usedFunctions.add(functionName);
+        try {
+            // Terraform reads the function back from the API after apply, so the output is
+            // the setting GCP stores, not only the requested one
+            return Integer.parseInt(TerraformUtil.getOutputString(terraformDir, functionName + "_min_instance_count").trim());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read min_instance_count of " + functionName + " from the Terraform output", e);
+        }
+    }
+
     private static String fetchIdToken(String targetUrl) throws IOException {
         IdTokenCredentials credentials = IdTokenCredentials.newBuilder()
                 .setIdTokenProvider((IdTokenProvider) GoogleCredentials.getApplicationDefault())

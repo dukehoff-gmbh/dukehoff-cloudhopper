@@ -19,6 +19,7 @@ resource "google_cloudfunctions2_function" "${handlerInfo.functionId}" {
   service_config {
     available_memory   = "${handlerInfo.memory}Mi"
     timeout_seconds    = ${handlerInfo.timeout}
+    min_instance_count = ${handlerInfo.minInstances?c}
     environment_variables = {
       FUNCTION_MEMORY_MB       = ${handlerInfo.memory}
       FUNCTION_TIMEOUT_SECONDS = ${handlerInfo.timeout}
@@ -39,4 +40,8 @@ resource "google_cloud_run_v2_service_iam_member" "${handlerInfo.functionId}_inv
 
 output "${handlerInfo.functionId}_direct_url" {
   value = google_cloudfunctions2_function.${handlerInfo.functionId}.service_config[0].uri
+}
+
+output "${handlerInfo.functionId}_min_instance_count" {
+  value = google_cloudfunctions2_function.${handlerInfo.functionId}.service_config[0].min_instance_count
 }
