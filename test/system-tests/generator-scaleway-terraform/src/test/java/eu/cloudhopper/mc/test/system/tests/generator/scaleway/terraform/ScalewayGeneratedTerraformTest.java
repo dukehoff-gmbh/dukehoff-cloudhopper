@@ -57,7 +57,7 @@ class ScalewayGeneratedTerraformTest {
     @Test
     void theApplicationComesFromTheSpringBootTemplates() throws IOException {
         String dockerfile = read("shared-resources_dockerfile..dockerfile");
-        assertTrue(dockerfile.contains("system-tests-generator-scaleway-terraform-1.0-SNAPSHOT-scaleway.jar"), dockerfile);
+        assertTrue(dockerfile.matches("(?s).*target/system-tests-generator-scaleway-terraform-[^ /]+-scaleway\\.jar app\\.jar.*"), dockerfile);
         assertTrue(read("queuemessage_event_eventRoute.properties").contains("path=/events/queuemessage"));
     }
 
