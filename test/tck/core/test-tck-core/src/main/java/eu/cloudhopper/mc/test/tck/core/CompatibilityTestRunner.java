@@ -192,7 +192,9 @@ public class CompatibilityTestRunner {
         for (RequiredFeature rf : required) {
             boolean matched = declared.getFeatures().stream().anyMatch(supported
                     -> supported.getSupportedAnnotation().equals(rf.annotationFqcn())
-                    && supported.getSupportedAttributes().containsAll(rf.requiredAttributes()));
+                    && supported.getSupportedAttributes().containsAll(rf.requiredAttributes())
+                    && rf.requiredValues().entrySet().stream().allMatch(values -> values.getValue().stream()
+                            .allMatch(value -> supported.supportsValue(values.getKey(), value))));
             if (!matched) {
                 return false;
             }

@@ -30,6 +30,7 @@ import eu.cloudhopper.mc.test.tck.api.FeatureAwareTest;
 import eu.cloudhopper.mc.test.tck.api.RequiredFeature;
 import eu.cloudhopper.mc.test.tck.api.TestContext;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.Assert;
 
@@ -75,6 +76,7 @@ public class EventExistingResourceCompatibilityTest implements FeatureAwareTest 
     public List<RequiredFeature> requiredFeatures() {
         return List.of(new RequiredFeature(EventTrigger.class.getName(),
                 List.of(EventTrigger.EventTriggerAttribute.SOURCE, EventTrigger.EventTriggerAttribute.NAME,
-                        EventTrigger.EventTriggerAttribute.CREATE)));
+                        EventTrigger.EventTriggerAttribute.CREATE),
+                Map.of(EventTrigger.EventTriggerAttribute.SOURCE, List.of("QUEUE", "STORAGE"))));
     }
 }

@@ -31,7 +31,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GeneratorFeatureInfo {
@@ -59,6 +61,7 @@ public class GeneratorFeatureInfo {
     public static class FeatureEntry {
         private String supportedAnnotation;
         private List<String> supportedAttributes;
+        private Map<String, List<String>> supportedValues = new LinkedHashMap<>();
 
         public String getSupportedAnnotation() {
             return supportedAnnotation;
@@ -74,6 +77,35 @@ public class GeneratorFeatureInfo {
 
         public void setSupportedAttributes(List<String> supportedAttributes) {
             this.supportedAttributes = supportedAttributes;
+        }
+
+        /**
+         * The supported values of attributes that are restricted to some values; an attribute
+         * without an entry supports every value.
+         *
+         * @return attribute name to supported values
+         */
+        public Map<String, List<String>> getSupportedValues() {
+            return supportedValues;
+        }
+
+        public void setSupportedValues(Map<String, List<String>> supportedValues) {
+            this.supportedValues = supportedValues == null ? new LinkedHashMap<>() : supportedValues;
+        }
+
+        /**
+         * Whether a value of a supported attribute is supported.
+         *
+         * @param attribute the attribute name
+         * @param value     the value, for enums the constant name
+         * @return {@code true} if the attribute is supported and has no restriction, or the restriction lists the value
+         */
+        public boolean supportsValue(String attribute, String value) {
+            if (supportedAttributes == null || !supportedAttributes.contains(attribute)) {
+                return false;
+            }
+            List<String> values = supportedValues.get(attribute);
+            return values == null || values.contains(value);
         }
     }
 

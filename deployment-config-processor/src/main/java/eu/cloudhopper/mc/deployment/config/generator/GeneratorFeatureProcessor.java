@@ -27,6 +27,7 @@ package eu.cloudhopper.mc.deployment.config.generator;
 import eu.cloudhopper.mc.generator.api.GeneratorFeatureInfo;
 import eu.cloudhopper.mc.generator.api.annotations.GeneratorFeature;
 import eu.cloudhopper.mc.generator.api.annotations.GeneratorFeatures;
+import eu.cloudhopper.mc.generator.api.annotations.SupportedValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.auto.service.AutoService;
@@ -79,6 +80,14 @@ public class GeneratorFeatureProcessor extends AbstractProcessor {
                 }
 
                 entry.setSupportedAttributes( List.of(feature.supportedAttributes()));
+                for (SupportedValues values : feature.supportedValues()) {
+                    if (!entry.getSupportedAttributes().contains(values.attribute())) {
+                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                                "@SupportedValues names the attribute '" + values.attribute()
+                                + "', which supportedAttributes does not list", element);
+                    }
+                    entry.getSupportedValues().put(values.attribute(), List.of(values.values()));
+                }
                 info.getFeatures().add(entry);
             }
 

@@ -177,6 +177,11 @@ you compile for a target, Cloudhopper reports what that target ignores:
 [WARNING] ReportMemoryFunction.java:[32,40] Attribute 'memory' of @Function is not supported by generator 'azure-terraform'; it is ignored for this target.
 ```
 
+A target can also support an attribute only for some values, such as the
+`source` of an `@EventTrigger`. A value it does not support is reported the
+same way, for example
+`@EventTrigger(source = TOPIC) is not supported by generator '…'; it supports QUEUE, STORAGE.`
+
 To fail the build instead, pass the processor option
 `-Acloudhopper.strictFeatureCheck=true` (a `compilerArgs` entry of the
 `maven-compiler-plugin`). Vendor extensions are never reported, since they are

@@ -45,7 +45,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Runs {@link AnnotationFeatureValidator} for a target that, like springboot-http, supports
- * {@code @Function(name)} and {@code @HttpTrigger} but no schedules (#14).
+ * {@code @Function(name)} and {@code @HttpTrigger} but no schedules (#14), and
+ * {@code @EventTrigger} only for queues.
  */
 public class AnnotationFeatureValidatorTest {
 
@@ -79,7 +80,11 @@ public class AnnotationFeatureValidatorTest {
         http.setSupportedAttributes(List.of("summary", "description", "operationId", "path", "method"));
         GeneratorFeatureInfo info = new GeneratorFeatureInfo();
         info.setGeneratorId("http-only");
-        info.setFeatures(List.of(function, http));
+        GeneratorFeatureInfo.FeatureEntry event = new GeneratorFeatureInfo.FeatureEntry();
+        event.setSupportedAnnotation("eu.cloudhopper.mc.annotations.EventTrigger");
+        event.setSupportedAttributes(List.of("source", "name"));
+        event.setSupportedValues(java.util.Map.of("source", List.of("QUEUE")));
+        info.setFeatures(List.of(function, http, event));
         return info;
     }
 
@@ -137,5 +142,27 @@ public class AnnotationFeatureValidatorTest {
 
         assertThat(compilation).failed();
         assertThat(compilation).hadErrorContaining("@ScheduledTrigger is not supported by generator 'http-only'");
+    }
+
+    @Test
+    public void supportedValuePassesWithoutWarnings() {
+        Compilation compilation = compile(""
+                + "  @Function(name = \"onMessage\")\n"
+                + "  @EventTrigger(source = EventSource.QUEUE, name = \"orders\")\n"
+                + "  public void onMessage(String body) { }\n");
+
+        assertThat(compilation).succeededWithoutWarnings();
+    }
+
+    @Test
+    public void unsupportedValueIsReported() {
+        Compilation compilation = compile(""
+                + "  @Function(name = \"onUpload\")\n"
+                + "  @EventTrigger(source = EventSource.STORAGE, name = \"invoices\")\n"
+                + "  public void onUpload(String body) { }\n");
+
+        assertThat(compilation).succeeded();
+        assertThat(compilation).hadWarningContaining(
+                "@EventTrigger(source = STORAGE) is not supported by generator 'http-only'; it supports QUEUE.");
     }
 }

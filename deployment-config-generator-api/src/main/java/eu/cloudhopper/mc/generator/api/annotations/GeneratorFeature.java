@@ -80,4 +80,12 @@ public @interface GeneratorFeature {
      * @return array of attribute names
      */
     String[] supportedAttributes() default {};
+
+    /**
+     * Value restrictions for some of the supported attributes. An attribute without an entry
+     * supports every value.
+     *
+     * @return the supported values per attribute
+     */
+    SupportedValues[] supportedValues() default {};
 }

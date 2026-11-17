@@ -34,8 +34,8 @@ site.
 
 Notes on the event and trigger columns:
 
-- `@EventTrigger` covers both `EventSource.QUEUE` and `EventSource.STORAGE` on every
-  target that claims it. On Spring Boot it is the endpoint
+- `@EventTrigger` lists the event sources a target supports as rows below
+  `source`; today every target supports `QUEUE` and `STORAGE`. On Spring Boot it is the endpoint
   `POST /events/<function name>`, and queues can also be consumed from Kafka
   (see below). On Knative a queue is a Kafka topic; storage events have no
   generated source and are posted to `POST /events/<function name>` like on
