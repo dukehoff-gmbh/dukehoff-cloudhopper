@@ -118,11 +118,15 @@ cd my-function
 mvn clean install -Paws-terraform
 ```
 
-This compiles your function, processes annotations, and generates Terraform files in:
+This compiles your function, processes annotations, builds the Lambda jar with all dependencies
+(`target/my-function-1.0-SNAPSHOT-aws-terraform.jar`) and writes the Terraform to:
 
 ```
 target/deployment/aws-terraform/
 ```
+
+The folder contains the generated files and your `main.tf` from Step 3, so you can run
+`terraform init` and `terraform apply` there.
 
 
 You can now copy the generated files along with the generated artefact and deploy the resources
@@ -146,7 +150,7 @@ Make sure your `pom.xml` includes the path to Terraform:
 Use the built-in Maven profile to apply the Terraform plan:
 
 ```bash
-mvn verify -Pdeploy-with-terraform -Dterraform.command=apply
+mvn verify -Paws-terraform,deploy-with-terraform -Dterraform.command=apply
 ```
 
 Terraform will create the function and related infrastructure.
