@@ -17,11 +17,19 @@ def run(List<String> command, File dir) {
     assert process.waitFor() == 0 : "${command.join(' ')} failed:\n${output}"
 }
 
-def terraform = System.getenv('PATH').split(File.pathSeparator).any { new File(it, 'terraform').canExecute() }
+def terraform
+try {
+    terraform = new ProcessBuilder('terraform', 'version').redirectErrorStream(true).start().with { it.inputStream.text; it.waitFor() == 0 }
+} catch (IOException e) {
+    terraform = false
+}
 if (terraform) {
     run(['terraform', 'init', '-backend=false', '-input=false', '-no-color'], deployment)
     run(['terraform', 'validate', '-no-color'], deployment)
+    println "terraform validate passed in ${deployment}"
 } else {
+    // CI sets CLOUDHOPPER_REQUIRE_TERRAFORM, so the check cannot be skipped there unnoticed
+    assert System.getenv('CLOUDHOPPER_REQUIRE_TERRAFORM') != 'true' : "terraform not found, PATH=${System.getenv('PATH')}"
     println 'terraform is not on the PATH, skipping terraform validate'
 }
 return true
