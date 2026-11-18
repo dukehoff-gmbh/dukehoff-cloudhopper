@@ -252,6 +252,22 @@ public class HandlerInfo {
         return stripGenericArguments(outputType);
     }
 
+    /**
+     * The input type as a class literal for Java code, e.g. {@code com.example.Order.class}.
+     * A parameterized type has no class literal of its own ({@code Map<String, Object>.class} does not
+     * compile), so it is the literal of the raw type, cast to the parameterized one:
+     * {@code (Class<java.util.Map<String, Object>>) (Class<?>) java.util.Map.class}.
+     *
+     * @return a Java expression of type {@code Class<input type>}
+     */
+    public String getInputClassLiteral() {
+        String raw = stripGenericArguments(inputType);
+        if (raw.equals(inputType)) {
+            return inputType + ".class";
+        }
+        return "(Class<" + inputType + ">) (Class<?>) " + raw + ".class";
+    }
+
     private String stripGenericArguments(String type) {
         int genericStart = type.indexOf('<');
         if (genericStart != -1) {

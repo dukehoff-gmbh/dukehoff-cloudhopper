@@ -167,7 +167,8 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
             MethodHandlerInfo info = new MethodHandlerInfo(
                     pkg, handlerCN, serviceFQ,
                     m.getSimpleName().toString(),
-                    bodyType, returnType, params
+                    bodyType, returnType, params,
+                    !m.getThrownTypes().isEmpty()
             );
             try {
                 HandlerGenerator.generateHandler(info, processingEnv.getFiler());

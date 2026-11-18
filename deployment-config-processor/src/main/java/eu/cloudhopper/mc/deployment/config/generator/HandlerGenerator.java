@@ -93,6 +93,7 @@ public class HandlerGenerator {
         private final String bodyType;
         private final String returnType;
         private final List<ParamInfo> params;
+        private final boolean declaresExceptions;
 
         public MethodHandlerInfo(String packageName,
                 String handlerClassName,
@@ -101,6 +102,21 @@ public class HandlerGenerator {
                 String bodyType,
                 String returnType,
                 List<ParamInfo> params) {
+            this(packageName, handlerClassName, serviceClassName, methodName, bodyType, returnType, params, false);
+        }
+
+        /**
+         * @param declaresExceptions whether the method has a {@code throws} clause; the handler then wraps
+         *                           checked exceptions in {@code FunctionException}
+         */
+        public MethodHandlerInfo(String packageName,
+                String handlerClassName,
+                String serviceClassName,
+                String methodName,
+                String bodyType,
+                String returnType,
+                List<ParamInfo> params,
+                boolean declaresExceptions) {
             this.packageName = packageName;
             this.handlerClassName = handlerClassName;
             this.serviceClassName = serviceClassName;
@@ -108,6 +124,11 @@ public class HandlerGenerator {
             this.bodyType = bodyType;
             this.returnType = returnType;
             this.params = params;
+            this.declaresExceptions = declaresExceptions;
+        }
+
+        public boolean isDeclaresExceptions() {
+            return declaresExceptions;
         }
 
         public String getPackageName() {
@@ -165,17 +186,40 @@ public class HandlerGenerator {
         if (genericsStart > 0 && fqn.endsWith(">")) {
             String raw = fqn.substring(0, genericsStart);
             String inner = fqn.substring(genericsStart + 1, fqn.length() - 1);
-            String[] args = inner.split(",");
+            List<String> args = splitTypeArguments(inner);
             ClassName rawName = ClassName.bestGuess(raw.trim());
-            TypeName[] typeArgs = new TypeName[args.length];
-            for (int i = 0; i < args.length; i++) {
-                typeArgs[i] = toTypeName(args[i].trim());
+            TypeName[] typeArgs = new TypeName[args.size()];
+            for (int i = 0; i < args.size(); i++) {
+                typeArgs[i] = toTypeName(args.get(i).trim());
             }
             return ParameterizedTypeName.get(rawName, typeArgs);
         }
 
         // fall back to reference type lookup (including boxed types)
         return ClassName.bestGuess(fqn);
+    }
+
+    /**
+     * Splits type arguments at the commas of the top level only:
+     * {@code String, List<Map<String, Integer>>} gives two arguments.
+     */
+    static List<String> splitTypeArguments(String arguments) {
+        List<String> result = new java.util.ArrayList<>();
+        int depth = 0;
+        int start = 0;
+        for (int i = 0; i < arguments.length(); i++) {
+            char c = arguments.charAt(i);
+            if (c == '<') {
+                depth++;
+            } else if (c == '>') {
+                depth--;
+            } else if (c == ',' && depth == 0) {
+                result.add(arguments.substring(start, i));
+                start = i + 1;
+            }
+        }
+        result.add(arguments.substring(start));
+        return result;
     }
 
     /**
@@ -355,11 +399,22 @@ public class HandlerGenerator {
                 .reduce((a, b) -> a + ", " + b)
                 .orElse("");
 
+        // CloudRequestHandler declares no checked exceptions: wrap those the method declares
+        if (info.isDeclaresExceptions()) {
+            methodBuilder.beginControlFlow("try");
+        }
         if ("void".equals(info.getReturnType())) {
             methodBuilder.addStatement("delegate.$L($L)", info.getMethodName(), args);
             methodBuilder.addStatement("return null");
         } else {
             methodBuilder.addStatement("return delegate.$L($L)", info.getMethodName(), args);
+        }
+        if (info.isDeclaresExceptions()) {
+            methodBuilder.nextControlFlow("catch ($T e)", RuntimeException.class)
+                    .addStatement("throw e")
+                    .nextControlFlow("catch ($T e)", Exception.class)
+                    .addStatement("throw new $T(e)", ClassName.get("eu.cloudhopper.mc.runtime", "FunctionException"))
+                    .endControlFlow();
         }
         classBuilder.addMethod(methodBuilder.build());
 

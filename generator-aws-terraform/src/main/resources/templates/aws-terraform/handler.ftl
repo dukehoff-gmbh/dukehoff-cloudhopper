@@ -29,8 +29,9 @@ public class AwsLambda${handlerInfo.handlerClassName}Handler {
      * API Gateway V2 proxy integration.
      */
     public static class ApiProxyV2 extends ApiGatewayV2ProxyRequestHandler<${handlerInfo.inputType}, ${handlerInfo.outputType}> {
+        @SuppressWarnings("unchecked") // the class literal of a parameterized input type is cast
         public ApiProxyV2() {
-            super(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputType}.class);
+            super(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputClassLiteral});
         }
     }
 
@@ -38,8 +39,9 @@ public class AwsLambda${handlerInfo.handlerClassName}Handler {
      * API Gateway V2 typed HTTP event integration.
      */
     public static class ApiHttpV2 extends ApiGatewayV2HttpEventHandler<${handlerInfo.inputType}, ${handlerInfo.outputType}> {
+        @SuppressWarnings("unchecked") // the class literal of a parameterized input type is cast
         public ApiHttpV2() {
-            super(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputType}.class);
+            super(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputClassLiteral});
         }
     }
 
@@ -47,10 +49,11 @@ public class AwsLambda${handlerInfo.handlerClassName}Handler {
      * Smart router for all supported event types (proxy, http, sqs, s3, scheduled, plain).
      */
     public static class Auto extends ApiGatewayEventRouter<${handlerInfo.inputType}, ${handlerInfo.outputType}> {
+        @SuppressWarnings("unchecked") // the class literal of a parameterized input type is cast
         public Auto() {
             super(new Plain(), new ApiProxyV2(), new ApiHttpV2(),
-                    new SqsEventHandler<>(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputType}.class),
-                    new S3EventHandler<>(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputType}.class));
+                    new SqsEventHandler<>(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputClassLiteral}),
+                    new S3EventHandler<>(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputClassLiteral}));
         }
     }
 }
