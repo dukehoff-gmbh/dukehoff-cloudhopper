@@ -296,6 +296,9 @@
                         <configuration>
                             <publishingServerId>central</publishingServerId>
                             <autoPublish>${central.autoPublish}</autoPublish>
+                            <!-- md5 and sha1 are what Central requires; sha256 and sha512 would add two files per
+                                 artifact file, and Central limits the number of uploaded files per month -->
+                            <checksums>required</checksums>
                             <!-- tests, test fixtures and the demo; everything else is published -->
                             <excludeArtifacts>
                                 <excludeArtifact>demo</excludeArtifact>

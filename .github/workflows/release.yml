@@ -93,6 +93,10 @@ jobs:
           bundle=target/central-publishing/central-bundle.zip
           unzip -Z1 "$bundle" | grep -v '/$' > entries.txt
           echo "$(wc -l < entries.txt) entries"
+          # Central limits the uploaded files per month; only the required checksums (md5, sha1) are bundled
+          if grep -E '\.(sha256|sha512)$' entries.txt; then
+            echo "::error::optional checksums in the bundle (see above)"; exit 1
+          fi
           # Central rejects a bundle with files outside the version folders
           if grep -vE "^eu/cloudhopper/mc/[a-z-]+/${VERSION//./\\.}/[^/]+$" entries.txt; then
             echo "::error::files outside the version folders (see above)"; exit 1
