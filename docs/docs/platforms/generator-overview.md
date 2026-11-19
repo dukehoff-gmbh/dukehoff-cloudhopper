@@ -73,7 +73,7 @@ in a `.tfvars` file or with `-var`:
 
 | Variable | Default | Effect |
 |---|---|---|
-| `api_stage_name` | `$default` | API Gateway stage. `$default` serves the API without a stage segment (`https://<api>.execute-api.<region>.amazonaws.com/players`); any other name becomes the first path segment |
+| `api_stage_name` | `$default` | API Gateway stage. `$default` serves the API without a stage segment (`https://<api>.execute-api.<region>.amazonaws.com/players`); any other name becomes the first path segment. On `$default`, API Gateway answers `/ping` and `/sping` with its own health check; a function on one of these paths makes `terraform plan` fail with a hint, so set a stage name or change the path |
 | `log_retention_days` | `30` | Retention of the log groups `/aws/lambda/<function>`, which Terraform creates before the functions |
 | `artifact_bucket_force_destroy` | `false` | Lets `terraform destroy` delete the artifact bucket even if it contains objects Terraform does not manage |
 | `cloudhopper_name_prefix` | empty | Prefix for all resource names, e.g. for several deployments in one account |
