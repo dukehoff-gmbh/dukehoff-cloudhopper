@@ -401,6 +401,9 @@ jobs:
     needs: [changes, build-and-validate]
     if: needs.changes.outputs.aws == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # OIDC token for the AWS role
     concurrency:
       group: cloud-tck-aws
       cancel-in-progress: false
@@ -434,11 +437,18 @@ jobs:
         file: test/system-tests/generator-aws-terraform/Dockerfile.dockerfile
         tags: cloudhopper-tck-aws
 
+    # Short-lived credentials of a role that may only manage the TCK's ci-* resources.
+    # The step exports AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN.
+    - name: AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        role-to-assume: ${{ vars.AWS_TCK_ROLE_ARN }}
+        aws-region: ${{ vars.AWS_REGION }}
+        role-duration-seconds: 14400
+
     - name: Run TCK for AWS
       uses: addnab/docker-run-action@v3
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: ${{ vars.AWS_REGION }}
         # Unique per run and attempt, so leftovers of an aborted run never collide
         # with the names of the next one (bucket names allow at most 63 chars).
@@ -451,6 +461,7 @@ jobs:
           -w /workspace
           -e AWS_ACCESS_KEY_ID
           -e AWS_SECRET_ACCESS_KEY
+          -e AWS_SESSION_TOKEN
           -e AWS_REGION
           -e TF_VAR_cloudhopper_name_prefix
         run: |
