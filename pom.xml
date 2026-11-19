@@ -15,6 +15,8 @@
         <maven.compiler.target>21</maven.compiler.target>
         <central.autoPublish>false</central.autoPublish>
         <jackson.version>2.23.0</jackson.version>
+        <!-- Spring Boot for provider-springboot, the archetype and the Spring Boot based system tests -->
+        <spring-boot.version>4.1.2</spring-boot.version>
         <com.google.code.gson.version>2.15.0</com.google.code.gson.version>
         <license.header.path>${project.basedir}/src/license/header.txt</license.header.path>
     </properties>

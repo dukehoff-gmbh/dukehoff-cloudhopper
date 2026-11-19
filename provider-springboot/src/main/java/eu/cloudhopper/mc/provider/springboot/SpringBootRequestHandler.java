@@ -29,8 +29,8 @@ package eu.cloudhopper.mc.provider.springboot;
 import eu.cloudhopper.mc.runtime.CloudRequestHandler;
 import eu.cloudhopper.mc.runtime.Headers;
 import eu.cloudhopper.mc.provider.http.LocalHandlerContext;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -91,7 +91,7 @@ public abstract class SpringBootRequestHandler<I, O> {
     private O toJson(CharSequence text) {
         try {
             return (O) MAPPER.writeValueAsString(text.toString());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Cannot serialize the result as JSON", e);
         }
     }

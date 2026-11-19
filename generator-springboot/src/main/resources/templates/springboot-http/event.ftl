@@ -5,7 +5,7 @@ import ${handlerInfo.handlerFullyQualifiedName};
 import ${handlerInfo.inputTypeImport};
 import ${handlerInfo.outputTypeImport};
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
  * Auto-generated Spring Boot endpoint for the event-triggered function "${handlerInfo.functionId}"
  * (${eventSource?lower_case} "${eventName}"): POST the event data to /events/${handlerInfo.functionId}.
 <#if eventSource == "QUEUE">
- * With spring-kafka on the classpath and cloudhopper.events.broker=kafka, the function also
+ * With spring-boot-starter-kafka on the classpath and cloudhopper.events.broker=kafka, the function also
  * consumes the Kafka topic "${eventName}".
 </#if>
  */
