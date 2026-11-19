@@ -10,6 +10,7 @@ on:
 permissions:
   contents: read
   actions: read
+  id-token: write   # OIDC token for the AWS role
 
 jobs:
   leftovers:
@@ -36,11 +37,17 @@ jobs:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: echo "$GOOGLE_APPLICATION_CREDENTIALS" > "$RUNNER_TEMP/gcp-key.json"
 
+    # read-only role (tag:GetResources); exports AWS_ACCESS_KEY_ID, which the script checks
+    - name: AWS credentials (OIDC)
+      if: steps.busy.outputs.running == '0'
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        role-to-assume: ${{ vars.AWS_LEFTOVERS_ROLE_ARN }}
+        aws-region: ${{ vars.AWS_REGION }}
+
     - name: List leftover resources
       if: steps.busy.outputs.running == '0'
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: ${{ vars.AWS_REGION }}
         ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
