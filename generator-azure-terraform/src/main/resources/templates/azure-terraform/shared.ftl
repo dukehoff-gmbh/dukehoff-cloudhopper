@@ -103,6 +103,17 @@ resource "azurerm_application_insights" "function_app_insights" {
   location            = azurerm_resource_group.function_rg.location
   resource_group_name = azurerm_resource_group.function_rg.name
   application_type    = "web"
+  retention_in_days   = var.log_retention_days
+}
+
+variable "log_retention_days" {
+  description = "Days Application Insights keeps the functions' telemetry and logs"
+  type        = number
+  default     = 30
+  validation {
+    condition     = contains([30, 60, 90, 120, 180, 270, 365, 550, 730], var.log_retention_days)
+    error_message = "Application Insights accepts 30, 60, 90, 120, 180, 270, 365, 550 or 730 days."
+  }
 }
 
 
