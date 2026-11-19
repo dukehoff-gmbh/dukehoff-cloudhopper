@@ -14,8 +14,8 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <central.autoPublish>false</central.autoPublish>
-        <swagger.version>2.2.22</swagger.version>
-        <com.google.code.gson.version>2.10.1</com.google.code.gson.version>
+        <jackson.version>2.23.0</jackson.version>
+        <com.google.code.gson.version>2.15.0</com.google.code.gson.version>
         <license.header.path>${project.basedir}/src/license/header.txt</license.header.path>
     </properties>
 

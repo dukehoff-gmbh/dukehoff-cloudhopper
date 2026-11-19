@@ -39,18 +39,20 @@
             <artifactId>deployment-config-generator-api</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>deployment-config-generator-generic</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>deployment-config-processor</artifactId>
             <version>${project.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>

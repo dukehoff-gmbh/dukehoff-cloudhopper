@@ -243,8 +243,6 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
     }
 
     private Map<String, String> extractPathParams(String actualPath, String routePattern) {
-        System.out.println("Extract path params from " + actualPath);
-        System.out.println("routePattern " + routePattern);
         String[] actualParts = actualPath.replaceAll("^/+", "").split("/");
         String[] routeParts = routePattern.replaceAll("^/+", "").split("/");
 

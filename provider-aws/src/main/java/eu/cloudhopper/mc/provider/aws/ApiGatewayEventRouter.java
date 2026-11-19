@@ -87,8 +87,6 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
 
     @Override
     public Object handleRequest(Object input, Context context) {
-        System.out.println("input = " + input);
-
         if (input instanceof APIGatewayV2ProxyRequestEvent) {
             return proxy.handleRequest((APIGatewayV2ProxyRequestEvent) input, context);
         } else if (input instanceof APIGatewayV2HTTPEvent) {
