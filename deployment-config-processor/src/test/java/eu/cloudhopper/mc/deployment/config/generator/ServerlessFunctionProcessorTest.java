@@ -35,16 +35,19 @@ import eu.cloudhopper.mc.runtime.CloudRequestHandler;
 import eu.cloudhopper.mc.runtime.Headers;
 import eu.cloudhopper.mc.runtime.EventHandlerContext;
 import eu.cloudhopper.mc.runtime.EventMetadata;
+import eu.cloudhopper.mc.runtime.FunctionException;
 import eu.cloudhopper.mc.runtime.HandlerContext;
 import eu.cloudhopper.mc.runtime.StorageEvent;
 import java.time.Instant;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.tools.StandardLocation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ServerlessFunctionProcessorTest {
@@ -228,6 +231,54 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @SuppressWarnings("unchecked")
+    // #66: CloudRequestHandler declares no checked exceptions, so the handler wraps them
+    @Test
+    public void checkedExceptionsAreWrappedAndRuntimeExceptionsPassThrough() throws Exception {
+        CloudRequestHandler<String, String> handler = compileAndLoad("com.example.CheckedService", ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "public class CheckedService {\n"
+                + "  @Function(name=\"checked\")\n"
+                + "  @HttpTrigger(method=\"POST\", path=\"/checked\")\n"
+                + "  public String read(String body) throws java.io.IOException {\n"
+                + "    if (\"io\".equals(body)) throw new java.io.IOException(\"disk\");\n"
+                + "    if (\"state\".equals(body)) throw new IllegalStateException(\"state\");\n"
+                + "    return \"ok:\" + body;\n"
+                + "  }\n"
+                + "}\n",
+                "com.example.CheckedService_read_Handler");
+        assertEquals("ok:x", handler.handleRequest("x", Map.of(), Map.of(), null));
+        FunctionException wrapped = assertThrows(FunctionException.class,
+                () -> handler.handleRequest("io", Map.of(), Map.of(), null));
+        assertTrue(wrapped.getCause() instanceof IOException, "cause: " + wrapped.getCause());
+        assertEquals("disk", wrapped.getMessage());
+        assertThrows(IllegalStateException.class, () -> handler.handleRequest("state", Map.of(), Map.of(), null));
+    }
+
+    // #65: parameterized body and return types, nested ones included
+    @Test
+    public void parameterizedBodyAndReturnTypesCompile() throws Exception {
+        CloudRequestHandler<Map<String, List<String>>, Map<String, Object>> handler = compileAndLoad(
+                "com.example.FormService", ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import java.util.*;\n"
+                + "public class FormService {\n"
+                + "  @Function(name=\"form\")\n"
+                + "  @HttpTrigger(method=\"POST\", path=\"/form\")\n"
+                + "  public Map<String, Object> submit(Map<String, List<String>> form) {\n"
+                + "    Map<String, Object> result = new LinkedHashMap<>();\n"
+                + "    result.put(\"fields\", form.size());\n"
+                + "    result.put(\"tags\", form.get(\"tags\"));\n"
+                + "    return result;\n"
+                + "  }\n"
+                + "}\n",
+                "com.example.FormService_submit_Handler");
+        Map<String, Object> result = handler.handleRequest(Map.of("tags", List.of("a", "b")), Map.of(), Map.of(), null);
+        assertEquals(1, result.get("fields"));
+        assertEquals(List.of("a", "b"), result.get("tags"));
+    }
+
     private static <I, O> CloudRequestHandler<I, O> compileAndLoad(String sourceName, String source,
                                                                    String handlerClass) throws Exception {
         Compilation compilation = javac()
