@@ -1,5 +1,12 @@
 # Shared resources for Azure Functions
 
+# Terraform versions the generated files are tested with (1.x). The provider versions
+# belong in your own main.tf: Terraform allows only one required_providers block per directory.
+terraform {
+  required_version = ">= 1.5.0, < 2.0.0"
+}
+
+
 resource "azurerm_resource_group" "function_rg" {
   name     = "${r"${var.project_name}-${var.environment}"}-rg"
   location = var.azure_region

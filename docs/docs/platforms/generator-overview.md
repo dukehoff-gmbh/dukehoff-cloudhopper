@@ -241,6 +241,41 @@ the variables `memory_limit_bytes`, `cpu_limit`, `timeout`, `min_scale` and
 
 ---
 
+## Terraform and provider versions
+
+The generated Terraform requires Terraform `>= 1.5.0, < 2.0.0` (`required_version`)
+and is tested with Terraform 1.17.
+
+Terraform allows only one `required_providers` block per directory. The provider
+versions therefore belong in your own `main.tf`, next to the provider configuration.
+The exception is Scaleway, where the generated files declare the provider. Projects
+created with the [archetype](../modules/maven-archetype) already contain these
+constraints:
+
+| Target | Provider constraints in `main.tf` |
+|---|---|
+| `aws-terraform` | `hashicorp/aws ~> 6.0` |
+| `azure-terraform` | `hashicorp/azurerm ~> 4.0` |
+| `gcp-terraform` | `hashicorp/google ~> 8.0`, `hashicorp/google-beta ~> 8.0`, `hashicorp/local ~> 2.0` |
+| `scaleway-terraform` | none: the generated files declare `scaleway/scaleway ~> 2.92`. Do not add a `required_providers` block to your `main.tf` |
+
+Without a constraint, `terraform init` installs the latest major version of the
+provider, which the generated files may not support. Older projects should add the
+block, for example on AWS:
+
+```hcl
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+}
+```
+
+---
+
 ## Maven configuration
 
 Projects created with the [archetype](../modules/maven-archetype) have a
