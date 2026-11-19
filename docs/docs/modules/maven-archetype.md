@@ -114,9 +114,25 @@ mvn clean install -Pazure-terraform
 mvn clean install -Pspringboot-http
 ```
 
-The annotation processor generates integration classes. The deployment files, (for aws, gcp and azure),
-will be generated into a directory in target/deployment/`{generatorId}`. You can import those files along with 
-the generated function JAR in your own terraform project, or use terraform directly from the generated directory.
+The annotation processor generates integration classes and writes the deployment files to
+`target/deployment/{generatorId}`. For the Terraform targets the profile also builds the artifact the
+generated Terraform uploads, and copies the files from `src/main/resources/deployment/{generatorId}`
+(provider, backend, variables) next to the generated ones:
+
+| Profile | Artifact |
+|---|---|
+| `aws-terraform` | `target/<artifactId>-<version>-aws-terraform.jar` (with all dependencies) |
+| `gcp-terraform` | `target/<artifactId>-<version>-gcp-terraform.zip` (the jar with all dependencies) |
+| `azure-terraform` | `target/<artifactId>-<version>-azure-terraform.zip` (the function app) |
+
+You can import the generated files along with the artifact into your own Terraform project, or run
+Terraform directly in `target/deployment/{generatorId}`:
+
+```bash
+cd target/deployment/aws-terraform
+terraform init
+terraform apply
+```
 
 
 You need to provide additional variables for the deployment. Please check the generator documentation for details. 
@@ -158,10 +174,10 @@ the path to your terraform executable in the pom's properties:
     </properties>
 ```
 
-The maven profile is configured to always run terraform init. A second command can be passed via a parameter:
+The maven profile is configured to always run terraform init. Activate it together with the target profile; a second command can be passed via a parameter:
 
   ```bash
-  mvn verify -Pdeploy-with-terraform -Dterraform.command=plan
-  mvn verify -Pdeploy-with-terraform -Dterraform.command=apply
-  mvn verify -Pdeploy-with-terraform -Dterraform.command=delete
+  mvn verify -Paws-terraform,deploy-with-terraform -Dterraform.command=plan
+  mvn verify -Paws-terraform,deploy-with-terraform -Dterraform.command=apply
+  mvn verify -Paws-terraform,deploy-with-terraform -Dterraform.command=destroy
   ```
