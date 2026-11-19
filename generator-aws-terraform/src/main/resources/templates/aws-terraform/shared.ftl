@@ -1,3 +1,9 @@
+# Terraform versions the generated files are tested with (1.x). The provider versions
+# belong in your own main.tf: Terraform allows only one required_providers block per directory.
+terraform {
+  required_version = ">= 1.5.0, < 2.0.0"
+}
+
 # Optional prefix for all named resources, e.g. to run several deployments of the
 # same project side by side in one account (CI runs, previews). Empty by default.
 variable "cloudhopper_name_prefix" {

@@ -6,10 +6,11 @@
 # (region, project) and the backend belong in your own main.tf.
 <#noparse>
 terraform {
+  required_version = ">= 1.5.0, < 2.0.0"
   required_providers {
     scaleway = {
       source  = "scaleway/scaleway"
-      version = ">= 2.92.0"
+      version = "~> 2.92"
     }
   }
 }

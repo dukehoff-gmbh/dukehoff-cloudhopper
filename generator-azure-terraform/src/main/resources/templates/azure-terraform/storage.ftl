@@ -15,7 +15,7 @@ resource "azurerm_storage_container" "${fid}_container" {
 # "${fid}_event" reads it. After five failed deliveries an event moves to "${queueName}-poison".
 resource "azurerm_storage_queue" "${fid}_storage_events" {
   name                 = "${queueName}"
-  storage_account_name = azurerm_storage_account.function_storage.name
+  storage_account_id   = azurerm_storage_account.function_storage.id
 }
 
 resource "azurerm_eventgrid_event_subscription" "${fid}_storage" {
