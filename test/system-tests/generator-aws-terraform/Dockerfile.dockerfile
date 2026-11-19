@@ -1,6 +1,7 @@
 # Terraform is a single static binary; taking it from the official image needs no package
 # mirrors (apt inside the image build failed to resolve the Ubuntu mirrors on GitHub runners).
-FROM hashicorp/terraform:latest AS terraform
+ARG TERRAFORM_VERSION=1.17.2
+FROM hashicorp/terraform:${TERRAFORM_VERSION} AS terraform
 
 FROM maven:3.9.6-eclipse-temurin-21
 
