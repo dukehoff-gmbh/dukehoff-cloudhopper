@@ -16,6 +16,8 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
   <#if awsArch?has_content>
   architectures = ["${awsArch}"]
   </#if>
+  depends_on = [aws_cloudwatch_log_group.${handlerInfo.functionId}_logs]
+
   environment {
     variables = {
       # lets the runtime report bucket and queue names without the prefix
@@ -24,10 +26,11 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
   }
 }
 
-# The CloudWatch log group "/aws/lambda/<function_name>" is intentionally
-# NOT managed by Terraform. AWS Lambda creates it automatically on first invocation
-# (the execution role has the AWSLambdaBasicExecutionRole logs permissions). Managing
-# it here caused "already exists" conflicts, because Lambda re-creates the group
-# outside of Terraform's state whenever the function runs.
-
-
+# The log group Lambda writes to, created before the function so that Lambda does not
+# create it on the first invocation (without retention, outside of Terraform's state).
+# Deployments made before this group was managed here already have it; import it once:
+#   terraform import 'aws_cloudwatch_log_group.${handlerInfo.functionId}_logs' /aws/lambda/<function name>
+resource "aws_cloudwatch_log_group" "${handlerInfo.functionId}_logs" {
+  name              = "/aws/lambda/${"$"}{var.cloudhopper_name_prefix}${handlerInfo.functionId}"
+  retention_in_days = var.log_retention_days
+}

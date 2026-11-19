@@ -28,6 +28,6 @@ resource "aws_apigatewayv2_deployment" "main_deployment" {
 
 resource "aws_apigatewayv2_stage" "main_stage" {
   api_id        = aws_apigatewayv2_api.main.id
-  name          = "test"
+  name          = var.api_stage_name
   deployment_id = aws_apigatewayv2_deployment.main_deployment.id
 }

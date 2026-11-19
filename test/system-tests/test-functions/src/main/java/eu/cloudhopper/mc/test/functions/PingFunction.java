@@ -32,7 +32,8 @@ public class PingFunction {
                     description = "Ping",
                     operationId = "ping",
                     method = "GET",
-                    path = "/ping",
+                    // not "/ping": API Gateway reserves /ping and /sping on its $default stage
+                    path = "/pingpong",
                     summary = "bla" 
             )
     @Function(name = "ping")

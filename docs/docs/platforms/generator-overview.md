@@ -68,6 +68,27 @@ Notes on the event and trigger columns:
 | `queue.ftl` | Terraform | SQS queue and event source mapping |
 | `storage.ftl` | Terraform | S3 bucket and event notification |
 
+The generated Terraform has these variables for the deployment as a whole; set them
+in a `.tfvars` file or with `-var`:
+
+| Variable | Default | Effect |
+|---|---|---|
+| `api_stage_name` | `$default` | API Gateway stage. `$default` serves the API without a stage segment (`https://<api>.execute-api.<region>.amazonaws.com/players`); any other name becomes the first path segment. On `$default`, API Gateway answers `/ping` and `/sping` with its own health check; a function on one of these paths makes `terraform plan` fail with a hint, so set a stage name or change the path |
+| `log_retention_days` | `30` | Retention of the log groups `/aws/lambda/<function>`, which Terraform creates before the functions |
+| `artifact_bucket_force_destroy` | `false` | Lets `terraform destroy` delete the artifact bucket even if it contains objects Terraform does not manage |
+| `cloudhopper_name_prefix` | empty | Prefix for all resource names, e.g. for several deployments in one account |
+
+:::note Upgrading from 1.2 or earlier
+- The stage used to be named `test`, so URLs contained `/test`. To keep these URLs, set `api_stage_name = "test"`.
+- The log groups already exist, because Lambda created them on the first invocation. `terraform apply` then fails with *already exists*. Import each group once, then apply again:
+
+  ```bash
+  terraform import 'aws_cloudwatch_log_group.<function id>_logs' /aws/lambda/<function name>
+  ```
+
+  Alternatively, delete the groups; this also deletes the logs they contain.
+:::
+
 ### Azure (`azure-terraform`)
 
 | Template | Output | Purpose |
@@ -84,6 +105,10 @@ Notes on the event and trigger columns:
 On Azure, triggers are Java annotations on generated classes; Terraform
 creates the infrastructure they bind to.
 
+The variable `log_retention_days` (default `30`) sets how long Application Insights
+keeps telemetry and logs. Application Insights accepts 30, 60, 90, 120, 180, 270, 365,
+550 or 730 days. Before, the Azure default of 90 days applied.
+
 ### GCP (`gcp-terraform`)
 
 | Template | Output | Purpose |
@@ -98,6 +123,9 @@ creates the infrastructure they bind to.
 | `schedule.ftl` | Terraform | Cloud Scheduler job |
 | `queue.ftl` | Terraform | Pub/Sub topic and Eventarc trigger |
 | `storage.ftl` | Terraform | Cloud Storage bucket and Eventarc trigger |
+
+Function logs go to Cloud Logging. The project's `_Default` log bucket keeps them for
+30 days unless its retention was changed; the generated Terraform does not manage it.
 
 ### Spring Boot (`springboot-http`)
 
