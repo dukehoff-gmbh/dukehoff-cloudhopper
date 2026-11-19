@@ -7,6 +7,10 @@ on:
   # runs everything, e.g. before a release
   workflow_dispatch:
 
+env:
+  # one Terraform version for every job and TCK image (build arg TERRAFORM_VERSION)
+  TERRAFORM_VERSION: 1.17.2
+
 jobs:
   # Decides what the PR needs (.github/scripts/affected-targets.sh): a docs-only PR
   # skips the jobs below, a PR that touches one target runs only that target's TCK.
@@ -64,11 +68,14 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
+
+    - name: Maven settings for CI (Maven Central fallback)
+      run: cp .github/maven/ci-settings.xml ~/.m2/settings.xml
         
     - name: Install Terraform
       uses: hashicorp/setup-terraform@v4
       with:
-        terraform_version: latest  # or specify a version like "1.6.0"
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
         terraform_wrapper: false
         
     - name: Cache Maven packages
@@ -116,6 +123,9 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
+
+    - name: Maven settings for CI (Maven Central fallback)
+      run: cp .github/maven/ci-settings.xml ~/.m2/settings.xml
 
     - name: Cache Maven packages
       uses: actions/cache@v6
@@ -167,6 +177,9 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
+
+    - name: Maven settings for CI (Maven Central fallback)
+      run: cp .github/maven/ci-settings.xml ~/.m2/settings.xml
 
     - name: Cache Maven packages
       uses: actions/cache@v6
@@ -231,6 +244,9 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
 
+    - name: Maven settings for CI (Maven Central fallback)
+      run: cp .github/maven/ci-settings.xml ~/.m2/settings.xml
+
     - name: Cache Maven packages
       uses: actions/cache@v6
       with:
@@ -242,9 +258,9 @@ jobs:
 
     # the binding reads terraform output -json; the wrapper would add its own lines
     - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v3
+      uses: hashicorp/setup-terraform@v4
       with:
-        terraform_version: 1.9.8
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
         terraform_wrapper: false
 
     - name: Install the modules the TCK needs
@@ -277,6 +293,9 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
 
+    - name: Maven settings for CI (Maven Central fallback)
+      run: cp .github/maven/ci-settings.xml ~/.m2/settings.xml
+
     - name: Cache Maven packages
       uses: actions/cache@v6
       with:
@@ -294,6 +313,7 @@ jobs:
       uses: docker/build-push-action@v7.4.0
       with:
         file: test/system-tests/generator-azure-terraform/Dockerfile.dockerfile
+        build-args: TERRAFORM_VERSION=${{ env.TERRAFORM_VERSION }}
         tags: cloudhopper-tck-azure
 
     - name: Run TCK for Azure
@@ -346,6 +366,9 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
 
+    - name: Maven settings for CI (Maven Central fallback)
+      run: cp .github/maven/ci-settings.xml ~/.m2/settings.xml
+
     - name: Cache Maven packages
       uses: actions/cache@v6
       with:
@@ -363,6 +386,7 @@ jobs:
       uses: docker/build-push-action@v7.4.0
       with:
         file: test/system-tests/generator-gcp-terraform/Dockerfile.dockerfile
+        build-args: TERRAFORM_VERSION=${{ env.TERRAFORM_VERSION }}
         tags: cloudhopper-tck-gcp
 
     - name: Set up GCP credentials
@@ -418,6 +442,9 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
 
+    - name: Maven settings for CI (Maven Central fallback)
+      run: cp .github/maven/ci-settings.xml ~/.m2/settings.xml
+
     - name: Cache Maven packages
       uses: actions/cache@v6
       with:
@@ -435,6 +462,7 @@ jobs:
       uses: docker/build-push-action@v7.4.0
       with:
         file: test/system-tests/generator-aws-terraform/Dockerfile.dockerfile
+        build-args: TERRAFORM_VERSION=${{ env.TERRAFORM_VERSION }}
         tags: cloudhopper-tck-aws
 
     # Short-lived credentials of a role that may only manage the TCK's ci-* resources.
