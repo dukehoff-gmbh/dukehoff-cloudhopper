@@ -144,19 +144,28 @@ in `src/main/springboot-http`), and the profile builds an executable jar,
 `<artifactId>-<version>-springboot-http.jar`, which the Dockerfile packages.
 Like on the other targets, a `String` result is returned as JSON (`"pong"`).
 
+The target requires Spring Boot 4 (the archetype uses 4.1). The web starter is
+`spring-boot-starter-webmvc`, and Spring MVC serializes with Jackson 3
+(`tools.jackson.*`). Jackson annotations (`com.fasterxml.jackson.annotation.*`)
+work unchanged. Applications built with Cloudhopper 1.2 or earlier used Spring
+Boot 3.2: see the Spring Boot 4 migration guide for changes in your own code.
+
 #### Queues from Kafka
 
 On Spring Boot, `@EventTrigger(source = EventSource.QUEUE, name = "<queue>")`
 always has the endpoint `POST /events/<function name>`. To consume the queue
-from Kafka instead, add `spring-kafka` to the project and set one property; the
+from Kafka instead, add the Kafka starter to the project and set one property; the
 function code stays the same:
 
 ```xml
 <dependency>
-    <groupId>org.springframework.kafka</groupId>
-    <artifactId>spring-kafka</artifactId>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-kafka</artifactId>
 </dependency>
 ```
+
+Since Spring Boot 4, `spring-kafka` alone is not enough: the Kafka
+auto-configuration that provides the connection is part of the starter.
 
 ```properties
 cloudhopper.events.broker=kafka

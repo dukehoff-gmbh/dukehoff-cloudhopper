@@ -25,9 +25,10 @@ package eu.cloudhopper.mc.provider.springboot;
  * #L%
  */
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 import eu.cloudhopper.mc.annotations.EventSource;
 import eu.cloudhopper.mc.provider.http.LocalHandlerContext;
 import eu.cloudhopper.mc.runtime.CloudRequestHandler;
@@ -35,7 +36,7 @@ import eu.cloudhopper.mc.runtime.EventHandlerContext;
 import eu.cloudhopper.mc.runtime.EventMetadata;
 import eu.cloudhopper.mc.runtime.Headers;
 import eu.cloudhopper.mc.runtime.StorageEvent;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
@@ -168,8 +169,17 @@ public abstract class SpringBootEventHandler<I, O> implements EventEndpoint {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private I parseBody(String body, String defaultSource) throws IOException {
+        try {
+            return parseJson(body, defaultSource);
+        } catch (JacksonException e) {
+            // Jackson 3 exceptions are unchecked; callers expect an IOException for invalid JSON
+            throw new IOException(e.getOriginalMessage(), e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private I parseJson(String body, String defaultSource) {
         if (body == null || body.isEmpty() || inputType.getRawClass() == Void.class) {
             return null;
         }

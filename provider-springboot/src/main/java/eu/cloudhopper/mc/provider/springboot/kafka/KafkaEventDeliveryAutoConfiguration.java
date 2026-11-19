@@ -40,7 +40,8 @@ import org.springframework.kafka.core.KafkaOperations;
 /**
  * Delivers the messages of Kafka topics to the queue-triggered functions of a Spring Boot service.
  *
- * <p>Active when {@code spring-kafka} is on the classpath and the property
+ * <p>Active when {@code spring-kafka} is on the classpath (with Spring Boot 4:
+ * {@code spring-boot-starter-kafka}, which brings the Kafka auto-configuration) and the property
  * {@code cloudhopper.events.broker=kafka} is set. Every function with
  * {@code @EventTrigger(source = QUEUE, name = "<queue>")} consumes the topic {@code <queue>}; the
  * connection comes from the usual {@code spring.kafka.*} properties.</p>
@@ -55,7 +56,10 @@ import org.springframework.kafka.core.KafkaOperations;
  *   <li>{@code cloudhopper.events.kafka.backoff} (default 1s): pause between two attempts</li>
  * </ul>
  */
-@AutoConfiguration(afterName = "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration")
+// Spring Boot 4 moved the Kafka auto-configuration into spring-boot-kafka; the old name is Spring Boot 3
+@AutoConfiguration(afterName = {
+        "org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration",
+        "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration"})
 @ConditionalOnClass(name = "org.springframework.kafka.listener.ConcurrentMessageListenerContainer")
 @ConditionalOnProperty(name = "cloudhopper.events.broker", havingValue = "kafka")
 public class KafkaEventDeliveryAutoConfiguration {

@@ -270,11 +270,11 @@
                     <artifactId>provider-http</artifactId>
                     <version>${project.version}</version>
                 </dependency>
-                <!-- The user is expected to depend on spring-boot-starter-web -->
+                <!-- The user is expected to depend on spring-boot-starter-webmvc -->
                 <dependency>
                     <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-web</artifactId>
-                    <version>3.2.5</version> <!-- or match your global BOM -->
+                    <artifactId>spring-boot-starter-webmvc</artifactId>
+                    <version>${spring-boot.version}</version> <!-- or match your global BOM -->
                 </dependency>
             </dependencies>
         </profile>

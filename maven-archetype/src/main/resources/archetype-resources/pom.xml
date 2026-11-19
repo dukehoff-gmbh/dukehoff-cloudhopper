@@ -111,8 +111,8 @@
                 </dependency>
                 <dependency>
                     <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-web</artifactId>
-                    <version>3.2.5</version>
+                    <artifactId>spring-boot-starter-webmvc</artifactId>
+                    <version>${spring-boot.version}</version>
                 </dependency>
 #end
 #if($generator == "azure-terraform")
@@ -150,7 +150,7 @@
                     <plugin>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-maven-plugin</artifactId>
-                        <version>3.2.5</version>
+                        <version>${spring-boot.version}</version>
                         <executions>
                             <execution>
                                 <goals>
