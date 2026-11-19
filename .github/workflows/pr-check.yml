@@ -69,6 +69,7 @@ jobs:
       uses: hashicorp/setup-terraform@v4
       with:
         terraform_version: latest  # or specify a version like "1.6.0"
+        terraform_wrapper: false
         
     - name: Cache Maven packages
       uses: actions/cache@v6
@@ -85,6 +86,9 @@ jobs:
       
     - name: Run archetype integration tests
       working-directory: maven-archetype
+      env:
+        # the ITs of the Terraform targets run terraform validate; without terraform they would skip it
+        CLOUDHOPPER_REQUIRE_TERRAFORM: 'true'
       run: mvn -B clean integration-test
       
     # Optional: Upload test results and generated projects for debugging
