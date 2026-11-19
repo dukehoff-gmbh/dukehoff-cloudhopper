@@ -63,6 +63,7 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.DeleteQueueRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.QueueDeletedRecentlyException;
 import software.amazon.awssdk.services.sqs.model.QueueDoesNotExistException;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
@@ -121,7 +122,7 @@ public class TestContextAws implements TestContext {
     private void createExistingResources() throws IOException {
         try (SqsClient sqs = SqsClient.create()) {
             for (String queue : existingQueues()) {
-                sqs.createQueue(CreateQueueRequest.builder().queueName(queue).tags(TCK_TAGS).build());
+                createQueue(sqs, CreateQueueRequest.builder().queueName(queue).tags(TCK_TAGS).build());
                 System.out.println("📦 Created the existing queue " + queue);
             }
         }
@@ -142,6 +143,30 @@ public class TestContextAws implements TestContext {
                                 .map(t -> Tag.builder().key(t.getKey()).value(t.getValue()).build()).toList()).build())
                         .build());
                 System.out.println("📦 Created the existing bucket " + bucket);
+            }
+        }
+    }
+
+    /**
+     * SQS refuses to recreate a queue within 60 seconds of deleting one with the same name,
+     * which happens when the pre-deploy cleanup removed a queue left over from an aborted run.
+     */
+    private static void createQueue(SqsClient sqs, CreateQueueRequest request) throws IOException {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                sqs.createQueue(request);
+                return;
+            } catch (QueueDeletedRecentlyException e) {
+                if (attempt == 3) {
+                    throw e;
+                }
+                System.out.println("⏳ Queue " + request.queueName() + " was deleted recently; retrying in 65 s");
+                try {
+                    Thread.sleep(65_000);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted while waiting to recreate queue " + request.queueName(), ie);
+                }
             }
         }
     }
