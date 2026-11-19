@@ -47,6 +47,16 @@
     </build>
     <dependencies>
         <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+            <version>2.3.35</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-core</artifactId>
+            <version>3.25.6</version>
+        </dependency>
+        <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>deployment-config-generator-api</artifactId>
             <version>${project.version}</version>

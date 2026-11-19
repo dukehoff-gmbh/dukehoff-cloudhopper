@@ -87,7 +87,16 @@
                     <artifactId>generator-${generator}</artifactId>
 #end
                     <version>${cloudhopper.version}</version>
+                    <!-- only the annotation processor uses the generator; the runtime is the provider below -->
+                    <scope>provided</scope>
                 </dependency>
+#if($generator == "aws-terraform" || $generator == "gcp-terraform" || $generator == "azure-terraform")
+                <dependency>
+                    <groupId>eu.cloudhopper.mc</groupId>
+                    <artifactId>provider-${generator.replace("-terraform", "")}</artifactId>
+                    <version>${cloudhopper.version}</version>
+                </dependency>
+#end
 ## knative and scaleway-terraform run the springboot-http application: same dependencies, same executable jar
 #if($generator == "springboot-http" || $generator == "knative" || $generator == "scaleway-terraform")
                 <dependency>

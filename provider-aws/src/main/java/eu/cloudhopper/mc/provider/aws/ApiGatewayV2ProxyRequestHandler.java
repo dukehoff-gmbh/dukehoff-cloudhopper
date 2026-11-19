@@ -5,7 +5,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2ProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2ProxyResponseEvent;
-import com.amazonaws.util.Base64;
 import eu.cloudhopper.mc.runtime.CloudRequestHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
@@ -65,7 +64,7 @@ public abstract class ApiGatewayV2ProxyRequestHandler<I, O> implements RequestHa
             // Decode body if base64-encoded
             String body = event.getBody();
             if (event.isIsBase64Encoded()) {
-                body = new String(Base64.decode(body), StandardCharsets.UTF_8);
+                body = new String(java.util.Base64.getDecoder().decode(body), StandardCharsets.UTF_8);
             }
 
             // Deserialize input

@@ -35,7 +35,6 @@ import javax.lang.model.element.Modifier;
 import java.util.List;
 import java.util.Collections;
 import java.util.Map;
-import static javassist.bytecode.stackmap.TypeData.ArrayType.typeName;
 import javax.annotation.processing.Filer;
 
 /**

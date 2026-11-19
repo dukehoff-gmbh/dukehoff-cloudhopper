@@ -40,29 +40,26 @@
             <artifactId>deployment-config-generator-api</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>deployment-config-generator-generic</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>deployment-config-processor</artifactId>
             <version>${project.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>provider-aws</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>${com.google.code.gson.version}</version>
         </dependency>
     </dependencies>
 </project>

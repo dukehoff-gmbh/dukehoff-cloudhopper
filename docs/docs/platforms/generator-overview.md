@@ -280,8 +280,10 @@ terraform {
 
 Projects created with the [archetype](../modules/maven-archetype) have a
 profile per target, so building for a target is
-`mvn clean install -P<generator ID>`. Each profile adds the generator and
-provider dependencies and passes the generator ID to the annotation processor:
+`mvn clean install -P<generator ID>`. Each profile adds the generator (in
+`provided` scope: only the annotation processor uses it) and the provider (the
+runtime of the generated handlers), and passes the generator ID to the annotation
+processor:
 
 ```xml
 <compilerArgs>

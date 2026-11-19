@@ -22,12 +22,24 @@ To use this generator in your own project, configure the following:
 ### 1. Add the dependency
 
 ```xml
+<!-- used by the annotation processor at build time only -->
 <dependency>
   <groupId>eu.cloudhopper.mc</groupId>
   <artifactId>generator-azure-terraform</artifactId>
   <version>${cloudhopper.version}</version>
+  <scope>provided</scope>
+</dependency>
+<!-- runtime of the generated handlers; this is what ends up in the function jar -->
+<dependency>
+  <groupId>eu.cloudhopper.mc</groupId>
+  <artifactId>provider-azure</artifactId>
+  <version>${cloudhopper.version}</version>
 </dependency>
 ```
+
+The generator brings the annotation processor's code generation (templates, FreeMarker,
+JavaParser) and is not needed at runtime. With `provided` scope it stays out of the
+function jar; up to 1.2.0 it was added in `compile` scope.
 
 ---
 
