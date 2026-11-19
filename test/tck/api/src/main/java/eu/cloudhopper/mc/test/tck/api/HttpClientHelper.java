@@ -24,7 +24,6 @@ package eu.cloudhopper.mc.test.tck.api;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -77,11 +76,9 @@ public class HttpClientHelper {
         int responseCode = conn.getResponseCode();
         InputStream responseStream = responseCode >= 400 ? conn.getErrorStream() : conn.getInputStream();
 
-        if (responseStream == null) {
-            throw new IOException("No response stream available for " + method + " " + uri + " (HTTP " + responseCode + ")");
-        }
-
-        String responseBody = new String(responseStream.readAllBytes(), StandardCharsets.UTF_8);
+        // an error response may come without a body (e.g. HTTP 500 from GCP API Gateway); the caller checks the status
+        String responseBody = responseStream == null ? ""
+                : new String(responseStream.readAllBytes(), StandardCharsets.UTF_8);
 
         return new HttpResponse(responseCode, responseBody);
     }

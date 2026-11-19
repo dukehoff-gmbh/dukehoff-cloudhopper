@@ -228,7 +228,13 @@ public Player update(@RequestBody Player input,
 ```
 
 The method's return value becomes the response body; a `void` method produces no
-response payload.
+response payload. Body and return value can be parameterized types such as
+`Map<String, List<String>>`.
+
+A method may declare checked exceptions (`throws IOException`). Any exception the
+method throws fails the invocation: an HTTP call answers with a server error, an
+event is redelivered. Checked exceptions reach the platform wrapped in
+`FunctionException`, runtime exceptions unchanged.
 
 ---
 
