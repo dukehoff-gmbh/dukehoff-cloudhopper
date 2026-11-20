@@ -87,6 +87,11 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
     private static final Pattern EVENT_SOURCE_NAME = Pattern.compile("[a-z][a-z0-9]*(-[a-z0-9]+)*");
     private static final Pattern IDENTITY_NAME = Pattern.compile("[a-z][a-z0-9]*(-[a-z0-9]+)*");
 
+    /** Functions without {@code identity}, by their implicit identity (the lowercase function name). */
+    private final java.util.Map<String, String> implicitIdentities = new java.util.HashMap<>();
+    /** Methods with an explicit {@code identity}, by that identity. */
+    private final java.util.Map<String, List<ExecutableElement>> explicitIdentities = new java.util.HashMap<>();
+
     @Override
     public synchronized void init(ProcessingEnvironment env) {
         super.init(env);
@@ -154,7 +159,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
             }
 
             if (!validateParams(m, params) || (event != null && !validateEventTrigger(m, event, params))
-                    || !validateIdentity(m, fn.identity())) {
+                    || !validateIdentity(m, fn)) {
                 continue;
             }
             String pkg = elementUtils.getPackageOf(cls).getQualifiedName().toString();
@@ -225,8 +230,18 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
         return true;
     }
 
-    private boolean validateIdentity(ExecutableElement method, String identity) {
+    /**
+     * Checks the identity name and that an explicit identity is not also the implicit identity of a
+     * function without one: both would silently run as one identity.
+     */
+    private boolean validateIdentity(ExecutableElement method, Function fn) {
+        String identity = fn.identity();
         if (identity.isEmpty()) {
+            String implicit = fn.name().toLowerCase();
+            implicitIdentities.put(implicit, fn.name());
+            for (ExecutableElement other : explicitIdentities.getOrDefault(implicit, List.of())) {
+                reportIdentityClash(other, implicit, fn.name());
+            }
             return true;
         }
         if (identity.length() > 32 || !IDENTITY_NAME.matcher(identity).matches()) {
@@ -235,7 +250,21 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     + " letters, digits and single hyphens, starting with a letter", method);
             return false;
         }
+        explicitIdentities.computeIfAbsent(identity, k -> new ArrayList<>()).add(method);
+        String function = implicitIdentities.get(identity);
+        if (function != null) {
+            reportIdentityClash(method, identity, function);
+            return false;
+        }
         return true;
+    }
+
+    private void reportIdentityClash(ExecutableElement method, String identity, String function) {
+        processingEnv.getMessager().printMessage(ERROR,
+                "@Function identity '" + identity + "' is also the identity of function '" + function
+                + "', which has no identity of its own declared; both would run as one identity. Use another"
+                + " identity name, or declare identity = \"" + identity + "\" on '" + function
+                + "' as well if they should share it", method);
     }
 
     private boolean validateEventTrigger(ExecutableElement method, EventTrigger event, List<ParamInfo> params) {

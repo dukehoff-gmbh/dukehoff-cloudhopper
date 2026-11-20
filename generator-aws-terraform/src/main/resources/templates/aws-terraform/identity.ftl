@@ -6,6 +6,13 @@
 resource "aws_iam_role" "identity_${identity}" {
   name = "${"$"}{var.cloudhopper_name_prefix}${"$"}{var.project_name}-${identity}"
 
+  lifecycle {
+    precondition {
+      condition     = length("${"$"}{var.cloudhopper_name_prefix}${"$"}{var.project_name}-${identity}") <= 64
+      error_message = "The IAM role name of identity \"${identity}\" (cloudhopper_name_prefix + project_name + \"-${identity}\") is longer than the 64 characters IAM allows. Shorten project_name or the prefix, or give the function a shorter identity with @Function(identity = \"...\")."
+    }
+  }
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{

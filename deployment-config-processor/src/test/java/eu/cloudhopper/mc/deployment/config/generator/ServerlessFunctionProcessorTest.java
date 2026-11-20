@@ -186,6 +186,40 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void explicitIdentityMustNotBeTheImplicitIdentityOfAnotherFunction() {
+        for (boolean implicitFirst : new boolean[]{true, false}) {
+            String implicit = "  @Function(name=\"connector\")\n  public String connect() { return \"\"; }\n";
+            String explicit = "  @Function(name=\"report\", identity=\"connector\")\n  public String report() { return \"\"; }\n";
+            Compilation compilation = javac()
+                    .withProcessors(new ServerlessFunctionProcessor())
+                    .compile(JavaFileObjects.forSourceString("com.example.Clash", ""
+                            + "package com.example;\n"
+                            + "import eu.cloudhopper.mc.annotations.*;\n"
+                            + "public class Clash {\n"
+                            + (implicitFirst ? implicit + explicit : explicit + implicit)
+                            + "}\n"));
+            assertThat(compilation).hadErrorContaining(
+                    "@Function identity 'connector' is also the identity of function 'connector'");
+        }
+    }
+
+    @Test
+    public void functionsCanShareAnIdentityDeclaredOnAll() {
+        Compilation compilation = javac()
+                .withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.Shared", ""
+                        + "package com.example;\n"
+                        + "import eu.cloudhopper.mc.annotations.*;\n"
+                        + "public class Shared {\n"
+                        + "  @Function(name=\"connector\", identity=\"connector\")\n"
+                        + "  public String connect() { return \"\"; }\n"
+                        + "  @Function(name=\"report\", identity=\"connector\")\n"
+                        + "  public String report() { return \"\"; }\n"
+                        + "}\n"));
+        assertThat(compilation).succeeded();
+    }
+
+    @Test
     public void eventSourceNamesMustBeValidOnEveryTarget() {
         for (String name : new String[]{"Orders", "or", "orders_in", "orders--in", "-orders", "1orders"}) {
             Compilation compilation = javac()

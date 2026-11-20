@@ -257,9 +257,10 @@ public void collect() { ... }
 ```
 
 An identity name has up to 32 lowercase letters, digits and hyphens and starts with a
-letter. A function without `identity` uses its function name as the identity name, so
-an explicit `identity` equal to the name of another function shares that function's
-identity.
+letter. A function without `identity` uses its function name as the identity name. An
+explicit `identity` that is also the name of a function without `identity` is a build
+error, because both would silently run as one identity; to share it on purpose, declare
+the same `identity` on both functions.
 
 The generator grants an identity logging and the permissions the triggers of its
 functions need, such as receiving from the function's queue. Nothing else: a function

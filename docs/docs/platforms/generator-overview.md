@@ -107,7 +107,8 @@ resource "aws_iam_role_policy" "connector_assume_reader" {
 
 The outputs `identity_<identity>_role_name` and `identity_<identity>_role_arn` give the
 role's name and ARN, e.g. for a trust policy in another account. The name stays the same
-as long as the identity does; IAM limits it to 64 characters.
+as long as the identity does. IAM limits it to 64 characters; a longer name makes
+`terraform plan` fail with a hint to shorten `project_name`, the prefix or the identity.
 
 :::note Upgrading from 1.3 or earlier
 All functions used to share the role `<project_name>-lambda-execution-role`, which also
