@@ -39,4 +39,4 @@ No boilerplate. No endless YAML. No regrets.
 
 ## Get Started
 
-👉 [Quickstart Guide](guides/quickstart)  
+👉 [Quickstart Guide](guides/quickstart.md)  
