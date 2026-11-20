@@ -38,6 +38,9 @@ jobs:
       RELEASE: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
       HAS_CENTRAL: ${{ secrets.CENTRAL_USERNAME != '' && secrets.CENTRAL_PASSWORD != '' }}
       HAS_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY != '' && secrets.MAVEN_GPG_PASSPHRASE != '' }}
+      # Google's copy of Maven Central as a fallback (see .github/maven/ci-settings.xml); as global
+      # settings, so that the user settings setup-java writes (server credentials) stay as they are
+      MAVEN_ARGS: -gs .github/maven/ci-settings.xml
     steps:
       - name: Secrets for a release
         if: env.RELEASE == 'true' && (env.HAS_CENTRAL != 'true' || env.HAS_KEY != 'true')

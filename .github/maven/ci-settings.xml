@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Maven settings for the CI jobs (copied to ~/.m2/settings.xml after setup-java).
+  Maven settings for the CI jobs: copied to ~/.m2/settings.xml after setup-java (pr-check), or
+  passed as global settings with -gs where setup-java's user settings hold credentials (release).
 
   Maven Central occasionally answers 404 for artifacts that exist, which fails a whole run
   with "Could not find artifact ... (absent)". Maven looks up an artifact in each declared
