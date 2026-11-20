@@ -49,14 +49,22 @@ public class SnapStartCompatibilityTest implements ExtensionAwareTest {
     public void run(TestContext context) throws Exception {
         Assert.assertTrue("SnapStart active for the invoked version", context.isSnapStartActive(FUNCTION_NAME));
         String url = context.getHttpUrl(FUNCTION_NAME);
-        System.out.println("📞 Calling: " + url);
-        HttpClientHelper.HttpResponse response = HttpClientHelper.get(URI.create(url));
-        System.out.println("📩 Raw Response (" + response.getStatusCode() + "): " + response.getBody());
+        HttpClientHelper.HttpResponse response = null;
+        // the version behind the alias may still be activating after the deployment
+        for (int attempt = 1; attempt <= 6; attempt++) {
+            System.out.println("📞 Calling (" + attempt + "): " + url);
+            response = HttpClientHelper.get(URI.create(url));
+            System.out.println("📩 Raw Response (" + response.getStatusCode() + "): " + response.getBody());
+            if (response.getStatusCode() == 200) {
+                break;
+            }
+            Thread.sleep(30000);
+        }
         if (response.getStatusCode() != 200) {
-            // no log lines: the trigger could not invoke the alias; otherwise the function failed
-            Thread.sleep(15000);
+            // no invocation in the logs: the trigger could not invoke the alias; otherwise the function failed
             System.out.println("📜 Logs of " + FUNCTION_NAME + ":");
             context.fetchLogs(FUNCTION_NAME).forEach(line -> System.out.println("  " + line));
+            context.isSnapStartActive(FUNCTION_NAME);
         }
         Assert.assertEquals("snap", new ObjectMapper().readValue(response.getBody(), String.class));
     }

@@ -240,8 +240,20 @@ public class TestContextAws implements TestContext {
                     .functionName(namePrefix + functionName.toLowerCase())
                     .qualifier("live")
                     .build());
-            System.out.println("📸 SnapStart of " + functionName + ":live (version " + configuration.version() + "): "
+            System.out.println("📸 SnapStart of " + functionName + ":live (version " + configuration.version() + ", state "
+                    + configuration.state() + ", last update " + configuration.lastUpdateStatus() + "): "
                     + configuration.snapStart());
+            try {
+                InvokeResponse direct = lambdaClient.invoke(InvokeRequest.builder()
+                        .functionName(namePrefix + functionName.toLowerCase())
+                        .qualifier("live")
+                        .payload(SdkBytes.fromUtf8String("{}"))
+                        .build());
+                System.out.println("📞 Direct call of " + functionName + ":live → " + direct.statusCode() + " "
+                        + (direct.functionError() == null ? "" : direct.functionError() + " ") + direct.payload().asUtf8String());
+            } catch (RuntimeException e) {
+                System.out.println("📞 Direct call of " + functionName + ":live failed: " + e);
+            }
             return configuration.snapStart() != null
                     && configuration.snapStart().applyOn() == software.amazon.awssdk.services.lambda.model.SnapStartApplyOn.PUBLISHED_VERSIONS
                     && configuration.snapStart().optimizationStatus() == software.amazon.awssdk.services.lambda.model.SnapStartOptimizationStatus.ON;
