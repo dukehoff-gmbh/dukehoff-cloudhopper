@@ -79,6 +79,37 @@ in a `.tfvars` file or with `-var`:
 | `artifact_bucket_force_destroy` | `false` | Lets `terraform destroy` delete the artifact bucket even if it contains objects Terraform does not manage |
 | `cloudhopper_name_prefix` | empty | Prefix for all resource names, e.g. for several deployments in one account |
 
+#### SnapStart
+
+Java functions start slowly on a new instance: the JVM starts and the function is
+initialized on the first request. With Lambda SnapStart, Lambda initializes a published
+version once, takes a snapshot of the initialized environment, and starts new instances
+from that snapshot:
+
+```java
+@Function(name = "hello", extensions = @Extension(
+        name = ExtensionKeys.Aws.SnapStart.KEY,
+        value = ExtensionKeys.Aws.SnapStart.Values.PUBLISHED_VERSIONS))
+```
+
+For such a function, every `terraform apply` that changes it publishes a new version, and the
+alias `live` points to it. API Gateway, EventBridge schedules, SQS and S3 invoke the
+alias; invoking the function without a qualifier runs `$LATEST` without SnapStart.
+
+Until Lambda has taken the snapshot, a new version is `Pending` and cannot be invoked.
+The generated Terraform therefore waits with `aws lambda wait published-version-active`
+before it moves the alias, so the triggers keep invoking the previous version during the
+deployment. This needs the [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+on the machine running Terraform, with the same credentials as Terraform, and it
+adds the time of the snapshot (usually under a minute) to the deployment.
+
+All instances restored from one snapshot share the state created during initialization:
+create random values, unique IDs and network connections in the function call, not in
+constructors or static initializers, or renew them in a `org.crac` `afterRestore` hook.
+
+Terraform does not delete old versions; they count toward Lambda's code storage quota per
+region. SnapStart cannot be combined with provisioned concurrency.
+
 #### Identities and permissions
 
 Every [identity](../guides/writing-functions.md#identities-and-permissions) becomes an

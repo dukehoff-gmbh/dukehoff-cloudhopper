@@ -26,6 +26,7 @@ package eu.cloudhopper.mc.test.tck.core;
  */
 import eu.cloudhopper.mc.generator.api.GeneratorFeatureInfo;
 import eu.cloudhopper.mc.test.tck.api.CompatibilityTest;
+import eu.cloudhopper.mc.test.tck.api.ExtensionAwareTest;
 import eu.cloudhopper.mc.test.tck.api.FeatureAwareTest;
 import eu.cloudhopper.mc.test.tck.api.RequiredFeature;
 import eu.cloudhopper.mc.test.tck.api.TestContext;
@@ -49,6 +50,7 @@ public class CompatibilityTestRunner {
                 new TimeoutFunctionCompatibilityTest(),
                 new MinInstancesFunctionCompatibilityTest(),
                 new IdentityCompatibilityTest(),
+                new SnapStartCompatibilityTest(),
                 new HttpFunctionCompatibilityTest(),
                 new HttpGetPlayerCompatibilityTest(),
                 new HttpRegisterPlayerCompatibilityTest(),
@@ -73,7 +75,9 @@ public class CompatibilityTestRunner {
         for (CompatibilityTest test : availableTests) {
             if (test instanceof FeatureAwareTest fat) {
                 List<RequiredFeature> required = fat.requiredFeatures();
-                if (supportsAllFeatures(required, info)) {
+                boolean extensionsSupported = !(test instanceof ExtensionAwareTest eat)
+                        || context.supportedExtensions().containsAll(eat.requiredExtensions());
+                if (supportsAllFeatures(required, info) && extensionsSupported) {
                     selectedTests.add(test);
                 } else {
                     unsupportedTests.put(test, required);
@@ -144,6 +148,9 @@ public class CompatibilityTestRunner {
                 System.out.println(" - " + entry.getKey().getClass().getSimpleName());
                 for (RequiredFeature feat : entry.getValue()) {
                     System.out.println("    ↳ Requires: " + feat.annotationFqcn() + " → " + feat.requiredAttributes());
+                }
+                if (entry.getKey() instanceof ExtensionAwareTest eat) {
+                    System.out.println("    ↳ Requires extensions: " + eat.requiredExtensions());
                 }
             }
         }

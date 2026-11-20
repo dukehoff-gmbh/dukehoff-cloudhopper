@@ -1,3 +1,6 @@
+<#-- with SnapStart, the triggers invoke the published version through the alias "live" -->
+<#assign snapStart = (handlerInfo.extensionsMap["x-aws-snapstart"]!"") == "PublishedVersions">
+<#assign lambdaTarget = snapStart?then("aws_lambda_alias.${handlerInfo.functionId}_live", "aws_lambda_function.${handlerInfo.functionId}")>
 <#if eventSource == "QUEUE">
 <#assign fid = handlerInfo.functionId>
 <#-- Lambda requires the queue's visibility timeout to be at least the function timeout; AWS recommends six times it -->
@@ -36,7 +39,7 @@ resource "aws_iam_role_policy" "${fid}_queue_access" {
 # One message per invocation; failed messages are reported individually and delivered again.
 resource "aws_lambda_event_source_mapping" "${fid}_queue" {
   event_source_arn        = ${queueArn}
-  function_name           = aws_lambda_function.${fid}.arn
+  function_name           = ${lambdaTarget}.arn
   batch_size              = 1
   function_response_types = ["ReportBatchItemFailures"]
 
