@@ -45,7 +45,8 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     supportedAttributes = {
                         Function.FunctionAttribute.NAME,
                         Function.FunctionAttribute.MEMORY,
-                        Function.FunctionAttribute.TIMEOUT
+                        Function.FunctionAttribute.TIMEOUT,
+                        Function.FunctionAttribute.IDENTITY
                     }
             ),
             @GeneratorFeature(
@@ -99,6 +100,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     phase = GenerationPhase.FUNCTION,
                     templateName = "function.ftl",
                     description = "Generates AWS Lambda function definition (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.IDENTITY,
+                    templateName = "identity.ftl",
+                    description = "Generates the execution role of an identity (Terraform)",
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
                     javaFile = false

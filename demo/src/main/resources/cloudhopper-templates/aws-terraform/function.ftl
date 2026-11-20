@@ -1,7 +1,7 @@
 resource "aws_lambda_function" "${handlerInfo.functionId}" {
   #filename      = "${handlerInfo.targetDir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.jar"
   function_name = "${handlerInfo.functionId}"
-  role          = aws_iam_role.lambda_exec.arn
+  role          = aws_iam_role.identity_${handlerInfo.identity}.arn
   handler       = "${handlerWrapperFullyQualifiedName}$Auto::handleRequest"
   
   s3_bucket     = aws_s3_bucket.lambda_artifacts.bucket

@@ -43,6 +43,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.lambda.LambdaClient;
+import software.amazon.awssdk.services.lambda.model.GetFunctionConfigurationRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -225,6 +226,15 @@ public class TestContextAws implements TestContext {
             Logger.getLogger(TestContextAws.class.getName()).log(Level.SEVERE, null, ex);
         }
         return url;
+    }
+
+    @Override
+    public String getDeployedIdentity(String functionName) {
+        try (LambdaClient lambdaClient = LambdaClient.create()) {
+            return lambdaClient.getFunctionConfiguration(GetFunctionConfigurationRequest.builder()
+                    .functionName(namePrefix + functionName.toLowerCase())
+                    .build()).role();
+        }
     }
 
     @Override

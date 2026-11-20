@@ -82,6 +82,7 @@ public @interface Function {
         public static final String TIMEOUT = "timeout";
         public static final String MIN_INSTANCES = "minInstances";
         public static final String ARCHITECTURE = "architecture";
+        public static final String IDENTITY = "identity";
     }
 
     /**
@@ -114,6 +115,25 @@ public @interface Function {
      * @return minimum instance count
      */
     int minInstances() default 0;
+
+    /**
+     * The identity the function runs as, i.e. the principal its permissions are granted to:
+     * an IAM role on AWS, a service account on GCP.
+     * <p>
+     * Without a value, every function gets an identity of its own. Functions with the same
+     * value share one identity. The name is independent of the function name, so it stays stable
+     * when a function is renamed; foreign trust policies or IAM bindings that refer to the
+     * identity keep working.
+     * <p>
+     * The generator grants the identity the permissions the function's own triggers need and
+     * logging, nothing else. Further permissions are attached to the identity in the project's own
+     * deployment configuration.
+     * <p>
+     * Lowercase letters, digits and hyphens, starting with a letter, at most 32 characters.
+     *
+     * @return the identity name, or an empty string for an identity of the function's own
+     */
+    String identity() default "";
     
     /**
      * Register extension attributes, for example vendor specific extensions

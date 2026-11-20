@@ -83,11 +83,12 @@ src/main/resources/templates/aws-terraform/
 | Template               | Output Type     | Purpose                                                         |
 |------------------------|------------------|-----------------------------------------------------------------|
 | `handler.ftl`          | Java             | Entry class using `AwsLambdaRequestHandler`                     |
+| `identity.ftl`         | Terraform        | Execution role per identity (`@Function(identity)`)             |
 | `function.ftl`         | Terraform        | Lambda function resource                                        |
 | `integration.ftl`      | Terraform        | API Gateway/Lambda integration resource                         |
 | `api.ftl`              | Terraform        | OpenAPI definition for API Gateway                              |
 | `schedule.ftl`         | Terraform        | Scheduled (EventBridge/CloudWatch) trigger                      |
-| `shared.ftl`           | Terraform        | Shared infrastructure (IAM roles, Lambda layer, etc.)           |
+| `shared.ftl`           | Terraform        | Shared infrastructure (artifact bucket)                         |
 | `queue.ftl`            | Terraform        | SQS queue and event source mapping (`@EventTrigger` `QUEUE`)    |
 | `storage.ftl`          | Terraform        | S3 bucket and event notification (`@EventTrigger` `STORAGE`)    |
 

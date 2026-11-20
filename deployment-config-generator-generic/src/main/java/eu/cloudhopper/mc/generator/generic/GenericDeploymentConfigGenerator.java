@@ -117,6 +117,7 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
     private final TemplateRenderer templateRenderer;
     private final ProcessingEnvironment processingEnv;
     private boolean sharedConfigGenerated;
+    private final Set<String> generatedIdentities = new java.util.HashSet<>();
     private String generatorId;
 
     public GenericDeploymentConfigGenerator(ProcessingEnvironment processingEnv) {
@@ -168,6 +169,10 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         try {
             if (!sharedConfigGenerated) {
                 sharedConfigGenerated = generateSharedConfig(generatorId, outputDir, dataModel, handlerInfo);
+            }
+            if (generatedIdentities.add(handlerInfo.getIdentity())) {
+                runPhase(processingEnv, GenerationPhase.IDENTITY, dataModel, handlerInfo, outputDir,
+                        handlerInfo.getIdentity());
             }
             runPhase(processingEnv, GenerationPhase.FUNCTION, dataModel, handlerInfo, outputDir, handlerInfo.getFunctionId().toLowerCase());
         } catch (ConfigGenerationException e) {

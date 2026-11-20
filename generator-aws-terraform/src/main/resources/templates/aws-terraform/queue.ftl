@@ -21,7 +21,7 @@ data "aws_sqs_queue" "${fid}_queue" {
 
 resource "aws_iam_role_policy" "${fid}_queue_access" {
   name = "${"$"}{var.cloudhopper_name_prefix}${fid}-queue-access"
-  role = aws_iam_role.lambda_exec.id
+  role = aws_iam_role.identity_${handlerInfo.identity}.id
 
   policy = jsonencode({
     Version = "2012-10-17"

@@ -39,6 +39,7 @@ Which target applies which attribute is listed in the
 | `memory` | `int` | `128` | Memory limit in MB |
 | `timeout` | `int` | `30` | Maximum run time in seconds |
 | `minInstances` | `int` | `0` | Instances kept warm to reduce cold starts. GCP sets `min_instance_count`; warm instances are billed while idle. Not applied on the other targets yet (AWS: [#48](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues/48)) |
+| `identity` | `String` | own identity | The identity the function runs as and its permissions are granted to (see [Identities and permissions](#identities-and-permissions)) |
 | `extensions` | `@Extension[]` | `{}` | Vendor-specific attributes (see [Vendor extensions](#vendor-extensions)) |
 
 ```java
@@ -235,6 +236,46 @@ A method may declare checked exceptions (`throws IOException`). Any exception th
 method throws fails the invocation: an HTTP call answers with a server error, an
 event is redelivered. Checked exceptions reach the platform wrapped in
 `FunctionException`, runtime exceptions unchanged.
+
+---
+
+## Identities and permissions
+
+Every function runs as an identity: the principal its permissions are granted to, an
+IAM role on AWS. By default, every function has an identity of its own, so a function
+gets only the permissions meant for it. Functions that need the same permissions can
+share one identity:
+
+```java
+@Function(name = "connectAccount", identity = "connector")
+@HttpTrigger(method = "POST", path = "/accounts")
+public String connect(@RequestBody Account account) { ... }
+
+@Function(name = "collectUsage", identity = "connector")
+@ScheduledTrigger(cron = "0 3 * * *")
+public void collect() { ... }
+```
+
+An identity name has up to 32 lowercase letters, digits and hyphens and starts with a
+letter. A function without `identity` uses its function name as the identity name. An
+explicit `identity` that is also the name of a function without `identity` is a build
+error, because both would silently run as one identity; to share it on purpose, declare
+the same `identity` on both functions.
+
+The generator grants an identity logging and the permissions the triggers of its
+functions need, such as receiving from the function's queue. Nothing else: a function
+that reads another bucket, writes to a database or calls another account needs
+permissions from your own deployment configuration, attached to the identity. How to
+refer to the identity is described per target in
+[Targets and what they support](../platforms/generator-overview.md#aws-aws-terraform).
+
+The name of an identity does not depend on the function names. Renaming a function
+keeps its identity, so policies elsewhere that refer to it, for example a role in
+another account that trusts it, keep working.
+
+Targets that deploy all functions of a project as one unit run them as one identity
+and ignore `identity`; the build warns about it
+([#82](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues/82)).
 
 ---
 
