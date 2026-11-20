@@ -39,8 +39,10 @@ jobs:
       HAS_CENTRAL: ${{ secrets.CENTRAL_USERNAME != '' && secrets.CENTRAL_PASSWORD != '' }}
       HAS_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY != '' && secrets.MAVEN_GPG_PASSPHRASE != '' }}
       # Google's copy of Maven Central as a fallback (see .github/maven/ci-settings.xml); as global
-      # settings, so that the user settings setup-java writes (server credentials) stay as they are
-      MAVEN_ARGS: -gs .github/maven/ci-settings.xml
+      # settings, so that the user settings setup-java writes (server credentials) stay as they are.
+      # Passed to each mvn call, not as MAVEN_ARGS: the Maven runs the archetype integration test
+      # starts would inherit MAVEN_ARGS and fail with it.
+      FALLBACK_SETTINGS: -gs ${{ github.workspace }}/.github/maven/ci-settings.xml
     steps:
       - name: Secrets for a release
         if: env.RELEASE == 'true' && (env.HAS_CENTRAL != 'true' || env.HAS_KEY != 'true')
@@ -74,12 +76,12 @@ jobs:
 
       # the archetype's generated pom takes its Cloudhopper version from project.version, so it follows along
       - name: Set the version
-        run: mvn -B -ntp versions:set -DnewVersion=${{ steps.version.outputs.version }} -DgenerateBackupPoms=false -DprocessAllModules=true
+        run: mvn -B -ntp $FALLBACK_SETTINGS versions:set -DnewVersion=${{ steps.version.outputs.version }} -DgenerateBackupPoms=false -DprocessAllModules=true
 
       # install, not verify: the archetype integration test builds the generated project against the local repository.
       # The cloud TCK runs on every pull request; it is not repeated here.
       - name: Build and test
-        run: mvn -B -ntp clean install
+        run: mvn -B -ntp $FALLBACK_SETTINGS clean install
 
       # builds the signed bundle exactly as it would be uploaded, without uploading it
       - name: Build the bundle
@@ -87,7 +89,7 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
         run: |
           signing=; [ "$HAS_KEY" = true ] || signing=-Dgpg.skip
-          mvn -B -ntp -Prelease deploy -DskipTests -DskipUpload=true $signing
+          mvn -B -ntp $FALLBACK_SETTINGS -Prelease deploy -DskipTests -DskipUpload=true $signing
 
       - name: Check the bundle
         env:
