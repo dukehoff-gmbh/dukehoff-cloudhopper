@@ -51,6 +51,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
 import software.amazon.awssdk.services.s3.model.CreateBucketConfiguration;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -134,10 +135,22 @@ public class TestContextAws implements TestContext {
                 if (!"us-east-1".equals(region)) {
                     request.createBucketConfiguration(CreateBucketConfiguration.builder().locationConstraint(region).build());
                 }
+                boolean created = true;
                 try {
                     s3.createBucket(request.build());
                 } catch (BucketAlreadyOwnedByYouException e) {
-                    // left over from an earlier run
+                    created = false; // left over from an earlier run
+                }
+                if (created) {
+                    // A bucket created again shortly after a delete is not visible everywhere at
+                    // once: Terraform's data source answered "couldn't find resource" seconds after
+                    // the creation. Wait until it can be found, then give it a moment more.
+                    s3.waiter().waitUntilBucketExists(HeadBucketRequest.builder().bucket(bucket).build());
+                    try {
+                        Thread.sleep(15000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
                 s3.putBucketTagging(PutBucketTaggingRequest.builder().bucket(bucket)
                         .tagging(Tagging.builder().tagSet(TCK_TAGS.entrySet().stream()
