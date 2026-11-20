@@ -1,7 +1,10 @@
+<#-- with SnapStart, the triggers invoke the published version through the alias "live" -->
+<#assign snapStart = (handlerInfo.extensionsMap["x-aws-snapstart"]!"") == "PublishedVersions">
+<#assign lambdaTarget = snapStart?then("aws_lambda_alias.${handlerInfo.functionId}_live", "aws_lambda_function.${handlerInfo.functionId}")>
 resource "aws_apigatewayv2_integration" "${handlerInfo.functionId}_integration" {
   api_id             = aws_apigatewayv2_api.main.id
   integration_type   = "AWS_PROXY"
-  integration_uri    = aws_lambda_function.${handlerInfo.functionId}.invoke_arn
+  integration_uri    = ${lambdaTarget}.invoke_arn
   integration_method = "POST"
   payload_format_version = "2.0"
  }
@@ -25,6 +28,9 @@ resource "aws_lambda_permission" "${handlerInfo.functionId}_invoke" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.${handlerInfo.functionId}.function_name
+<#if snapStart>
+  qualifier     = aws_lambda_alias.${handlerInfo.functionId}_live.name
+</#if>
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${"$"}{aws_apigatewayv2_api.main.execution_arn}/*/*"
 }

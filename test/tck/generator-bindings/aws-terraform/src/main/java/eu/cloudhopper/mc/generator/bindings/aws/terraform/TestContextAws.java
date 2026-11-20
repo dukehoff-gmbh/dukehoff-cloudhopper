@@ -229,6 +229,26 @@ public class TestContextAws implements TestContext {
     }
 
     @Override
+    public java.util.Set<String> supportedExtensions() {
+        return java.util.Set.of("x-aws-snapstart"); // ExtensionKeys.Aws.SnapStart.KEY
+    }
+
+    @Override
+    public boolean isSnapStartActive(String functionName) {
+        try (LambdaClient lambdaClient = LambdaClient.create()) {
+            var configuration = lambdaClient.getFunctionConfiguration(GetFunctionConfigurationRequest.builder()
+                    .functionName(namePrefix + functionName.toLowerCase())
+                    .qualifier("live")
+                    .build());
+            System.out.println("📸 SnapStart of " + functionName + ":live (version " + configuration.version() + "): "
+                    + configuration.snapStart());
+            return configuration.snapStart() != null
+                    && configuration.snapStart().applyOn() == software.amazon.awssdk.services.lambda.model.SnapStartApplyOn.PUBLISHED_VERSIONS
+                    && configuration.snapStart().optimizationStatus() == software.amazon.awssdk.services.lambda.model.SnapStartOptimizationStatus.ON;
+        }
+    }
+
+    @Override
     public String getDeployedIdentity(String functionName) {
         try (LambdaClient lambdaClient = LambdaClient.create()) {
             return lambdaClient.getFunctionConfiguration(GetFunctionConfigurationRequest.builder()

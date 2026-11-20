@@ -1,3 +1,6 @@
+<#-- with SnapStart, the triggers invoke the published version through the alias "live" -->
+<#assign snapStart = (handlerInfo.extensionsMap["x-aws-snapstart"]!"") == "PublishedVersions">
+<#assign lambdaTarget = snapStart?then("aws_lambda_alias.${handlerInfo.functionId}_live", "aws_lambda_function.${handlerInfo.functionId}")>
 resource "aws_lambda_function" "${handlerInfo.functionId}" {
   #filename      = "${handlerInfo.targetDir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.jar"
   function_name = "${"$"}{var.cloudhopper_name_prefix}${handlerInfo.functionId}"
@@ -17,6 +20,14 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
   architectures = ["${awsArch}"]
   </#if>
   depends_on = [aws_cloudwatch_log_group.${handlerInfo.functionId}_logs]
+<#if snapStart>
+
+  # every deployment publishes a version; Lambda takes the SnapStart snapshot of it
+  publish = true
+  snap_start {
+    apply_on = "PublishedVersions"
+  }
+</#if>
 
   environment {
     variables = {
@@ -34,3 +45,13 @@ resource "aws_cloudwatch_log_group" "${handlerInfo.functionId}_logs" {
   name              = "/aws/lambda/${"$"}{var.cloudhopper_name_prefix}${handlerInfo.functionId}"
   retention_in_days = var.log_retention_days
 }
+<#if snapStart>
+
+# The triggers invoke the latest published version through this alias, so that new instances
+# start from its SnapStart snapshot.
+resource "aws_lambda_alias" "${handlerInfo.functionId}_live" {
+  name             = "live"
+  function_name    = aws_lambda_function.${handlerInfo.functionId}.function_name
+  function_version = aws_lambda_function.${handlerInfo.functionId}.version
+}
+</#if>

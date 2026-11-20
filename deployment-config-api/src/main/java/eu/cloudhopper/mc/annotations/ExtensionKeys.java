@@ -88,5 +88,36 @@ public final class ExtensionKeys {
                 public static final String X86_64 = "x86_64";
             }
         }
+
+        /**
+         * Extension key for Lambda SnapStart.
+         *
+         * <p>Key: {@code x-aws-snapstart}</p>
+         *
+         * <p>With {@link Values#PUBLISHED_VERSIONS}, every deployment publishes a version of the
+         * function with SnapStart, and the triggers invoke it through the alias {@code live}.
+         * Lambda initializes a version once, takes a snapshot of the initialized environment
+         * and starts new instances from it, which shortens cold starts. State created during
+         * initialization, such as random seeds or connections, is shared by all instances
+         * restored from the snapshot.</p>
+         */
+        public static final class SnapStart {
+            private SnapStart() {}
+
+            /**
+             * The key for enabling Lambda SnapStart: {@code "x-aws-snapstart"}
+             */
+            public static final String KEY = "x-aws-snapstart";
+
+            /**
+             * Allowed values for {@link #KEY}.
+             */
+            public static final class Values {
+                private Values() {}
+
+                /** SnapStart for published versions, invoked through the alias {@code live} */
+                public static final String PUBLISHED_VERSIONS = "PublishedVersions";
+            }
+        }
     }
 }

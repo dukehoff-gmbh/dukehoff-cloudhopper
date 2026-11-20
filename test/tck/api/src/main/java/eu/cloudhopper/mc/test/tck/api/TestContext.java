@@ -77,6 +77,27 @@ public interface TestContext {
     }
 
     /**
+     * The vendor extensions ({@code @Extension} keys) this target applies; tests of other
+     * extensions are skipped.
+     *
+     * @return the supported extension keys
+     */
+    default java.util.Set<String> supportedExtensions() {
+        return java.util.Set.of();
+    }
+
+    /**
+     * Whether the version a deployed function's triggers invoke runs with Lambda SnapStart, as the
+     * platform reports it after the deployment ({@code x-aws-snapstart}).
+     *
+     * @param functionName the name given in {@code @Function}
+     * @return {@code true} if SnapStart is applied and its optimization is on
+     */
+    default boolean isSnapStartActive(String functionName) {
+        throw new UnsupportedOperationException("This binding cannot read SnapStart");
+    }
+
+    /**
      * The identity a deployed function runs as, as the platform reports it after the deployment,
      * e.g. the ARN of the execution role on AWS.
      *

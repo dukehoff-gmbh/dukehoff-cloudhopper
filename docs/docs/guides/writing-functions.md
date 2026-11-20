@@ -302,6 +302,11 @@ public String hello(@PathParam String name) {
 Only generators that declare support for a given extension key act on it; others
 ignore it.
 
+| Key | Values | Target | Effect |
+|---|---|---|---|
+| `x-aws-architecture` (`ExtensionKeys.Aws.Architecture`) | `arm64`, `x86_64` | `aws-terraform` | CPU architecture of the Lambda function |
+| `x-aws-snapstart` (`ExtensionKeys.Aws.SnapStart`) | `PublishedVersions` | `aws-terraform` | [Lambda SnapStart](../platforms/generator-overview.md#snapstart) for shorter cold starts |
+
 ---
 
 ## What gets generated
