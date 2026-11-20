@@ -25,7 +25,7 @@ same declarations drive the build and the
 compatibility tests (TCK): when you
 compile for a target, the build warns about every annotation or attribute it
 does not claim (see
-[When a target does not support something](../guides/writing-functions#when-a-target-does-not-support-something)),
+[When a target does not support something](../guides/writing-functions.md#when-a-target-does-not-support-something)),
 and the TCK certifies each target against the tests whose features it claims.
 The table below is generated from these declarations on every build of this
 site.
@@ -48,7 +48,7 @@ Notes on the event and trigger columns:
   `GET`/`POST /functions/<function name>`; set
   `cloudhopper.functions.direct-endpoint=false` to switch these off.
 - Vendor-specific settings, such as the processor architecture on AWS, go
-  through [`@Extension`](../guides/writing-functions#vendor-extensions) and are
+  through [`@Extension`](../guides/writing-functions.md#vendor-extensions) and are
   only read by the target they are meant for.
 
 ---
@@ -203,7 +203,7 @@ The `knative` generator builds on `springboot-http`: it generates the same
 Spring Boot application (all templates above) and adds a Helm chart under
 `target/deployment/knative/chart` that runs it as one Knative service. The
 cluster setup and the installation are described in the
-[Knative setup guide](../setup/knative-prerequisites).
+[Knative setup guide](../setup/knative-prerequisites.md).
 
 | Template | Output | Purpose |
 |---|---|---|
@@ -245,7 +245,7 @@ The `scaleway-terraform` generator builds on `springboot-http`: it generates the
 same Spring Boot application and adds Terraform under
 `target/deployment/scaleway-terraform` that runs it as one Scaleway Serverless
 Container. The account setup and the deployment are described in the
-[Scaleway setup guide](../setup/scaleway-prerequisites).
+[Scaleway setup guide](../setup/scaleway-prerequisites.md).
 
 | Template | Output | Purpose |
 |---|---|---|
@@ -286,7 +286,7 @@ and is tested with Terraform 1.17.
 Terraform allows only one `required_providers` block per directory. The provider
 versions therefore belong in your own `main.tf`, next to the provider configuration.
 The exception is Scaleway, where the generated files declare the provider. Projects
-created with the [archetype](../modules/maven-archetype) already contain these
+created with the [archetype](../modules/maven-archetype.md) already contain these
 constraints:
 
 | Target | Provider constraints in `main.tf` |
@@ -315,7 +315,7 @@ terraform {
 
 ## Maven configuration
 
-Projects created with the [archetype](../modules/maven-archetype) have a
+Projects created with the [archetype](../modules/maven-archetype.md) have a
 profile per target, so building for a target is
 `mvn clean install -P<generator ID>`. Each profile adds the generator (in
 `provided` scope: only the annotation processor uses it) and the provider (the
@@ -337,8 +337,8 @@ processor:
 
 ## See also
 
-- [AWS generator](../modules/generator-aws-terraform) and [provider](../modules/provider-aws)
-- [Azure generator](../modules/generator-azure-terraform) and [provider](../modules/provider-azure)
-- [GCP generator](../modules/generator-gcp-terraform) and [provider](../modules/provider-gcp)
-- [Knative setup guide](../setup/knative-prerequisites)
-- [Scaleway setup guide](../setup/scaleway-prerequisites)
+- [AWS generator](../modules/generator-aws-terraform.md) and [provider](../modules/provider-aws.md)
+- [Azure generator](../modules/generator-azure-terraform.md) and [provider](../modules/provider-azure.md)
+- [GCP generator](../modules/generator-gcp-terraform.md) and [provider](../modules/provider-gcp.md)
+- [Knative setup guide](../setup/knative-prerequisites.md)
+- [Scaleway setup guide](../setup/scaleway-prerequisites.md)

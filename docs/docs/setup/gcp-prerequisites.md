@@ -89,8 +89,8 @@ declares these variables:
 The last one is the service account Cloud Scheduler uses to call scheduled
 functions, and Eventarc to deliver queue messages and storage events; it is only used if your
 project contains a
-[`@ScheduledTrigger`](../guides/writing-functions#scheduledtrigger) or an
-[`@EventTrigger`](../guides/writing-functions#eventtrigger).
+[`@ScheduledTrigger`](../guides/writing-functions.md#scheduledtrigger) or an
+[`@EventTrigger`](../guides/writing-functions.md#eventtrigger).
 
 Set the variables in the generated `gcp.auto.tfvars`, which Terraform loads
 automatically, or as environment variables (`TF_VAR_gcp_project_id`, …).
@@ -99,5 +99,5 @@ automatically, or as environment variables (`TF_VAR_gcp_project_id`, …).
 
 ## Next
 
-Continue with the [Quickstart](../guides/quickstart), using the
+Continue with the [Quickstart](../guides/quickstart.md), using the
 `gcp-terraform` profile.

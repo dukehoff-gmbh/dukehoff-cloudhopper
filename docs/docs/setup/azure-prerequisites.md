@@ -86,5 +86,5 @@ and `environment`; the storage account name must be globally unique in Azure.
 
 ## Next
 
-Continue with the [Quickstart](../guides/quickstart), using the
+Continue with the [Quickstart](../guides/quickstart.md), using the
 `azure-terraform` profile.

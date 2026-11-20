@@ -42,16 +42,16 @@ timeline
 
 - **Dependencies:** add the generator in `provided` scope and the runtime
   library of the cloud, e.g. `provider-aws`; see the
-  [AWS generator](modules/generator-aws-terraform#1-add-the-maven-dependency)
+  [AWS generator](modules/generator-aws-terraform.md#1-add-the-maven-dependency)
 - **Spring Boot targets:** the application needs Spring Boot 4: replace
   `spring-boot-starter-web` with `spring-boot-starter-webmvc`, and for Kafka add
   `spring-boot-starter-kafka`; see
-  [Spring Boot](platforms/generator-overview#spring-boot-springboot-http)
+  [Spring Boot](platforms/generator-overview.md#spring-boot-springboot-http)
 - **AWS:** URLs no longer contain `/test`; set `api_stage_name = "test"` to keep
   them. Import the existing log groups once before the next `apply`; see
-  [AWS](platforms/generator-overview#aws-aws-terraform)
+  [AWS](platforms/generator-overview.md#aws-aws-terraform)
 - **Terraform:** add provider version constraints to your `main.tf`; see
-  [Terraform and provider versions](platforms/generator-overview#terraform-and-provider-versions)
+  [Terraform and provider versions](platforms/generator-overview.md#terraform-and-provider-versions)
 
 ### 1.2
 
@@ -75,7 +75,7 @@ timeline
   `/functions/<function name>` for every function, `@ScheduledTrigger`
   (in-process and `POST /schedules/<function name>`), queues from Kafka
 - The Spring Boot target is certified by the TCK like the cloud targets
-- Generated [support matrix](platforms/generator-overview#support-matrix) and
+- Generated [support matrix](platforms/generator-overview.md#support-matrix) and
   build warnings for anything a target ignores
 - [API reference](pathname:///api/index.html) (Javadoc) on this site
 

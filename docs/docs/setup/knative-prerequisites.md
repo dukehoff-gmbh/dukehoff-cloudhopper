@@ -2,7 +2,7 @@
 
 This guide prepares a Kubernetes cluster for Cloudhopper functions built with the
 `knative` generator. The generator writes a Helm chart that runs your functions as
-one Knative service; see [Knative (`knative`)](../platforms/generator-overview#knative-knative)
+one Knative service; see [Knative (`knative`)](../platforms/generator-overview.md#knative-knative)
 for what the chart contains.
 
 ---

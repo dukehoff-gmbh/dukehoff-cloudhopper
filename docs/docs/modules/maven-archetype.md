@@ -150,12 +150,12 @@ The generated `Dockerfile` in `target/deployment/springboot-http` packages the s
 
 For `knative` the project uses the same entry point and builds `<artifactId>-<version>-knative.jar`.
 `target/deployment/knative` contains the Dockerfile and a Helm chart; see the
-[Knative setup guide](../setup/knative-prerequisites).
+[Knative setup guide](../setup/knative-prerequisites.md).
 
 For `scaleway-terraform` the project also uses this entry point and builds
 `<artifactId>-<version>-scaleway-terraform.jar`. `target/deployment/scaleway-terraform`
 contains the Dockerfile and the Terraform; see the
-[Scaleway setup guide](../setup/scaleway-prerequisites).
+[Scaleway setup guide](../setup/scaleway-prerequisites.md).
 
 ## Deploy with Terraform
 

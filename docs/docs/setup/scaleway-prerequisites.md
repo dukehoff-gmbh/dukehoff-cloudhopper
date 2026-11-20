@@ -3,7 +3,7 @@
 This guide prepares a Scaleway project for Cloudhopper functions built with the
 `scaleway-terraform` generator. The generator writes Terraform that runs your
 functions as one Scaleway Serverless Container; see
-[Scaleway (`scaleway-terraform`)](../platforms/generator-overview#scaleway-scaleway-terraform)
+[Scaleway (`scaleway-terraform`)](../platforms/generator-overview.md#scaleway-scaleway-terraform)
 for what it contains.
 
 ---

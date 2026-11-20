@@ -12,9 +12,9 @@ You’ll need:
 - **[Maven 3.8+](https://maven.apache.org/install.html)**
 - **[Terraform 1.5+](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)**
 - A cloud account and CLI set up for one of the following:
-  - [AWS →](../setup/aws-prerequisites)
-  - [GCP →](../setup/gcp-prerequisites)
-  - [Azure →](../setup/azure-prerequisites)
+  - [AWS →](../setup/aws-prerequisites.md)
+  - [GCP →](../setup/gcp-prerequisites.md)
+  - [Azure →](../setup/azure-prerequisites.md)
 
 For the `springboot-http` target, which runs your functions as a local Spring
 Boot application, you need neither Terraform nor a cloud account.
@@ -63,7 +63,7 @@ That is the whole programming model: a plain method, a `@Function` name, and a
 trigger. Cloudhopper generates the cloud-specific handler and infrastructure
 from these annotations. To add your own functions — request bodies, query
 parameters, scheduled triggers — see the
-[Writing Functions guide](writing-functions).
+[Writing Functions guide](writing-functions.md).
 
 ---
 
@@ -174,6 +174,6 @@ Expected response:
 
 ## What’s Next?
 
-- [Write your own functions →](writing-functions)
-- [Explore the Maven Archetype →](../modules/maven-archetype)
-- [Annotation & runtime API reference →](../modules/deployment-config-api)
+- [Write your own functions →](writing-functions.md)
+- [Explore the Maven Archetype →](../modules/maven-archetype.md)
+- [Annotation & runtime API reference →](../modules/deployment-config-api.md)
