@@ -135,7 +135,7 @@ role's name and ARN, e.g. for a trust policy in another account. The name stays 
 as long as the identity does. IAM limits it to 64 characters; a longer name makes
 `terraform plan` fail with a hint to shorten `project_name`, the prefix or the identity.
 
-:::note Upgrading from 1.3 or earlier
+:::note Upgrading from 1.3.0 or earlier
 All functions used to share the role `<project_name>-lambda-execution-role`, which also
 had `AmazonS3ReadOnlyAccess` (read access to every bucket in the account). Terraform
 replaces it with one role per identity. Permissions you attached to
