@@ -103,6 +103,13 @@
     <build>
         <pluginManagement>
             <plugins>   
+                <!-- versions:set in the release workflow; a fixed version needs no lookup of the
+                     plugin's metadata, which Maven Central occasionally fails to deliver -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>2.23.0</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-deploy-plugin</artifactId>
