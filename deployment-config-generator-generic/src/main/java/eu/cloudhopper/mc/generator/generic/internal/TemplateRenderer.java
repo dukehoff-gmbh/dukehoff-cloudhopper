@@ -43,6 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.JavaFileObject;
@@ -53,7 +54,26 @@ import javax.tools.JavaFileObject;
  */
 public class TemplateRenderer {
 
-    private final Configuration freemarkerConfig = new Configuration(Configuration.VERSION_2_3_32);
+    private final Configuration freemarkerConfig = newConfiguration();
+
+    /**
+     * The templates generate code and configuration, not text for people: numbers are rendered
+     * without grouping separators and independent of the build machine's locale ({@code 1024},
+     * not {@code 1,024} or {@code 1.024}).
+     */
+    static Configuration newConfiguration() {
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_32);
+        configuration.setLocale(Locale.ROOT);
+        configuration.setNumberFormat("computer");
+        return configuration;
+    }
+
+    /**
+     * @return the FreeMarker configuration the templates are rendered with
+     */
+    Configuration configuration() {
+        return freemarkerConfig;
+    }
 
         /**
      * Call this once during processor init.
