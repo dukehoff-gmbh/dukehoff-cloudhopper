@@ -23,7 +23,8 @@ This module is **used by developers**, **referenced by integrators**, and **cons
 | Package                             | Description                                                  |
 |-------------------------------------|--------------------------------------------------------------|
 | `eu.cloudhopper.mc.annotations`    | Function/trigger annotations (`@Function`, `@ScheduledTrigger`, `@HttpTrigger`), parameter-binding annotations (`@RequestBody`, `@PathParam`, `@QueryParam`, `@HeaderParam`) and vendor extensions (`@Extension`, `ExtensionKeys`) |
-| `eu.cloudhopper.mc.runtime`        | Runtime types such as `HandlerContext`, `CloudRequestHandler`, `ParamConverters` |
+| `eu.cloudhopper.mc.runtime`        | Runtime types such as `HandlerContext`, `CloudRequestHandler`, `ParamConverters`, `ConfigParams` |
+| `eu.cloudhopper.mc.runtime.config` | A small MicroProfile Config implementation (environment, system properties, `META-INF/microprofile-config.properties`) |
 
 ---
 
@@ -76,6 +77,7 @@ each value before invoking your method:
 | `@PathParam("id")` | a URI path template variable; blank value falls back to the parameter name |
 | `@QueryParam("q")` | a query string parameter; blank value falls back to the parameter name |
 | `@HeaderParam("X-Token")` | an HTTP request header; the header name is required |
+| `@ConfigProperty(name = "report.bucket")` | a configuration value (MicroProfile Config); see [Configuration](../guides/writing-functions.md#configuration) |
 
 A parameter of type `HandlerContext` is recognized automatically (no annotation
 needed) and receives the runtime context. Any unannotated, non-context

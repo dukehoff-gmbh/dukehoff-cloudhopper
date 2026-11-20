@@ -349,6 +349,37 @@ the variables `memory_limit_bytes`, `cpu_limit`, `timeout`, `min_scale` and
 
 ---
 
+## Configuration
+
+Functions read [configuration](../guides/writing-functions.md#configuration)
+from environment variables; each target passes them its own way.
+
+| Target | How to set values |
+|---|---|
+| `aws-terraform`, `gcp-terraform` | Terraform variable `cloudhopper_config`; each function gets the values of the properties it reads |
+| `azure-terraform`, `scaleway-terraform` | Terraform variable `cloudhopper_config`; all functions run in one app or container and get all values |
+| `knative` | Helm value `env` (list of `name`/`value`) |
+| `springboot-http` | environment variables or system properties (`-Dreport.bucket=…`) of the process |
+
+`cloudhopper_config` is a map from property name to value, for example in a
+`.tfvars` file:
+
+```hcl
+cloudhopper_config = {
+  "report.bucket" = "acme-reports-prod"
+  "report.days"   = "30"
+}
+```
+
+On AWS and GCP, `terraform plan` fails if a function reads a property without
+`defaultValue` that the map does not contain, and names the missing properties.
+Values are plain environment variables of the function: keep secrets out of
+them.
+
+On Spring Boot, `@ConfigProperty` reads MicroProfile Config, not Spring's
+`application.properties`; set the values as environment variables or system
+properties.
+
 ## Terraform and provider versions
 
 The generated Terraform requires Terraform `>= 1.5.0, < 2.0.0` (`required_version`)

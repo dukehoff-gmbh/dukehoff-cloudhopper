@@ -37,6 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -94,8 +95,15 @@ public class TestContextKnative implements TestContext {
             run(moduleDir, "kind", "load", "docker-image", repository + ":" + tag, "--name", kindCluster);
 
             System.out.println("⎈ Installing the chart as release " + RELEASE + " in namespace " + namespace);
-            run(moduleDir, "helm", "upgrade", "--install", RELEASE, deploymentDir.resolve("chart").toString(),
-                    "--namespace", namespace,
+            List<String> helm = new ArrayList<>(List.of("helm", "upgrade", "--install", RELEASE,
+                    deploymentDir.resolve("chart").toString(), "--namespace", namespace));
+            int index = 0;
+            for (var variable : eu.cloudhopper.mc.test.tck.api.TckConfiguration.environment().entrySet()) {
+                helm.addAll(List.of("--set-string", "env[" + index + "].name=" + variable.getKey(),
+                        "--set-string", "env[" + index + "].value=" + variable.getValue()));
+                index++;
+            }
+            helm.addAll(List.of(
                     "--set", "image.repository=" + repository,
                     "--set", "image.tag=" + tag,
                     "--set", "kafka.bootstrapServers={" + clusterKafka + "}",
@@ -103,7 +111,8 @@ public class TestContextKnative implements TestContext {
                     "--set", "scaling.minScale=1",
                     // a single-node Kafka
                     "--set", "delivery.deadLetterTopicPartitions=1",
-                    "--set", "delivery.deadLetterTopicReplicationFactor=1");
+                    "--set", "delivery.deadLetterTopicReplicationFactor=1"));
+            run(moduleDir, helm.toArray(String[]::new));
             run(moduleDir, "kubectl", "wait", "--namespace", namespace,
                     "ksvc,pingsource,kafkasource,kafkasink",
                     "--selector", "app.kubernetes.io/instance=" + RELEASE,

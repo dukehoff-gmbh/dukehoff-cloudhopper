@@ -68,6 +68,15 @@ variable "privacy" {
   default     = "public"
 }
 
+# Values of the configuration properties the functions read with @ConfigProperty, by property
+# name, e.g. { "report.bucket" = "my-reports" }. The container runs all functions and gets all of them as environment variables
+# (report.bucket → REPORT_BUCKET).
+variable "cloudhopper_config" {
+  description = "Values of the functions' configuration properties (@ConfigProperty), by property name"
+  type        = map(string)
+  default     = {}
+}
+
 variable "environment_variables" {
   description = "Environment variables of the application"
   type        = map(string)
@@ -108,7 +117,7 @@ resource "scaleway_container" "app" {
   cpu_limit                    = var.cpu_limit
   timeout                      = var.timeout
   privacy                      = var.privacy
-  environment_variables        = var.environment_variables
+  environment_variables        = merge({ for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, var.environment_variables)
   secret_environment_variables = var.secret_environment_variables
   # the cron triggers call the schedules; an in-process schedule would run in every instance
   args = ["--cloudhopper.schedules.in-process=false"]

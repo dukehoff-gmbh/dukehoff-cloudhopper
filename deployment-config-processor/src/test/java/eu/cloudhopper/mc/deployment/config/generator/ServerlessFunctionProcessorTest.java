@@ -147,6 +147,50 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void configPropertiesAreReadFromTheConfiguration() throws Exception {
+        CloudRequestHandler<Void, String> handler = compileAndLoad("com.example.ConfigService", ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import java.util.*;\n"
+                + "import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+                + "public class ConfigService {\n"
+                + "  @Function(name=\"config\")\n"
+                + "  public String config(@ConfigProperty(name=\"svc.bucket\") String bucket,\n"
+                + "      @ConfigProperty(name=\"svc.retries\", defaultValue=\"3\") int retries,\n"
+                + "      @ConfigProperty(name=\"svc.unset\") Optional<String> unset,\n"
+                + "      @ConfigProperty(name=\"svc.hosts\", defaultValue=\"a,b\") List<String> hosts) {\n"
+                + "    return bucket + \"|\" + retries + \"|\" + unset.orElse(\"none\") + \"|\" + hosts;\n"
+                + "  }\n"
+                + "}\n",
+                "com.example.ConfigService_config_Handler");
+
+        System.setProperty("svc.bucket", "reports");
+        try {
+            assertEquals("reports|3|none|[a, b]", handler.handleRequest(null, Map.of(), Map.of(), null));
+        } finally {
+            System.clearProperty("svc.bucket");
+        }
+        java.util.NoSuchElementException missing = org.junit.jupiter.api.Assertions.assertThrows(
+                java.util.NoSuchElementException.class, () -> handler.handleRequest(null, Map.of(), Map.of(), null));
+        assertTrue(missing.getMessage().contains("SVC_BUCKET"), missing.getMessage());
+    }
+
+    @Test
+    public void configPropertyParametersNeedAName() {
+        Compilation compilation = javac()
+                .withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.NoName", ""
+                        + "package com.example;\n"
+                        + "import eu.cloudhopper.mc.annotations.*;\n"
+                        + "import org.eclipse.microprofile.config.inject.ConfigProperty;\n"
+                        + "public class NoName {\n"
+                        + "  @Function(name=\"noname\")\n"
+                        + "  public String f(@ConfigProperty String bucket) { return bucket; }\n"
+                        + "}\n"));
+        assertThat(compilation).hadErrorContaining("@ConfigProperty on parameter 'bucket' of f needs a name");
+    }
+
+    @Test
     public void eventMetadataIsTakenFromTheContext() throws Exception {
         CloudRequestHandler<String, String> handler = compileAndLoad("com.example.QueueService", ""
                 + "package com.example;\n"

@@ -13,6 +13,13 @@
         <license.header.path>${project.parent.basedir}/src/license/header.txt</license.header.path>
     </properties>
     <dependencies>
+        <!-- the API function code reads its configuration with (@ConfigProperty, ConfigProvider);
+             the implementation in eu.cloudhopper.mc.runtime.config is part of this module -->
+        <dependency>
+            <groupId>org.eclipse.microprofile.config</groupId>
+            <artifactId>microprofile-config-api</artifactId>
+            <version>${microprofile-config.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>

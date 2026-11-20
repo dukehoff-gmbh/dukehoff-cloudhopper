@@ -1,3 +1,6 @@
+<#-- the properties of this function, and those without a default -->
+<#assign configNames><#list handlerInfo.configProperties as p>"${p.name}"<#sep>, </#sep></#list></#assign>
+<#assign requiredNames><#list handlerInfo.configProperties?filter(p -> p.required) as p>"${p.name}"<#sep>, </#sep></#list></#assign>
 <#-- with SnapStart, the triggers invoke the published version through the alias "live" -->
 <#assign snapStart = (handlerInfo.extensionsMap["x-aws-snapstart"]!"") == "PublishedVersions">
 <#assign lambdaTarget = snapStart?then("aws_lambda_alias.${handlerInfo.functionId}_live", "aws_lambda_function.${handlerInfo.functionId}")>
@@ -30,11 +33,19 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
 </#if>
 
   environment {
-    variables = {
+    variables = merge({
       # lets the runtime report bucket and queue names without the prefix
       CLOUDHOPPER_NAME_PREFIX = var.cloudhopper_name_prefix
+    }, { for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value if contains([${configNames}], name) })
+  }
+<#if requiredNames?has_content>
+  lifecycle {
+    precondition {
+      condition     = alltrue([for name in [${requiredNames}] : contains(keys(var.cloudhopper_config), name)])
+      error_message = "Function ${handlerInfo.functionId} reads configuration properties without a default that cloudhopper_config does not set: ${"$"}{join(", ", [for name in [${requiredNames}] : name if !contains(keys(var.cloudhopper_config), name)])}"
     }
   }
+</#if>
 }
 
 # The log group Lambda writes to, created before the function so that Lambda does not

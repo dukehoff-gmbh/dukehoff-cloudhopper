@@ -262,6 +262,7 @@ public class TestContextScaleway implements TestContext {
                 "-var", "container_name=" + containerName,
                 "-var", "registry_namespace=" + registryNamespace,
                 "-var", "cloudhopper_name_prefix=" + namePrefix,
+                "-var", "cloudhopper_config=" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformVariable(),
                 // one instance stays up, so that the cron triggers and the logs do not wait for cold starts
                 "-var", "min_scale=1",
                 "-var", "max_scale=1"));
