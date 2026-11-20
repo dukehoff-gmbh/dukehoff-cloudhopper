@@ -47,11 +47,25 @@ resource "aws_cloudwatch_log_group" "${handlerInfo.functionId}_logs" {
 }
 <#if snapStart>
 
-# The triggers invoke the latest published version through this alias, so that new instances
+# Lambda creates the SnapStart snapshot after publishing; until then the version is Pending
+# and every invocation fails. The alias moves to a new version only after this wait, so the
+# triggers keep invoking the previous, active version during a deployment. Needs the AWS CLI
+# with the same credentials as Terraform.
+resource "terraform_data" "${handlerInfo.functionId}_version_active" {
+  input            = aws_lambda_function.${handlerInfo.functionId}.version
+  # a new version replaces this resource, which runs the wait again
+  triggers_replace = aws_lambda_function.${handlerInfo.functionId}.version
+
+  provisioner "local-exec" {
+    command = "aws lambda wait published-version-active --region ${"$"}{aws_lambda_function.${handlerInfo.functionId}.region} --function-name ${"$"}{aws_lambda_function.${handlerInfo.functionId}.function_name} --qualifier ${"$"}{aws_lambda_function.${handlerInfo.functionId}.version}"
+  }
+}
+
+# The triggers invoke the latest active version through this alias, so that new instances
 # start from its SnapStart snapshot.
 resource "aws_lambda_alias" "${handlerInfo.functionId}_live" {
   name             = "live"
   function_name    = aws_lambda_function.${handlerInfo.functionId}.function_name
-  function_version = aws_lambda_function.${handlerInfo.functionId}.version
+  function_version = terraform_data.${handlerInfo.functionId}_version_active.output
 }
 </#if>

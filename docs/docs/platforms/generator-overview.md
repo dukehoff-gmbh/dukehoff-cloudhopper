@@ -95,7 +95,13 @@ from that snapshot:
 For such a function, every `terraform apply` that changes it publishes a new version, and the
 alias `live` points to it. API Gateway, EventBridge schedules, SQS and S3 invoke the
 alias; invoking the function without a qualifier runs `$LATEST` without SnapStart.
-Publishing and taking the snapshot add a few minutes to the deployment.
+
+Until Lambda has taken the snapshot, a new version is `Pending` and cannot be invoked.
+The generated Terraform therefore waits with `aws lambda wait published-version-active`
+before it moves the alias, so the triggers keep invoking the previous version during the
+deployment. This needs the [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+on the machine running Terraform, with the same credentials as Terraform, and it
+adds the time of the snapshot (usually under a minute) to the deployment.
 
 All instances restored from one snapshot share the state created during initialization:
 create random values, unique IDs and network connections in the function call, not in

@@ -91,7 +91,7 @@ public interface TestContext {
      * platform reports it after the deployment ({@code x-aws-snapstart}).
      *
      * @param functionName the name given in {@code @Function}
-     * @return {@code true} if SnapStart is applied and its optimization is on
+     * @return {@code true} if the version is active, SnapStart is applied and its optimization is on
      */
     default boolean isSnapStartActive(String functionName) {
         throw new UnsupportedOperationException("This binding cannot read SnapStart");
