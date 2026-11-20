@@ -1,3 +1,6 @@
+<#-- with SnapStart, the triggers invoke the published version through the alias "live" -->
+<#assign snapStart = (handlerInfo.extensionsMap["x-aws-snapstart"]!"") == "PublishedVersions">
+<#assign lambdaTarget = snapStart?then("aws_lambda_alias.${handlerInfo.functionId}_live", "aws_lambda_function.${handlerInfo.functionId}")>
 <#if eventSource == "STORAGE">
 <#assign fid = handlerInfo.functionId>
 <#if eventCreate>
@@ -20,6 +23,9 @@ resource "aws_lambda_permission" "${fid}_storage" {
   statement_id   = "AllowS3Invoke"
   action         = "lambda:InvokeFunction"
   function_name  = aws_lambda_function.${fid}.function_name
+<#if snapStart>
+  qualifier      = aws_lambda_alias.${fid}_live.name
+</#if>
   principal      = "s3.amazonaws.com"
   source_arn     = ${bucketArn}
   source_account = data.aws_caller_identity.current.account_id
@@ -31,7 +37,7 @@ resource "aws_s3_bucket_notification" "${fid}_storage" {
   bucket = ${bucketId}
 
   lambda_function {
-    lambda_function_arn = aws_lambda_function.${fid}.arn
+    lambda_function_arn = ${lambdaTarget}.arn
     events              = ["s3:ObjectCreated:*"]
   }
 
