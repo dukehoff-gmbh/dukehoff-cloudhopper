@@ -51,7 +51,13 @@ public class SnapStartCompatibilityTest implements ExtensionAwareTest {
         String url = context.getHttpUrl(FUNCTION_NAME);
         System.out.println("📞 Calling: " + url);
         HttpClientHelper.HttpResponse response = HttpClientHelper.get(URI.create(url));
-        System.out.println("📩 Raw Response: " + response.getBody());
+        System.out.println("📩 Raw Response (" + response.getStatusCode() + "): " + response.getBody());
+        if (response.getStatusCode() != 200) {
+            // no log lines: the trigger could not invoke the alias; otherwise the function failed
+            Thread.sleep(15000);
+            System.out.println("📜 Logs of " + FUNCTION_NAME + ":");
+            context.fetchLogs(FUNCTION_NAME).forEach(line -> System.out.println("  " + line));
+        }
         Assert.assertEquals("snap", new ObjectMapper().readValue(response.getBody(), String.class));
     }
 
