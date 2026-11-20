@@ -40,31 +40,6 @@ resource "aws_s3_bucket" "lambda_artifacts" {
   force_destroy = var.artifact_bucket_force_destroy
 }
 
-resource "aws_iam_role" "lambda_exec" {
-  name = "${"$"}{var.cloudhopper_name_prefix}${"$"}{var.project_name}-lambda-execution-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      }
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_exec_policy" {
-  role       = aws_iam_role.lambda_exec.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_s3_access" {
-  role       = aws_iam_role.lambda_exec.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
-}
-
 resource "aws_s3_object" "lambda_jar" {
   bucket = aws_s3_bucket.lambda_artifacts.bucket
   # the bucket is per project and environment already

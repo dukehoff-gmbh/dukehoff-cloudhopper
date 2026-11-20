@@ -59,6 +59,7 @@ public class HandlerInfo {
     private final int timeout;
     private final int minInstances;
     private final Extension[] extensions;
+    private final String identity;
 
     /**
      * Constructs a new {@code HandlerInfo} with the required properties.
@@ -97,11 +98,56 @@ public class HandlerInfo {
             String classifier,
             String targetDir
     ) {
+        this(functionId, memory, timeout, minInstances, extensions, "", handlerClassName,
+                handlerFullyQualifiedName, handlerPackage, handlerMethod, inputType, outputType,
+                artifactId, version, classifier, targetDir);
+    }
+
+    /**
+     * Constructs a new {@code HandlerInfo} with an identity.
+     *
+     * @param functionId unique identifier of the function
+     * @param memory memory limit in MB
+     * @param timeout timeout in seconds
+     * @param minInstances minimum instances (e.g., warm start)
+     * @param extensions extensions, e.g. function architecture
+     * @param identity the identity from {@code @Function(identity)}; empty for one of the function's own
+     * @param handlerClassName simple name of the handler class
+     * @param handlerFullyQualifiedName fully qualified name of the handler
+     * class
+     * @param handlerPackage package name of the handler class
+     * @param handlerMethod method name implementing the handler
+     * @param inputType input type (possibly generic)
+     * @param outputType output type (possibly generic)
+     * @param artifactId Maven artifactId of the module
+     * @param version Maven version of the module
+     * @param classifier optional classifier
+     * @param targetDir build output directory
+     */
+    public HandlerInfo(
+            String functionId,
+            int memory,
+            int timeout,
+            int minInstances,
+            Extension[] extensions,
+            String identity,
+            String handlerClassName,
+            String handlerFullyQualifiedName,
+            String handlerPackage,
+            String handlerMethod,
+            String inputType,
+            String outputType,
+            String artifactId,
+            String version,
+            String classifier,
+            String targetDir
+    ) {
         this.functionId = functionId;
         this.memory = memory;
         this.timeout = timeout;
         this.minInstances = minInstances;
         this.extensions = extensions;
+        this.identity = identity == null ? "" : identity;
         this.handlerClassName = handlerClassName;
         this.handlerFullyQualifiedName = handlerFullyQualifiedName;
         this.handlerPackage = handlerPackage;
@@ -119,6 +165,23 @@ public class HandlerInfo {
      */
     public String getFunctionId() {
         return functionId.toLowerCase();
+    }
+
+    /**
+     * The identity the function runs as: the value of {@code @Function(identity)}, or the
+     * function ID if none is given, so that every function without one has its own.
+     *
+     * @return the identity name
+     */
+    public String getIdentity() {
+        return identity.isEmpty() ? getFunctionId() : identity;
+    }
+
+    /**
+     * @return {@code true} if the identity was given in {@code @Function(identity)}
+     */
+    public boolean isSharedIdentity() {
+        return !identity.isEmpty();
     }
 
     /**

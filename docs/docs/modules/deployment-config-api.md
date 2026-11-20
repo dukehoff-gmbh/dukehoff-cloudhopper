@@ -42,7 +42,8 @@ public String hello(@PathParam("name") String name) {
 ~~~
 
 Optional attributes: `memory` (MB, default 128), `timeout` (seconds, default 30),
-`minInstances` (default 0), and `extensions` for vendor-specific keys.
+`minInstances` (default 0), `identity` (the identity the function runs as; by default
+one of its own), and `extensions` for vendor-specific keys.
 
 ### `@ScheduledTrigger`
 Invokes a function on a cron schedule. A scheduled function typically takes no

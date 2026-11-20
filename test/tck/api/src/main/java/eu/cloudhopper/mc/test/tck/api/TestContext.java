@@ -77,6 +77,17 @@ public interface TestContext {
     }
 
     /**
+     * The identity a deployed function runs as, as the platform reports it after the deployment,
+     * e.g. the ARN of the execution role on AWS.
+     *
+     * @param functionName the name given in {@code @Function}
+     * @return the platform's identifier of the identity
+     */
+    default String getDeployedIdentity(String functionName) {
+        throw new UnsupportedOperationException("This binding cannot read the identity of a function");
+    }
+
+    /**
      * The time zone in which the platform evaluates the schedule of a deployed
      * {@code @ScheduledTrigger} function, as the platform reports it after the deployment.
      *

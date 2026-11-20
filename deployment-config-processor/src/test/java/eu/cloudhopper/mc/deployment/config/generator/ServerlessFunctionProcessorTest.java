@@ -169,6 +169,23 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void identityNamesMustBeValidOnEveryTarget() {
+        for (String name : new String[]{"Connector", "connector_1", "connector--x", "-connector", "1connector",
+            "connector-", "a23456789012345678901234567890123"}) {
+            Compilation compilation = javac()
+                    .withProcessors(new ServerlessFunctionProcessor())
+                    .compile(JavaFileObjects.forSourceString("com.example.BadIdentity", ""
+                            + "package com.example;\n"
+                            + "import eu.cloudhopper.mc.annotations.*;\n"
+                            + "public class BadIdentity {\n"
+                            + "  @Function(name=\"bad\", identity=\"" + name + "\")\n"
+                            + "  public String bad() { return \"\"; }\n"
+                            + "}\n"));
+            assertThat(compilation).hadErrorContaining("@Function identity '" + name + "' is not valid on every target");
+        }
+    }
+
+    @Test
     public void eventSourceNamesMustBeValidOnEveryTarget() {
         for (String name : new String[]{"Orders", "or", "orders_in", "orders--in", "-orders", "1orders"}) {
             Compilation compilation = javac()

@@ -37,6 +37,8 @@ package eu.cloudhopper.mc.generator.api;
  *   <li><b>FUNCTION</b> – Generates the serverless function configuration.</li>
  *   <li><b>API</b> – Generates the API resources and integrations.</li>
  *   <li><b>SCHEDULE</b> – Generates scheduled/cron triggers.</li>
+ *   <li><b>IDENTITY</b> – Generates the identity a function runs as, once for every distinct
+ *   identity (the first function with that identity is passed as {@code handlerInfo}).</li>
  *   <li><b>EVENT</b> – Generates event triggers (queues) and their sources.</li>
  *   <li><b>FINALIZE</b> – Runs final configuration steps.</li>
  *   <li><b>SHARED</b> – Generates shared resources during the function phase.</li>
@@ -44,6 +46,7 @@ package eu.cloudhopper.mc.generator.api;
  */
 public enum GenerationPhase {
     FUNCTION("function", "Generates the serverless function configuration"), 
+    IDENTITY("identity", "Generates the identity a function runs as, once per identity"),
     API("api", "Generates the API resources and integrations"), 
     SCHEDULE("schedule", "Generates scheduled/cron triggers"),
     EVENT("event", "Generates event triggers and their sources"),

@@ -85,6 +85,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
      * (3-63 lowercase letters, digits and single hyphens); Pub/Sub topics must start with a letter.
      */
     private static final Pattern EVENT_SOURCE_NAME = Pattern.compile("[a-z][a-z0-9]*(-[a-z0-9]+)*");
+    private static final Pattern IDENTITY_NAME = Pattern.compile("[a-z][a-z0-9]*(-[a-z0-9]+)*");
 
     @Override
     public synchronized void init(ProcessingEnvironment env) {
@@ -152,7 +153,8 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                 }
             }
 
-            if (!validateParams(m, params) || (event != null && !validateEventTrigger(m, event, params))) {
+            if (!validateParams(m, params) || (event != null && !validateEventTrigger(m, event, params))
+                    || !validateIdentity(m, fn.identity())) {
                 continue;
             }
             String pkg = elementUtils.getPackageOf(cls).getQualifiedName().toString();
@@ -184,7 +186,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
             }
 
             HandlerInfo hinfo = new HandlerInfo(
-                    fn.name(), fn.memory(), fn.timeout(), fn.minInstances(), fn.extensions(),
+                    fn.name(), fn.memory(), fn.timeout(), fn.minInstances(), fn.extensions(), fn.identity(),
                     adapterSimpleName,
                     adapterFQN, pkg,
                     m.getSimpleName().toString(),
@@ -220,6 +222,19 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
             }
         }
 
+        return true;
+    }
+
+    private boolean validateIdentity(ExecutableElement method, String identity) {
+        if (identity.isEmpty()) {
+            return true;
+        }
+        if (identity.length() > 32 || !IDENTITY_NAME.matcher(identity).matches()) {
+            processingEnv.getMessager().printMessage(ERROR,
+                    "@Function identity '" + identity + "' is not valid on every target: use up to 32 lowercase"
+                    + " letters, digits and single hyphens, starting with a letter", method);
+            return false;
+        }
         return true;
     }
 

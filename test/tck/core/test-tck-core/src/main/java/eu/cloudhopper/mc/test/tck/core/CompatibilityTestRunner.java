@@ -48,6 +48,7 @@ public class CompatibilityTestRunner {
                 new MemoryFunctionCompatibilityTest(),
                 new TimeoutFunctionCompatibilityTest(),
                 new MinInstancesFunctionCompatibilityTest(),
+                new IdentityCompatibilityTest(),
                 new HttpFunctionCompatibilityTest(),
                 new HttpGetPlayerCompatibilityTest(),
                 new HttpRegisterPlayerCompatibilityTest(),

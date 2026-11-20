@@ -60,7 +60,8 @@ Notes on the event and trigger columns:
 | Template | Output | Purpose |
 |---|---|---|
 | `handler.ftl` | Java | Lambda handler classes; `Auto` routes API Gateway, SQS, S3, schedule and direct calls |
-| `shared.ftl` | Terraform | Artifact bucket, execution role |
+| `shared.ftl` | Terraform | Artifact bucket |
+| `identity.ftl` | Terraform | Execution role per identity |
 | `function.ftl` | Terraform | Lambda function |
 | `integration.ftl` | Terraform | API Gateway integration and permission per HTTP function |
 | `api.ftl` | Terraform | HTTP API with its OpenAPI description |
@@ -77,6 +78,44 @@ in a `.tfvars` file or with `-var`:
 | `log_retention_days` | `30` | Retention of the log groups `/aws/lambda/<function>`, which Terraform creates before the functions |
 | `artifact_bucket_force_destroy` | `false` | Lets `terraform destroy` delete the artifact bucket even if it contains objects Terraform does not manage |
 | `cloudhopper_name_prefix` | empty | Prefix for all resource names, e.g. for several deployments in one account |
+
+#### Identities and permissions
+
+Every [identity](../guides/writing-functions.md#identities-and-permissions) becomes an
+IAM role named `<cloudhopper_name_prefix><project_name>-<identity>`, the execution role
+of its functions. The role has `AWSLambdaBasicExecutionRole` for logging and, for
+queue-triggered functions, the permissions to receive and delete the queue's messages.
+Storage triggers need no permission on the role: S3 invokes the function through a
+resource-based permission.
+
+Attach further permissions in your own `.tf` file next to `main.tf`, to the role
+`aws_iam_role.identity_<identity>`:
+
+```hcl
+resource "aws_iam_role_policy" "connector_assume_reader" {
+  role = aws_iam_role.identity_connector.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "sts:AssumeRole"
+      Resource = "arn:aws:iam::*:role/ReaderRole"
+    }]
+  })
+}
+```
+
+The outputs `identity_<identity>_role_name` and `identity_<identity>_role_arn` give the
+role's name and ARN, e.g. for a trust policy in another account. The name stays the same
+as long as the identity does; IAM limits it to 64 characters.
+
+:::note Upgrading from 1.3 or earlier
+All functions used to share the role `<project_name>-lambda-execution-role`, which also
+had `AmazonS3ReadOnlyAccess` (read access to every bucket in the account). Terraform
+replaces it with one role per identity. Permissions you attached to
+`aws_iam_role.lambda_exec` now belong to the role of the identity that needs them, and a
+function that read buckets through `AmazonS3ReadOnlyAccess` needs an explicit policy.
+:::
 
 :::note Upgrading from 1.2 or earlier
 - The stage used to be named `test`, so URLs contained `/test`. To keep these URLs, set `api_stage_name = "test"`.
