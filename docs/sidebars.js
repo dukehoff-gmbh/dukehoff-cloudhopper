@@ -13,6 +13,7 @@ const sidebars = {
             items: [
                 'guides/quickstart',
                 'guides/writing-functions',
+                'guides/customizing-targets',
                 'modules/maven-archetype',
                 {
                     type: 'category',

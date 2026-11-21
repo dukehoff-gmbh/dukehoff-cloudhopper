@@ -29,10 +29,10 @@ const FeatureList = [
     Svg: require('@site/static/img/relax.svg').default,
     description: (
       <>
-        Deploy to an EU region of your cloud, or run the Spring Boot target on
-        your own servers. Providers plug in through
-        an <Link to="/docs/modules/deployment-config-generator-api">SPI</Link>,
-        and a European cloud provider is next.
+        Deploy to an EU region of your cloud, to Scaleway, to any Kubernetes
+        with Knative, or run the Spring Boot target on your own servers.
+        Override a generated template in your project, or add a target of your
+        own through the <Link to="/docs/guides/customizing-targets">SPI</Link>.
       </>
     ),
   },
