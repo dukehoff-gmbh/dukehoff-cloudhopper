@@ -87,11 +87,13 @@ Each template is associated with a phase:
 
 | Phase     | Description                              |
 |-----------|------------------------------------------|
-| FUNCTION  | Generates function configuration          |
-| API       | Generates API gateway definitions         |
-| SCHEDULE  | Generates scheduled triggers              |
-| FINALIZE  | Final catch-all step (e.g. root modules)  |
-| SHARED    | Shared resources used by all functions    |
+| SHARED    | Shared resources used by all functions, once            |
+| IDENTITY  | The identity functions run as, once per identity        |
+| FUNCTION  | Generates function configuration, per function          |
+| API       | Generates API gateway definitions, per HTTP function    |
+| SCHEDULE  | Generates scheduled triggers                            |
+| EVENT     | Generates queue and storage triggers and their sources  |
+| FINALIZE  | Final step after all functions (e.g. the API definition)|
 
 The generator will call your templates in the correct order based on these phases.
 
