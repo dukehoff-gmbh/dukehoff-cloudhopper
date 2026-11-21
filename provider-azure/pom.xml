@@ -36,5 +36,18 @@
             <type>jar</type>
         </dependency>
 
+        <!-- only to check the SharedKey signature against the Azure SDK -->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-common</artifactId>
+            <version>12.35.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.12.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

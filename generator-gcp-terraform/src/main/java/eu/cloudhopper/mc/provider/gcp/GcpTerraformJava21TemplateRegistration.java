@@ -43,6 +43,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
         generatorId = "gcp-terraform",
         supportedFeatures = {
             @GeneratorFeature(
+                    supportedAnnotation = eu.cloudhopper.mc.annotations.Queue.class,
+                    supportedAttributes = {
+                        eu.cloudhopper.mc.annotations.Queue.QueueAttribute.NAME,
+                        eu.cloudhopper.mc.annotations.Queue.QueueAttribute.EXISTING
+                    },
+                    runtimeClass = "eu.cloudhopper.mc.provider.gcp.publisher.PubSubPublisherFactory",
+                    runtimeModule = "eu.cloudhopper.mc:provider-gcp-publisher"
+            ),
+            @GeneratorFeature(
                     supportedAnnotation = Function.class,
                     supportedAttributes = {
                         FunctionAttribute.NAME,

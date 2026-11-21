@@ -43,6 +43,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
         generatorId = "azure-terraform",
         supportedFeatures = {
             @GeneratorFeature(
+                    supportedAnnotation = eu.cloudhopper.mc.annotations.Queue.class,
+                    supportedAttributes = {
+                        eu.cloudhopper.mc.annotations.Queue.QueueAttribute.NAME
+                    },
+                    runtimeClass = "eu.cloudhopper.mc.provider.azure.publisher.StorageQueuePublisherFactory",
+                    runtimeModule = "eu.cloudhopper.mc:provider-azure-publisher"
+            ),
+            @GeneratorFeature(
                     supportedAnnotation = Function.class,
                     supportedAttributes = {    
                         FunctionAttribute.NAME
