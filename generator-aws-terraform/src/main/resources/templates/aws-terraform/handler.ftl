@@ -53,7 +53,8 @@ public class AwsLambda${handlerInfo.handlerClassName}Handler {
         public Auto() {
             super(new Plain(), new ApiProxyV2(), new ApiHttpV2(),
                     new SqsEventHandler<>(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputClassLiteral}),
-                    new S3EventHandler<>(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputClassLiteral}));
+                    new S3EventHandler<>(new ${handlerInfo.handlerClassName}(), ${handlerInfo.inputClassLiteral}),
+                    ${handlerInfo.inputClassLiteral});
         }
     }
 }
