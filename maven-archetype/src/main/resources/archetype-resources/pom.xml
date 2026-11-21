@@ -96,6 +96,14 @@
                     <artifactId>provider-${generator.replace("-terraform", "")}</artifactId>
                     <version>${cloudhopper.version}</version>
                 </dependency>
+#if($generator == "aws-terraform")
+                <!-- sends messages to SQS queues from function code (@Queue Publisher) -->
+                <dependency>
+                    <groupId>eu.cloudhopper.mc</groupId>
+                    <artifactId>provider-aws-publisher</artifactId>
+                    <version>${cloudhopper.version}</version>
+                </dependency>
+#end
 #end
 ## knative and scaleway-terraform run the springboot-http application: same dependencies, same executable jar
 #if($generator == "springboot-http" || $generator == "knative" || $generator == "scaleway-terraform")

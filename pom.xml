@@ -77,6 +77,7 @@
         <module>generator-knative</module>
         <module>generator-scaleway-terraform</module>
         <module>provider-aws</module>
+        <module>provider-aws-publisher</module>
         <module>provider-azure</module>
         <module>provider-gcp</module>
         <module>provider-http</module>

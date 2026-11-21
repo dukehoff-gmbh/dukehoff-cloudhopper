@@ -48,14 +48,14 @@ public class HandlerGenerator {
     public static class ParamInfo {
 
         public enum ParamType {
-            BODY, PATH, QUERY, HEADER, CONTEXT, EVENT_METADATA, CONFIG
+            BODY, PATH, QUERY, HEADER, CONTEXT, EVENT_METADATA, CONFIG, QUEUE
         }
 
         private final ParamType type;
         private final String name;      // e.g. path/query/header key
         private final String typeName;  // fully-qualified Java type
         private final String varName;   // local variable name in generated code
-        private final String defaultValue; // CONFIG: @ConfigProperty(defaultValue)
+        private final String defaultValue; // CONFIG: @ConfigProperty(defaultValue); QUEUE: @Queue(existing)
 
         public ParamInfo(ParamType type, String name, String typeName, String varName) {
             this(type, name, typeName, varName, null);
@@ -413,6 +413,13 @@ public class HandlerGenerator {
                     // null when the invocation is not an event (HTTP, schedule, direct call)
                     methodBuilder.addStatement("$T $L = _ctx == null ? null : _ctx.getEventMetadata()",
                             toTypeName(p.getTypeName()), p.getVarName());
+                    break;
+
+                case QUEUE:
+                    methodBuilder.addStatement("$T $L = $T.queue($S, $L)",
+                            toTypeName(typeName), p.getVarName(),
+                            ClassName.get("eu.cloudhopper.mc.runtime", "Publishers"), p.getName(),
+                            Boolean.parseBoolean(p.getDefaultValue()));
                     break;
 
                 case CONFIG: {

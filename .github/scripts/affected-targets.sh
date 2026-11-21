@@ -17,7 +17,7 @@ TARGETS=(aws azure gcp springboot knative scaleway)
 # generator and run its application, so a Spring Boot change also affects them
 target_of() {
   case "$1" in
-    generator-aws-terraform/*|provider-aws/*|test/system-tests/generator-aws-terraform/*|test/tck/generator-bindings/aws-terraform/*)
+    generator-aws-terraform/*|provider-aws/*|provider-aws-publisher/*|test/system-tests/generator-aws-terraform/*|test/tck/generator-bindings/aws-terraform/*)
       echo aws ;;
     generator-azure-terraform/*|provider-azure/*|test/system-tests/generator-azure-terraform/*|test/tck/generator-bindings/azure-terraform/*)
       echo azure ;;

@@ -80,6 +80,12 @@ public class GeneratorFeatureProcessor extends AbstractProcessor {
                 }
 
                 entry.setSupportedAttributes( List.of(feature.supportedAttributes()));
+                if (!feature.runtimeModule().isBlank()) {
+                    entry.setRuntimeModule(feature.runtimeModule());
+                }
+                if (!feature.runtimeClass().isBlank()) {
+                    entry.setRuntimeClass(feature.runtimeClass());
+                }
                 for (SupportedValues values : feature.supportedValues()) {
                     if (!entry.getSupportedAttributes().contains(values.attribute())) {
                         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
