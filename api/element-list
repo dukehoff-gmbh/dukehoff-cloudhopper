@@ -10,10 +10,14 @@ eu.cloudhopper.mc.generator.knative
 eu.cloudhopper.mc.generator.scaleway.terraform
 eu.cloudhopper.mc.generator.springboot
 eu.cloudhopper.mc.provider.aws
+eu.cloudhopper.mc.provider.aws.auth
+eu.cloudhopper.mc.provider.aws.publisher
 eu.cloudhopper.mc.provider.azure
 eu.cloudhopper.mc.provider.gcp
 eu.cloudhopper.mc.provider.http
 eu.cloudhopper.mc.provider.springboot
 eu.cloudhopper.mc.provider.springboot.kafka
+eu.cloudhopper.mc.provider.springboot.publisher
 eu.cloudhopper.mc.runtime
 eu.cloudhopper.mc.runtime.config
+eu.cloudhopper.mc.runtime.spi
