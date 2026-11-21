@@ -1,0 +1,106 @@
+/*
+ * Dukehoff Cloudhopper design tokens.
+ *
+ * One family for the framework documentation and the product pages:
+ *  - the same mascot drawing with the navy outline everywhere
+ *  - the documentation keeps the bright mascot green
+ *  - product pages use the calmer green and a deep green accent
+ *
+ * Contrast (WCAG 2.x) of the semantic pairs:
+ *   text on bg 16.9:1, muted on bg 7.0:1, white on primary 6.2:1, link on bg 5.7:1,
+ *   dark: text on bg 15.6:1, navy on primary 9.2:1, link on bg 10.5:1.
+ *
+ * Published at /brand/tokens.css; logo files next to it (docs/scripts/generate-logos.py).
+ * Usage: import this file and use the semantic tokens (--ch-bg, --ch-text, --ch-primary ...);
+ * the primitives are for the rare case that needs a fixed brand colour.
+ */
+
+:root {
+  /* primitives */
+  --ch-navy: #090231;
+  --ch-ink: #14112b;
+  --ch-green-bright: #0ddc2c;      /* mascot body, documentation */
+  --ch-green-bright-shade: #06b634;
+  --ch-green: #5cc66b;             /* mascot body, product pages */
+  --ch-green-shade: #3c9f4e;
+  --ch-green-deep: #1f6f35;        /* accent on light ground */
+  --ch-green-deeper: #185a2b;
+  --ch-green-light: #7fd08f;       /* accent text on dark ground */
+
+  --ch-neutral-50: #f4f6f3;
+  --ch-neutral-100: #e8ece6;
+  --ch-neutral-200: #dfe4dd;
+  --ch-neutral-400: #8a948a;
+  --ch-neutral-600: #4f5650;
+  --ch-neutral-800: #2a2f2a;
+
+  --ch-navy-900: #07031d;
+  --ch-navy-800: #0b0727;
+  --ch-navy-700: #110b3a;
+  --ch-navy-600: #2a2366;
+  --ch-lavender-200: #e6e4f5;
+  --ch-lavender-400: #b4b0d6;
+
+  /* typography */
+  --ch-font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ch-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* shape */
+  --ch-radius-sm: 4px;
+  --ch-radius: 8px;
+  --ch-radius-lg: 12px;
+  --ch-focus-width: 3px;
+
+  /* semantic, light */
+  --ch-bg: var(--ch-neutral-50);
+  --ch-surface: #ffffff;
+  --ch-surface-alt: var(--ch-neutral-100);
+  --ch-border: var(--ch-neutral-200);
+  --ch-border-strong: var(--ch-neutral-400);   /* form fields: 3.1:1 on surface */
+  --ch-text: var(--ch-ink);
+  --ch-text-muted: var(--ch-neutral-600);
+  --ch-heading: var(--ch-navy);
+  --ch-primary: var(--ch-green-deep);
+  --ch-primary-hover: var(--ch-green-deeper);
+  --ch-on-primary: #ffffff;
+  --ch-link: var(--ch-green-deep);
+  --ch-focus: var(--ch-navy);
+  --ch-mascot-body: var(--ch-green);
+  --ch-mascot-shade: var(--ch-green-shade);
+  --ch-mascot-line: var(--ch-navy);
+}
+
+/* Dark: the documentation's navy surfaces, the calm green as accent with navy text on it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ch-bg: var(--ch-navy-800);
+    --ch-surface: var(--ch-navy-700);
+    --ch-surface-alt: var(--ch-navy-900);
+    --ch-border: var(--ch-navy-600);
+    --ch-border-strong: var(--ch-lavender-400);
+    --ch-text: var(--ch-lavender-200);
+    --ch-text-muted: var(--ch-lavender-400);
+    --ch-heading: #ffffff;
+    --ch-primary: var(--ch-green);
+    --ch-primary-hover: var(--ch-green-light);
+    --ch-on-primary: var(--ch-navy);
+    --ch-link: var(--ch-green-light);
+    --ch-focus: var(--ch-green);
+  }
+}
+
+:root[data-theme="dark"] {
+  --ch-bg: var(--ch-navy-800);
+  --ch-surface: var(--ch-navy-700);
+  --ch-surface-alt: var(--ch-navy-900);
+  --ch-border: var(--ch-navy-600);
+  --ch-border-strong: var(--ch-lavender-400);
+  --ch-text: var(--ch-lavender-200);
+  --ch-text-muted: var(--ch-lavender-400);
+  --ch-heading: #ffffff;
+  --ch-primary: var(--ch-green);
+  --ch-primary-hover: var(--ch-green-light);
+  --ch-on-primary: var(--ch-navy);
+  --ch-link: var(--ch-green-light);
+  --ch-focus: var(--ch-green);
+}
