@@ -35,6 +35,7 @@ import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
 import software.amazon.awssdk.services.cloudwatchlogs.model.*;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
@@ -42,6 +43,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.cloudwatchlogs.model.FilterLogEventsRequest;
+import software.amazon.awssdk.services.cloudwatchlogs.model.FilterLogEventsResponse;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.GetFunctionConfigurationRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
@@ -324,29 +327,21 @@ public class TestContextAws implements TestContext {
         try {
             String logGroupName = "/aws/lambda/" + namePrefix + functionName;
 
-            DescribeLogStreamsResponse streamsResponse = logsClient.describeLogStreams(DescribeLogStreamsRequest.builder()
-                    .logGroupName(logGroupName)
-                    .orderBy("LastEventTime")
-                    .descending(true)
-                    .limit(1)
-                    .build());
-
-            if (streamsResponse.logStreams().isEmpty()) {
-                return List.of("[No log streams found]");
-            }
-
-            String streamName = streamsResponse.logStreams().get(0).logStreamName();
-
-            GetLogEventsResponse events = logsClient.getLogEvents(GetLogEventsRequest.builder()
-                    .logGroupName(logGroupName)
-                    .logStreamName(streamName)
-                    .limit(50)
-                    .startFromHead(false)
-                    .build());
-
-            return events.events().stream()
-                    .map(OutputLogEvent::message)
-                    .collect(Collectors.toList());
+            // all streams of the group: several instances may have run, each with a stream of its own,
+            // and the LastEventTime of a stream is only updated with a delay
+            List<String> lines = new ArrayList<>();
+            String token = null;
+            long since = System.currentTimeMillis() - java.time.Duration.ofHours(1).toMillis();
+            do {
+                FilterLogEventsResponse response = logsClient.filterLogEvents(FilterLogEventsRequest.builder()
+                        .logGroupName(logGroupName)
+                        .startTime(since)
+                        .nextToken(token)
+                        .build());
+                response.events().forEach(event -> lines.add(event.message()));
+                token = response.nextToken();
+            } while (token != null && lines.size() < 2000);
+            return lines.isEmpty() ? List.of("[No log events found]") : lines;
 
         } catch (Exception e) {
             return List.of("[Failed to fetch logs: " + e.getMessage() + "]");
