@@ -58,7 +58,7 @@ public class TestContextGcp implements TestContext {
             System.out.println("🌍 CWD (user.dir): " + System.getProperty("user.dir"));
             System.out.println("📁 Terraform dir: " + terraformDir.toAbsolutePath());
             createExistingResources();
-            TerraformDeployer deployer = new TerraformDeployer(terraformDir, eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment());
+            TerraformDeployer deployer = new TerraformDeployer(terraformDir, terraformEnvironment());
             deployer.init();
             deployer.apply();
         } catch (Exception e) {
@@ -69,7 +69,7 @@ public class TestContextGcp implements TestContext {
     @Override
     public void cleanupTestFunctions() {
         try {
-            new TerraformDeployer(terraformDir, eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment()).destroy();
+            new TerraformDeployer(terraformDir, terraformEnvironment()).destroy();
         } catch (Exception e) {
             throw new RuntimeException("Failed to destroy deployed functions", e);
         }
@@ -367,5 +367,17 @@ public class TestContextGcp implements TestContext {
 
     private String functionNameToOutputKey(String functionName) {
         return functionName.toLowerCase().replace("function", "") + "_url";
+    }
+
+    /**
+     * The TCK's configuration, and fewer parallel operations: deploying and destroying all test
+     * functions at once exceeded Cloud Run's quota of write requests per minute and region.
+     */
+    private static java.util.Map<String, String> terraformEnvironment() {
+        java.util.Map<String, String> environment = new java.util.HashMap<>(
+                eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment());
+        environment.put("TF_CLI_ARGS_apply", "-parallelism=4");
+        environment.put("TF_CLI_ARGS_destroy", "-parallelism=4");
+        return environment;
     }
 }
