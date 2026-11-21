@@ -90,6 +90,8 @@ public class CompatibilityTestRunner {
         }
 
         List<TestResult> results = new ArrayList<>();
+        // resources left behind make the next run fail ("already exists"), so a failed cleanup fails this run
+        Exception cleanupFailure = null;
 
         // Best-effort pre-deploy cleanup: remove any leftovers a previous run may
         // have left behind (e.g. resources created before a mid-apply failure).
@@ -131,7 +133,8 @@ public class CompatibilityTestRunner {
             try {
                 context.cleanupTestFunctions();
             } catch (Exception cleanup) {
-                System.err.println("\u26A0\uFE0F Cleanup failed - leftover resources may need to be removed manually: " + cleanup.getMessage());
+                cleanupFailure = cleanup;
+                System.err.println("\u274C Cleanup failed - leftover resources need to be removed before the next run: " + cleanup.getMessage());
                 cleanup.printStackTrace();
             }
         }
@@ -190,6 +193,11 @@ public class CompatibilityTestRunner {
             }
         }
 
+        if (cleanupFailure != null) {
+            System.out.println("\n\u2757 Cleanup FAILED — remove the leftover resources of this run, see above.");
+            throw new IllegalStateException("Cleanup of the deployed test functions failed"
+                    + (failed > 0 ? " and " + failed + " compatibility test(s) failed" : ""), cleanupFailure);
+        }
         if (failed == 0) {
             System.out.println("\n\uD83C\uDF89 Certification PASSED — generator is compatible with all claimed features!");
         } else {
