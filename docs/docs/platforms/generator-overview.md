@@ -227,6 +227,10 @@ service account from the metadata server, without the Google client libraries.
 The configuration property `cloudhopper.queue.<name>.url`
 (`projects/<project>/topics/<topic>`) names another topic.
 
+Give a function that sends at least 256 MB (`@Function(memory = 256)`): with the
+default of 128 MB, a Java function that sends over HTTP exceeds the limit on GCP and
+is terminated.
+
 The functions run as the project's default compute service account, which needs
 `roles/pubsub.publisher` on the topics (the role Editor includes it). A service
 account per [identity](#identities-and-permissions) is planned for GCP as well.
