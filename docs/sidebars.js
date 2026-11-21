@@ -74,8 +74,8 @@ const sidebars = {
         },
         {
             type: 'doc',
-            id: 'roadmap',
-            label: 'Roadmap',
+            id: 'release-notes',
+            label: 'Release notes',
         },
     ],
 };

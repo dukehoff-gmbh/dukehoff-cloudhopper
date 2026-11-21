@@ -1,27 +1,16 @@
 ---
-id: roadmap
-title: Project Roadmap
+id: release-notes
+title: Release notes
 ---
 
-# Project Roadmap
+# Release notes
 
-What we plan next, in order. We don't publish dates; releases are announced on
-[GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/releases).
+What changed in each release. Releases are published on Maven Central and
+announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/releases),
+together with the full list of changes. What is being worked on is tracked in the
+[issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
-```mermaid
-timeline
-  title Dukehoff Cloudhopper Roadmap
-  Released : v1.0 on Maven Central
-           : v1.1 queue and storage events, Spring Boot schedules and Kafka, generated support matrix
-           : v1.2 Knative and Scaleway targets
-           : v1.3 Spring Boot 4, smaller function jars, production defaults on AWS
-           : v1.3.1 an execution role per function on AWS
-  Later : Quarkus support
-```
-
-## Released
-
-### 1.3.1
+## 1.3.1
 
 - `@Function(identity)`: on AWS every function runs as an execution role of its
   own, or functions share one by declaring the same identity. A role has logging
@@ -31,7 +20,7 @@ timeline
 - Numbers of 1000 and above, such as `memory = 1024`, are generated without a
   thousands separator; with 1.3.0 they depended on the build machine's locale
 
-### 1.3
+## 1.3
 
 - Spring Boot 4.1 for the targets `springboot-http`, `knative` and
   `scaleway-terraform`
@@ -49,7 +38,7 @@ timeline
   checked exceptions
 - Request data is no longer written to the function log
 
-#### Upgrading from 1.2
+### Upgrading from 1.2
 
 - **Dependencies:** add the generator in `provided` scope and the runtime
   library of the cloud, e.g. `provider-aws`; see the
@@ -64,7 +53,7 @@ timeline
 - **Terraform:** add provider version constraints to your `main.tf`; see
   [Terraform and provider versions](platforms/generator-overview.md#terraform-and-provider-versions)
 
-### 1.2
+## 1.2
 
 - New target `knative`: a Helm chart for any Kubernetes cluster with Knative
   Serving and Eventing; schedules as `PingSource`, queues from Kafka with a
@@ -78,7 +67,7 @@ timeline
 - Targets can claim single values of an attribute, such as
   `@EventTrigger(source = QUEUE)`; the support matrix shows them
 
-### 1.1
+## 1.1
 
 - `@EventTrigger` for queues and storage buckets on all four targets, with
   `EventMetadata` and at-least-once delivery
@@ -90,5 +79,10 @@ timeline
   build warnings for anything a target ignores
 - [API reference](pathname:///api/index.html) (Javadoc) on this site
 
-Missing something you need? Open an
-[issue](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
+## 1.0
+
+- First release on Maven Central: `@Function`, `@HttpTrigger` and
+  `@ScheduledTrigger` with deployments generated for AWS, Azure and GCP
+  (Terraform) and Spring Boot, and the Maven archetype
+- Use 1.0.1: in 1.0.0 the archetype generates broken `springboot-http` and
+  `azure-terraform` profiles
