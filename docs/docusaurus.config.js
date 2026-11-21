@@ -6,7 +6,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 const config = {
     title: 'Dukehoff Cloudhopper',
     tagline: 'Write once, run anywhere. Revisited for serverless Java.',
-    favicon: 'img/favicon.svg',
+    favicon: 'brand/favicon.svg',
 
     customFields: {
         description:
@@ -89,7 +89,7 @@ const config = {
                             logo: {
                                 alt: 'Dukehoff Cloudhopper logo',
                                 src: 'img/logo.svg',
-                                srcDark: 'img/logo-dark.svg',
+                                srcDark: 'brand/hopper-rim.svg',
                             },
                             items: [
                                 {

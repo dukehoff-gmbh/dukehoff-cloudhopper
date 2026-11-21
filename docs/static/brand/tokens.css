@@ -10,6 +10,7 @@
  *   text on bg 16.9:1, muted on bg 7.0:1, white on primary 6.2:1, link on bg 5.7:1,
  *   dark: text on bg 15.6:1, navy on primary 9.2:1, link on bg 10.5:1.
  *
+ * Published at /brand/tokens.css; logo files next to it (docs/scripts/generate-logos.py).
  * Usage: import this file and use the semantic tokens (--ch-bg, --ch-text, --ch-primary ...);
  * the primitives are for the rare case that needs a fixed brand colour.
  */

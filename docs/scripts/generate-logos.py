@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""Generates the logo variants in brand/logo from the master drawing brand/logo/hopper.svg.
+"""Generates the logo variants in docs/static/brand from the mascot drawing docs/static/img/logo.svg.
 
-    python3 brand/generate-logos.py
+    python3 docs/scripts/generate-logos.py
+
+The files are published with the site under /brand/, next to tokens.css, so other
+Cloudhopper web pages can use the same logo and tokens.
 
 Variants:
   hopper-product.svg       calmer green for cloud-hopper.com and the app
@@ -11,7 +14,8 @@ Variants:
   *-rim-thin.svg           with a thin rim, for dark backgrounds above 128 px
   favicon*.svg             the thick rim, switched on by prefers-color-scheme: dark
 
-The documentation site's dark logo and favicon are copied to docs/static/img.
+Rules: keep the navy outline and change only the body colours; on dark backgrounds always use
+a rim variant (lightening the outline does not work: the pupil would vanish on the white eye).
 
 The rim is plain geometry (each shape stroked in white underneath the drawing), not an SVG
 filter, so it renders the same in browsers, design tools and image converters.
@@ -27,7 +31,9 @@ ET.register_namespace("", SVG)
 ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 ET.register_namespace("serif", "http://www.serif.com/")
 
-HERE = Path(__file__).parent / "logo"
+STATIC = Path(__file__).parent.parent / "static"
+MASTER = STATIC / "img" / "logo.svg"
+OUT = STATIC / "brand"
 SIZE = 512
 
 FRAMEWORK = {"body": "rgb(13,220,44)", "shade": "rgb(6,182,52)"}
@@ -66,7 +72,7 @@ def rim_group(root, width):
 
 
 def write(name, colors, rim=0, favicon=False):
-    root = ET.fromstring(recolor((HERE / "hopper.svg").read_text(), colors))
+    root = ET.fromstring(recolor(MASTER.read_text(), colors))
     root.set("width", "100%")
     root.set("height", "100%")
     if rim:
@@ -79,12 +85,13 @@ def write(name, colors, rim=0, favicon=False):
             root.insert(1, group)
         else:
             root.insert(0, group)
-    ET.ElementTree(root).write(HERE / name, encoding="unicode", xml_declaration=False)
-    print("wrote", HERE / name)
+    ET.ElementTree(root).write(OUT / name, encoding="unicode", xml_declaration=False)
+    print("wrote", OUT / name)
 
 
 THICK, THIN = 32, 8
 
+write("hopper.svg", FRAMEWORK)
 write("hopper-rim.svg", FRAMEWORK, rim=THICK)
 write("hopper-rim-thin.svg", FRAMEWORK, rim=THIN)
 write("hopper-product.svg", PRODUCT)
@@ -93,7 +100,3 @@ write("hopper-product-rim-thin.svg", PRODUCT, rim=THIN)
 write("favicon.svg", FRAMEWORK, rim=THICK, favicon=True)
 write("favicon-product.svg", PRODUCT, rim=THICK, favicon=True)
 
-DOCS = Path(__file__).parent.parent / "docs" / "static" / "img"
-for source, target in [("hopper-rim.svg", "logo-dark.svg"), ("favicon.svg", "favicon.svg")]:
-    (DOCS / target).write_text((HERE / source).read_text())
-    print("wrote", DOCS / target)
