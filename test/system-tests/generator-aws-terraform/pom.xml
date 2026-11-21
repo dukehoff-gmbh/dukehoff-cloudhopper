@@ -33,6 +33,12 @@
             <artifactId>generator-aws-terraform</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- @Queue publishers on AWS -->
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>provider-aws-publisher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>test-tck-core</artifactId>

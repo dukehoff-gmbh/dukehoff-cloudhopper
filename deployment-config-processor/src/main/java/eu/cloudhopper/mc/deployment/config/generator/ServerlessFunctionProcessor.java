@@ -87,6 +87,15 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
     private static final Pattern EVENT_SOURCE_NAME = Pattern.compile("[a-z][a-z0-9]*(-[a-z0-9]+)*");
     private static final Pattern IDENTITY_NAME = Pattern.compile("[a-z][a-z0-9]*(-[a-z0-9]+)*");
 
+    /** A {@code @Queue} parameter of a function. */
+    private record QueueUse(ExecutableElement method, eu.cloudhopper.mc.generator.api.QueueInfo queue) {
+    }
+
+    /** The {@code @Queue} parameters of all functions. */
+    private final List<QueueUse> queueUses = new ArrayList<>();
+    /** The queues functions of the project consume and create ({@code @EventTrigger(QUEUE, create = true)}). */
+    private final Set<String> consumedQueues = new HashSet<>();
+
     /** Functions without {@code identity}, by their implicit identity (the lowercase function name). */
     private final java.util.Map<String, String> implicitIdentities = new java.util.HashMap<>();
     /** Methods with an explicit {@code identity}, by that identity. */
@@ -149,6 +158,10 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     params.add(new ParamInfo(QUERY,
                             queryParamName,
                             tm.toString(), name));
+                } else if (p.getAnnotation(eu.cloudhopper.mc.annotations.Queue.class) != null) {
+                    var queue = p.getAnnotation(eu.cloudhopper.mc.annotations.Queue.class);
+                    params.add(new ParamInfo(ParamType.QUEUE, queue.name(), tm.toString(), name,
+                            String.valueOf(queue.existing())));
                 } else if (p.getAnnotation(org.eclipse.microprofile.config.inject.ConfigProperty.class) != null) {
                     var config = p.getAnnotation(org.eclipse.microprofile.config.inject.ConfigProperty.class);
                     params.add(new ParamInfo(ParamType.CONFIG, config.name(), tm.toString(), name,
@@ -202,6 +215,16 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     bodyType, returnType,
                     artifactId, version, classifier, targetDir
             );
+            List<eu.cloudhopper.mc.generator.api.QueueInfo> queues = params.stream()
+                    .filter(pi -> pi.getType() == ParamType.QUEUE)
+                    .map(pi -> new eu.cloudhopper.mc.generator.api.QueueInfo(pi.getName(),
+                            Boolean.parseBoolean(pi.getDefaultValue())))
+                    .toList();
+            hinfo.setPublishedQueues(queues);
+            queues.forEach(q -> queueUses.add(new QueueUse(m, q)));
+            if (event != null && event.source() == eu.cloudhopper.mc.annotations.EventSource.QUEUE && event.create()) {
+                consumedQueues.add(event.name());
+            }
             hinfo.setConfigProperties(params.stream()
                     .filter(pi -> pi.getType() == ParamType.CONFIG)
                     .map(pi -> new eu.cloudhopper.mc.generator.api.ConfigPropertyInfo(pi.getName(),
@@ -230,6 +253,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
         }
 
         if (round.processingOver()) {
+            checkQueues();
             try {
                 deploymentGenerator.finalizeConfig(generatorId, configOutputDir);
             } catch (ConfigGenerationException e) {
@@ -244,6 +268,33 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
      * Checks the identity name and that an explicit identity is not also the implicit identity of a
      * function without one: both would silently run as one identity.
      */
+    /**
+     * At the end of processing: every project queue a function sends to is created by a queue
+     * trigger of the project, and the target's runtime module for {@code @Queue} is on the classpath.
+     */
+    private void checkQueues() {
+        for (QueueUse use : queueUses) {
+            if (!use.queue().isExisting() && !consumedQueues.contains(use.queue().getName())) {
+                processingEnv.getMessager().printMessage(ERROR,
+                        "@Queue(name = \"" + use.queue().getName() + "\") on " + use.method().getSimpleName()
+                        + ": no function of the project consumes this queue with @EventTrigger(source = QUEUE, name = \""
+                        + use.queue().getName() + "\"), so nothing would create it. For a queue another system owns,"
+                        + " declare @Queue(name = \"" + use.queue().getName() + "\", existing = true)", use.method());
+            }
+        }
+        if (queueUses.isEmpty() || generatorFeatureInfo == null) {
+            return;
+        }
+        generatorFeatureInfo.getFeatures().stream()
+                .filter(f -> eu.cloudhopper.mc.annotations.Queue.class.getName().equals(f.getSupportedAnnotation()))
+                .filter(f -> f.getRuntimeClass() != null && f.getRuntimeModule() != null)
+                .findFirst()
+                .filter(f -> processingEnv.getElementUtils().getTypeElement(f.getRuntimeClass()) == null)
+                .ifPresent(f -> processingEnv.getMessager().printMessage(ERROR,
+                        "Functions send to queues (@Queue), and generator '" + generatorId + "' needs the runtime module "
+                        + f.getRuntimeModule() + " for that: add it as a dependency", queueUses.get(0).method()));
+    }
+
     private boolean validateIdentity(ExecutableElement method, Function fn) {
         String identity = fn.identity();
         if (identity.isEmpty()) {
@@ -316,6 +367,16 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     + " has more than one un-annotated body parameter; only one is allowed.",
                     method);
             return false;
+        }
+
+        for (ParamInfo p : params) {
+            if (p.getType() == ParamInfo.ParamType.QUEUE
+                    && !p.getTypeName().startsWith("eu.cloudhopper.mc.runtime.Publisher<")) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "@Queue on parameter '" + p.getVarName() + "' of " + method.getSimpleName()
+                        + " needs the type Publisher<T>, e.g. Publisher<Order>", method);
+                return false;
+            }
         }
 
         // a parameter has no injection point name to derive the property name from

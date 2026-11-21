@@ -1,1 +1,2 @@
 eu.cloudhopper.mc.provider.springboot.kafka.KafkaEventDeliveryAutoConfiguration
+eu.cloudhopper.mc.provider.springboot.publisher.PublisherAutoConfiguration

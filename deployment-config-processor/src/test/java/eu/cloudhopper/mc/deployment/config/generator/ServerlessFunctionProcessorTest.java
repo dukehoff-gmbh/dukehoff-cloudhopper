@@ -176,6 +176,80 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void queueParametersSendThroughThePublisherFactory() throws Exception {
+        CloudRequestHandler<String, String> handler = compileAndLoad("com.example.PublishService", ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import eu.cloudhopper.mc.runtime.Publisher;\n"
+                + "public class PublishService {\n"
+                + "  @Function(name=\"publish\")\n"
+                + "  public String publish(String item, @Queue(name=\"orders\") Publisher<String> orders) {\n"
+                + "    orders.send(item); return \"sent\";\n"
+                + "  }\n"
+                + "  @Function(name=\"consume\")\n"
+                + "  @EventTrigger(source=EventSource.QUEUE, name=\"orders\")\n"
+                + "  public void consume(String item) { }\n"
+                + "}\n",
+                "com.example.PublishService_publish_Handler");
+
+        java.util.List<String> sent = new java.util.ArrayList<>();
+        eu.cloudhopper.mc.runtime.Publishers.setFactory(new eu.cloudhopper.mc.runtime.spi.PublisherFactory() {
+            @Override
+            public <T> eu.cloudhopper.mc.runtime.Publisher<T> queue(String name, boolean existing) {
+                return new eu.cloudhopper.mc.runtime.Publisher<>() {
+                    @Override
+                    public void send(T message) {
+                        sent.add(name + "|" + existing + "|" + message);
+                    }
+
+                    @Override
+                    public void sendAll(java.util.Collection<? extends T> messages) {
+                        messages.forEach(this::send);
+                    }
+                };
+            }
+        });
+        try {
+            assertEquals("sent", handler.handleRequest("book", Map.of(), Map.of(), null));
+            assertEquals(java.util.List.of("orders|false|book"), sent);
+        } finally {
+            eu.cloudhopper.mc.runtime.Publishers.setFactory(null);
+        }
+    }
+
+    @Test
+    public void queuesNeedAConsumerInTheProjectOrExisting() {
+        String source = ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import eu.cloudhopper.mc.runtime.Publisher;\n"
+                + "public class Lonely {\n"
+                + "  @Function(name=\"lonely\")\n"
+                + "  public void f(@Queue(name=\"nowhere\"EXISTING) Publisher<String> q) { }\n"
+                + "}\n";
+        Compilation missing = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.Lonely", source.replace("EXISTING", "")));
+        assertThat(missing).hadErrorContaining("@Queue(name = \"nowhere\") on f: no function of the project consumes this queue");
+
+        Compilation existing = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.Lonely", source.replace("EXISTING", ", existing=true")));
+        assertThat(existing).succeeded();
+    }
+
+    @Test
+    public void queueParametersNeedThePublisherType() {
+        Compilation compilation = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.WrongType", ""
+                        + "package com.example;\n"
+                        + "import eu.cloudhopper.mc.annotations.*;\n"
+                        + "public class WrongType {\n"
+                        + "  @Function(name=\"wrong\")\n"
+                        + "  public void f(@Queue(name=\"orders\", existing=true) String q) { }\n"
+                        + "}\n"));
+        assertThat(compilation).hadErrorContaining("@Queue on parameter 'q' of f needs the type Publisher<T>");
+    }
+
+    @Test
     public void configPropertyParametersNeedAName() {
         Compilation compilation = javac()
                 .withProcessors(new ServerlessFunctionProcessor())

@@ -82,6 +82,17 @@ public class AnnotationFeatureValidator {
      * @return {@code true} if everything on it is supported
      */
     public boolean validate(Element element) {
+        boolean supported = validateAnnotations(element);
+        // annotations on parameters, such as @Queue
+        if (element instanceof ExecutableElement method) {
+            for (VariableElement parameter : method.getParameters()) {
+                supported &= validateAnnotations(parameter);
+            }
+        }
+        return supported;
+    }
+
+    private boolean validateAnnotations(Element element) {
         boolean supported = true;
         for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
             String annotation = mirror.getAnnotationType().asElement().toString();
