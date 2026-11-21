@@ -97,10 +97,11 @@ public class TestContextSpringBoot implements TestContext {
             }
             System.out.println("🚀 Starting " + moduleDir.relativize(jar) + " on port " + port
                     + (kafka == null || kafka.isBlank() ? "" : ", queues from Kafka at " + kafka));
-            process = new ProcessBuilder(command)
+            ProcessBuilder builder = new ProcessBuilder(command)
                     .redirectErrorStream(true)
-                    .redirectOutput(logFile.toFile())
-                    .start();
+                    .redirectOutput(logFile.toFile());
+            builder.environment().putAll(eu.cloudhopper.mc.test.tck.api.TckConfiguration.environment());
+            process = builder.start();
             waitForPort();
             System.out.println("✅ Service is up");
         } catch (IOException e) {

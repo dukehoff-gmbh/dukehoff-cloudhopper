@@ -48,19 +48,29 @@ public class HandlerGenerator {
     public static class ParamInfo {
 
         public enum ParamType {
-            BODY, PATH, QUERY, HEADER, CONTEXT, EVENT_METADATA
+            BODY, PATH, QUERY, HEADER, CONTEXT, EVENT_METADATA, CONFIG
         }
 
         private final ParamType type;
         private final String name;      // e.g. path/query/header key
         private final String typeName;  // fully-qualified Java type
         private final String varName;   // local variable name in generated code
+        private final String defaultValue; // CONFIG: @ConfigProperty(defaultValue)
 
         public ParamInfo(ParamType type, String name, String typeName, String varName) {
+            this(type, name, typeName, varName, null);
+        }
+
+        public ParamInfo(ParamType type, String name, String typeName, String varName, String defaultValue) {
             this.type = type;
             this.name = name;
             this.typeName = typeName;
             this.varName = varName;
+            this.defaultValue = defaultValue;
+        }
+
+        public String getDefaultValue() {
+            return defaultValue;
         }
 
         public ParamType getType() {
@@ -157,6 +167,20 @@ public class HandlerGenerator {
         public List<ParamInfo> getParams() {
             return params;
         }
+    }
+
+    /**
+     * The class for a {@code .class} literal: primitives boxed, type arguments removed.
+     */
+    static TypeName rawClassName(String fqn) {
+        TypeName type = toTypeName(fqn);
+        if (type.isPrimitive()) {
+            return type.box();
+        }
+        if (type instanceof ParameterizedTypeName parameterized) {
+            return parameterized.rawType();
+        }
+        return type;
     }
 
     private static TypeName toTypeName(String fqn) {
@@ -390,6 +414,27 @@ public class HandlerGenerator {
                     methodBuilder.addStatement("$T $L = _ctx == null ? null : _ctx.getEventMetadata()",
                             toTypeName(p.getTypeName()), p.getVarName());
                     break;
+
+                case CONFIG: {
+                    // read on every call: the configuration caches its sources, and a value can come
+                    // from a source registered after the handler was created
+                    ClassName configParams = ClassName.get("eu.cloudhopper.mc.runtime", "ConfigParams");
+                    String method = "value";
+                    String elementType = typeName;
+                    if (typeName.startsWith("java.util.Optional<")) {
+                        method = "optional";
+                        elementType = typeName.substring("java.util.Optional<".length(), typeName.length() - 1);
+                    } else if (typeName.startsWith("java.util.List<")) {
+                        method = "values";
+                        elementType = typeName.substring("java.util.List<".length(), typeName.length() - 1);
+                    }
+                    methodBuilder.addStatement("$T $L = $T.$L($S, $T.class, $S)",
+                            toTypeName(typeName), p.getVarName(), configParams, method, p.getName(),
+                            rawClassName(elementType),
+                            "org.eclipse.microprofile.config.configproperty.unconfigureddvalue".equals(p.getDefaultValue())
+                                    ? null : p.getDefaultValue());
+                    break;
+                }
             }
         }
 

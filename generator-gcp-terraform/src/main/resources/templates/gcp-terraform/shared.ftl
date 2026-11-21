@@ -6,6 +6,15 @@ terraform {
   required_version = ">= 1.5.0, < 2.0.0"
 }
 
+# Values of the configuration properties the functions read with @ConfigProperty, by property
+# name, e.g. { "report.bucket" = "my-reports" }. Functions get them as environment variables
+# (report.bucket → REPORT_BUCKET).
+variable "cloudhopper_config" {
+  description = "Values of the functions' configuration properties (@ConfigProperty), by property name"
+  type        = map(string)
+  default     = {}
+}
+
 
 # Shared storage bucket for all function JARs
 resource "google_storage_bucket" "function_bucket" {

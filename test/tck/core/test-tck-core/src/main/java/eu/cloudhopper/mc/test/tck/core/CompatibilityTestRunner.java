@@ -45,6 +45,7 @@ public class CompatibilityTestRunner {
 
         List<CompatibilityTest> availableTests = List.of(
                 new PlainFunctionCompatibilityTest(),
+                new ConfigPropertyCompatibilityTest(),
                 new DirectCallToAPIFunctionCompatibilityTest(),
                 new MemoryFunctionCompatibilityTest(),
                 new TimeoutFunctionCompatibilityTest(),

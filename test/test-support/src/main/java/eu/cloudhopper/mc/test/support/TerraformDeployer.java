@@ -36,9 +36,19 @@ import java.util.Map;
 public class TerraformDeployer {
 
     private final Path workingDir;
+    private final Map<String, String> environment;
 
     public TerraformDeployer(Path workingDir) {
+        this(workingDir, Map.of());
+    }
+
+    /**
+     * @param workingDir  the Terraform directory
+     * @param environment additional environment variables for every Terraform command, e.g. {@code TF_VAR_...}
+     */
+    public TerraformDeployer(Path workingDir, Map<String, String> environment) {
         this.workingDir = workingDir;
+        this.environment = environment;
     }
 
     public void init() throws IOException, InterruptedException {
@@ -72,6 +82,7 @@ public class TerraformDeployer {
 
         Map<String, String> env = pb.environment();
         env.put("PATH", System.getenv("PATH"));
+        env.putAll(environment);
 
         Process process = pb.start();
 

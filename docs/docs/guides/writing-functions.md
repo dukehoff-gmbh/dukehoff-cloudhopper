@@ -204,6 +204,7 @@ before calling your method.
 | `@PathParam("id")` | A path template variable | Blank value → the parameter name is used |
 | `@QueryParam("q")` | A query string parameter | Blank value → the parameter name is used |
 | `@HeaderParam("X-Token")` | An HTTP request header | The header name is **required** and matched case-insensitively |
+| `@ConfigProperty(name = "report.bucket")` | A configuration value of the deployment | See [Configuration](#configuration) |
 
 Because a blank value falls back to the parameter name, `@PathParam Integer id`
 binds the `{id}` path variable without repeating the name.
@@ -236,6 +237,49 @@ A method may declare checked exceptions (`throws IOException`). Any exception th
 method throws fails the invocation: an HTTP call answers with a server error, an
 event is redelivered. Checked exceptions reach the platform wrapped in
 `FunctionException`, runtime exceptions unchanged.
+
+---
+
+## Configuration
+
+Values that differ per deployment, such as resource names, endpoints or limits,
+are read with [MicroProfile Config](https://microprofile.io/specifications/config/):
+`@ConfigProperty` on a parameter, or `ConfigProvider.getConfig()` in any code.
+
+```java
+@Function(name = "report")
+@ScheduledTrigger(cron = "0 6 * * *")
+public void report(@ConfigProperty(name = "report.bucket") String bucket,
+                   @ConfigProperty(name = "report.days", defaultValue = "7") int days,
+                   @ConfigProperty(name = "report.cc") Optional<String> cc) {
+    // ...
+}
+```
+
+- A property needs a `name`; there is no field or method name to derive it from.
+- Without a value and without `defaultValue`, the call fails with an exception
+  that names the property and its environment variable. `Optional<T>` is empty
+  instead.
+- Types: `String`, the primitive types and their wrappers, enums, `List<T>`
+  (comma-separated, `\,` for a literal comma), and every class with a static
+  `of`, `valueOf` or `parse` method or a constructor taking a `String`, e.g.
+  `Duration` (`PT30S`) or `URI`.
+- Values are read on every call; the sources are read once per instance.
+
+The deployment passes the values as **environment variables**: `report.bucket`
+becomes `REPORT_BUCKET` (every character other than a letter or digit becomes
+`_`, upper case). How to set them is described per target in
+[Targets and what they support](../platforms/generator-overview.md#configuration).
+System properties take precedence over environment variables, and
+`META-INF/microprofile-config.properties` in the function jar provides defaults
+for every target.
+
+Cloudhopper ships a small implementation of the MicroProfile Config API with
+these three sources and the converters above; it keeps the runtime small and
+starts fast. It has no profiles, property expressions or config mapping. To use
+a complete implementation such as SmallRye Config instead, add it to the
+project; your own `ConfigSource` and `Converter` implementations registered
+through `META-INF/services` work with either.
 
 ---
 

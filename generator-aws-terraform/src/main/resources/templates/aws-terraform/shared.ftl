@@ -12,6 +12,15 @@ variable "cloudhopper_name_prefix" {
   default     = ""
 }
 
+# Values of the configuration properties the functions read with @ConfigProperty, by property
+# name, e.g. { "report.bucket" = "my-reports" }. Functions get them as environment variables
+# (report.bucket → REPORT_BUCKET).
+variable "cloudhopper_config" {
+  description = "Values of the functions' configuration properties (@ConfigProperty), by property name"
+  type        = map(string)
+  default     = {}
+}
+
 # Name of the API Gateway stage. "$default" serves the API at the root of its endpoint
 # (no stage segment in the URLs); any other name becomes the first path segment.
 variable "api_stage_name" {

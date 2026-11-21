@@ -60,7 +60,7 @@ public class TestContextAzure implements TestContext {
         try {
             System.out.println("🌍 CWD (user.dir): " + System.getProperty("user.dir"));
             System.out.println("📁 Terraform dir: " + terraformDir.toAbsolutePath());
-            TerraformDeployer deployer = new TerraformDeployer(terraformDir);
+            TerraformDeployer deployer = new TerraformDeployer(terraformDir, eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment());
             deployer.init();
             deployer.apply();
         } catch (Exception e) {
@@ -71,7 +71,7 @@ public class TestContextAzure implements TestContext {
     @Override
     public void cleanupTestFunctions() {
         try {
-            new TerraformDeployer(terraformDir).destroy();
+            new TerraformDeployer(terraformDir, eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment()).destroy();
         } catch (Exception e) {
             throw new RuntimeException("Failed to destroy deployed functions", e);
         }

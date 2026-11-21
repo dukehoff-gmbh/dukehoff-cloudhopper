@@ -149,6 +149,10 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     params.add(new ParamInfo(QUERY,
                             queryParamName,
                             tm.toString(), name));
+                } else if (p.getAnnotation(org.eclipse.microprofile.config.inject.ConfigProperty.class) != null) {
+                    var config = p.getAnnotation(org.eclipse.microprofile.config.inject.ConfigProperty.class);
+                    params.add(new ParamInfo(ParamType.CONFIG, config.name(), tm.toString(), name,
+                            config.defaultValue()));
                 } else if (p.getAnnotation(HeaderParam.class) != null) {
                     params.add(new ParamInfo(HEADER,
                             p.getAnnotation(HeaderParam.class).value(),
@@ -198,6 +202,12 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     bodyType, returnType,
                     artifactId, version, classifier, targetDir
             );
+            hinfo.setConfigProperties(params.stream()
+                    .filter(pi -> pi.getType() == ParamType.CONFIG)
+                    .map(pi -> new eu.cloudhopper.mc.generator.api.ConfigPropertyInfo(pi.getName(),
+                            !pi.getTypeName().startsWith("java.util.Optional<")
+                            && org.eclipse.microprofile.config.inject.ConfigProperty.UNCONFIGURED_VALUE.equals(pi.getDefaultValue())))
+                    .toList());
             try {
                 deploymentGenerator.generateServerlessFunctionConfiguration(
                         generatorId, configOutputDir, hinfo, processingEnv);
@@ -306,6 +316,16 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     + " has more than one un-annotated body parameter; only one is allowed.",
                     method);
             return false;
+        }
+
+        // a parameter has no injection point name to derive the property name from
+        for (ParamInfo p : params) {
+            if (p.getType() == ParamInfo.ParamType.CONFIG && (p.getName() == null || p.getName().isBlank())) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "@ConfigProperty on parameter '" + p.getVarName() + "' of " + method.getSimpleName()
+                        + " needs a name, e.g. @ConfigProperty(name = \"report.bucket\")", method);
+                return false;
+            }
         }
 
         // Check for duplicate keys in PATH/QUERY/HEADER

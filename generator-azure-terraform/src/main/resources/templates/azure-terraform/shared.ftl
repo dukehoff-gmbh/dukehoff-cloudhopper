@@ -6,6 +6,15 @@ terraform {
   required_version = ">= 1.5.0, < 2.0.0"
 }
 
+# Values of the configuration properties the functions read with @ConfigProperty, by property
+# name, e.g. { "report.bucket" = "my-reports" }. All functions run in one function app and get all of them as environment variables
+# (report.bucket → REPORT_BUCKET).
+variable "cloudhopper_config" {
+  description = "Values of the functions' configuration properties (@ConfigProperty), by property name"
+  type        = map(string)
+  default     = {}
+}
+
 
 resource "azurerm_resource_group" "function_rg" {
   name     = "${r"${var.project_name}-${var.environment}"}-rg"
@@ -77,7 +86,8 @@ resource "azurerm_linux_function_app" "shared_function_app" {
     }
   }
 
-  app_settings = {
+  # all functions share the app, so it gets all configuration properties
+  app_settings = merge({
     FUNCTIONS_WORKER_RUNTIME    = "java"
     AzureWebJobsDisableHomepage = "true"
     WEBSITE_RUN_FROM_PACKAGE    = "${"$"}{azurerm_storage_blob.function_code.url}?${"$"}{trim(data.azurerm_storage_account_blob_container_sas.function_zip_sas.sas, "?")}"
@@ -92,7 +102,7 @@ resource "azurerm_linux_function_app" "shared_function_app" {
 
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.function_app_insights.connection_string
     APPLICATIONINSIGHTS_ROLE_NAME         = "my-shared-function-app"
-  }
+  }, { for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value })
 
   depends_on = [azurerm_storage_blob.function_code]
 }
