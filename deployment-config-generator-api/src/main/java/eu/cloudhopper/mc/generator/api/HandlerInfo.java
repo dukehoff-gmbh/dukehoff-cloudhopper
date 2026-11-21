@@ -61,6 +61,7 @@ public class HandlerInfo {
     private final Extension[] extensions;
     private final String identity;
     private java.util.List<ConfigPropertyInfo> configProperties = java.util.List.of();
+    private java.util.List<QueueInfo> publishedQueues = java.util.List.of();
 
     /**
      * Constructs a new {@code HandlerInfo} with the required properties.
@@ -199,6 +200,22 @@ public class HandlerInfo {
      */
     public void setConfigProperties(java.util.List<ConfigPropertyInfo> configProperties) {
         this.configProperties = configProperties == null ? java.util.List.of() : java.util.List.copyOf(configProperties);
+    }
+
+    /**
+     * The queues the function sends to through {@code @Queue} parameters.
+     *
+     * @return the queues, in parameter order
+     */
+    public java.util.List<QueueInfo> getPublishedQueues() {
+        return publishedQueues;
+    }
+
+    /**
+     * @param publishedQueues the queues the function sends to
+     */
+    public void setPublishedQueues(java.util.List<QueueInfo> publishedQueues) {
+        this.publishedQueues = publishedQueues == null ? java.util.List.of() : java.util.List.copyOf(publishedQueues);
     }
 
     /**

@@ -44,6 +44,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger.ScheduleAttribute;
     generatorId = "springboot-http",
     supportedFeatures = {
         @GeneratorFeature(
+            supportedAnnotation = eu.cloudhopper.mc.annotations.Queue.class,
+            supportedAttributes = {
+                eu.cloudhopper.mc.annotations.Queue.QueueAttribute.NAME,
+                eu.cloudhopper.mc.annotations.Queue.QueueAttribute.EXISTING
+            },
+            runtimeClass = "eu.cloudhopper.mc.provider.springboot.publisher.SpringPublisherFactory",
+            runtimeModule = "eu.cloudhopper.mc:provider-springboot"
+        ),
+        @GeneratorFeature(
             supportedAnnotation = Function.class,
             supportedAttributes = {
                 FunctionAttribute.NAME

@@ -44,6 +44,9 @@ variable "artifact_bucket_force_destroy" {
   default     = false
 }
 
+# The region, for the addresses of queues functions send to (@Queue).
+data "aws_region" "cloudhopper" {}
+
 resource "aws_s3_bucket" "lambda_artifacts" {
   bucket = "${"$"}{var.cloudhopper_name_prefix}${"$"}{var.project_name}-${"$"}{var.environment}-lambda-artifacts-${"$"}{data.aws_caller_identity.current.account_id}"
   force_destroy = var.artifact_bucket_force_destroy

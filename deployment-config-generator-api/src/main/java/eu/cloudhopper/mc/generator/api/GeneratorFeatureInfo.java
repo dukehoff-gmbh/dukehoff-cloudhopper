@@ -62,6 +62,36 @@ public class GeneratorFeatureInfo {
         private String supportedAnnotation;
         private List<String> supportedAttributes;
         private Map<String, List<String>> supportedValues = new LinkedHashMap<>();
+        private String runtimeModule;
+        private String runtimeClass;
+
+        /**
+         * @return a class of the runtime module, to check that it is on the classpath, or {@code null}
+         */
+        public String getRuntimeClass() {
+            return runtimeClass;
+        }
+
+        /**
+         * @param runtimeClass a class of the runtime module, or {@code null}
+         */
+        public void setRuntimeClass(String runtimeClass) {
+            this.runtimeClass = runtimeClass;
+        }
+
+        /**
+         * @return the runtime module the feature needs ({@code groupId:artifactId}), or {@code null}
+         */
+        public String getRuntimeModule() {
+            return runtimeModule;
+        }
+
+        /**
+         * @param runtimeModule the runtime module the feature needs, or {@code null}
+         */
+        public void setRuntimeModule(String runtimeModule) {
+            this.runtimeModule = runtimeModule;
+        }
 
         public String getSupportedAnnotation() {
             return supportedAnnotation;

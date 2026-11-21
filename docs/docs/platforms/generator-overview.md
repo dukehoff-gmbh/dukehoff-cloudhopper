@@ -110,6 +110,15 @@ constructors or static initializers, or renew them in a `org.crac` `afterRestore
 Terraform does not delete old versions; they count toward Lambda's code storage quota per
 region. SnapStart cannot be combined with provisioned concurrency.
 
+#### Sending messages
+
+A function with a [`@Queue`](../guides/writing-functions.md#sending-messages)
+parameter needs the dependency `eu.cloudhopper.mc:provider-aws-publisher`; the
+archetype adds it. It sends through the SQS API, signed with the credentials of
+the function's execution role, without the AWS SDK. The generated Terraform passes
+the queue URL as the environment variable `CLOUDHOPPER_QUEUE_<NAME>_URL` and grants
+the function's identity `sqs:SendMessage` on exactly that queue.
+
 #### Identities and permissions
 
 Every [identity](../guides/writing-functions.md#identities-and-permissions) becomes an
@@ -220,6 +229,15 @@ The target requires Spring Boot 4 (the archetype uses 4.1). The web starter is
 (`tools.jackson.*`). Jackson annotations (`com.fasterxml.jackson.annotation.*`)
 work unchanged. Applications built with Cloudhopper 1.2 or earlier used Spring
 Boot 3.2: see the Spring Boot 4 migration guide for changes in your own code.
+
+#### Sending messages
+
+A [`@Queue`](../guides/writing-functions.md#sending-messages) publisher delivers
+to the queue-triggered functions of the same service: in-process, on a background
+thread, retried up to `cloudhopper.events.in-process.max-attempts` times (default
+3, pause `cloudhopper.events.in-process.backoff`, default 1 s) and dropped with a
+log entry after that; messages do not survive a restart. With Kafka (below), it
+sends to the topic of the queue instead and waits for Kafka's acknowledgement.
 
 #### Queues from Kafka
 

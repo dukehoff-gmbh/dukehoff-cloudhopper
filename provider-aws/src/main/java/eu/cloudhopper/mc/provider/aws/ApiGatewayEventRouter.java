@@ -46,6 +46,7 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
     private final RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> http;
     private final SqsEventHandler<I, O> sqs;
     private final S3EventHandler<I, O> s3;
+    private final Class<I> inputType;
 
     public ApiGatewayEventRouter(
             RequestHandler<I, O> plain,
@@ -78,11 +79,37 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
             SqsEventHandler<I, O> sqs,
             S3EventHandler<I, O> s3
     ) {
+        this(plain, proxy, http, sqs, s3, null);
+    }
+
+    /**
+     * @param sqs       handles SQS events (queue triggers); {@code null} if the function has none
+     * @param s3        handles S3 events (storage triggers); {@code null} if the function has none
+     * @param inputType the function's input type: a direct invocation with a JSON object is
+     *                  converted to it; {@code null} passes no input
+     */
+    public ApiGatewayEventRouter(
+            RequestHandler<I, O> plain,
+            RequestHandler<APIGatewayV2ProxyRequestEvent, APIGatewayV2ProxyResponseEvent> proxy,
+            RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> http,
+            SqsEventHandler<I, O> sqs,
+            S3EventHandler<I, O> s3,
+            Class<I> inputType
+    ) {
         this.plain = plain;
         this.proxy = proxy;
         this.http = http;
         this.sqs = sqs;
         this.s3 = s3;
+        this.inputType = inputType;
+    }
+
+    /** The payload of a direct invocation as the function's input, or {@code null} if it takes none. */
+    private I directInput(Map<?, ?> payload) {
+        if (inputType == null || inputType == Void.class || payload.isEmpty() && !Map.class.isAssignableFrom(inputType)) {
+            return null;
+        }
+        return objectMapper.convertValue(payload, inputType);
     }
 
     @Override
@@ -112,8 +139,8 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
                 // Scheduled event
                 return plain.handleRequest(null, context);
             }
-            // simple call
-            return plain.handleRequest(null, context);
+            // a direct invocation: the payload is the function's input
+            return plain.handleRequest(directInput(map), context);
         }
 
         // fallback

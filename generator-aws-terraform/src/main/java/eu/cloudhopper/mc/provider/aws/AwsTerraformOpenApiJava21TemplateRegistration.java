@@ -68,6 +68,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     )
             ),
             @GeneratorFeature(
+                    supportedAnnotation = eu.cloudhopper.mc.annotations.Queue.class,
+                    supportedAttributes = {
+                        eu.cloudhopper.mc.annotations.Queue.QueueAttribute.NAME,
+                        eu.cloudhopper.mc.annotations.Queue.QueueAttribute.EXISTING
+                    },
+                    runtimeClass = "eu.cloudhopper.mc.provider.aws.publisher.SqsPublisherFactory",
+                    runtimeModule = "eu.cloudhopper.mc:provider-aws-publisher"
+            ),
+            @GeneratorFeature(
                     supportedAnnotation = HttpTrigger.class,
                     supportedAttributes = {
                         HttpTrigger.HttpTriggerAttribute.OPERATION_ID,

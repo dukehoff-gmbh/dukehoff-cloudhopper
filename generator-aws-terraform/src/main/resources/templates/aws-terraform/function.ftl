@@ -1,3 +1,5 @@
+<#-- the queues this function sends to (@Queue): the project's queues carry the name prefix -->
+<#function queueName q><#return q.existing?then(q.name, r"${var.cloudhopper_name_prefix}" + q.name)></#function>
 <#-- the properties of this function, and those without a default -->
 <#assign configNames><#list handlerInfo.configProperties as p>"${p.name}"<#sep>, </#sep></#list></#assign>
 <#assign requiredNames><#list handlerInfo.configProperties?filter(p -> p.required) as p>"${p.name}"<#sep>, </#sep></#list></#assign>
@@ -36,7 +38,12 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
     variables = merge({
       # lets the runtime report bucket and queue names without the prefix
       CLOUDHOPPER_NAME_PREFIX = var.cloudhopper_name_prefix
-    }, { for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value if contains([${configNames}], name) })
+    }, { for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value if contains([${configNames}], name) }, {
+<#list handlerInfo.publishedQueues as q>
+      # @Queue(name = "${q.name}")
+      ${q.urlEnvironmentName} = "https://sqs.${"$"}{data.aws_region.cloudhopper.region}.amazonaws.com/${"$"}{data.aws_caller_identity.current.account_id}/${queueName(q)}"
+</#list>
+    })
   }
 <#if requiredNames?has_content>
   lifecycle {
@@ -78,5 +85,26 @@ resource "aws_lambda_alias" "${handlerInfo.functionId}_live" {
   name             = "live"
   function_name    = aws_lambda_function.${handlerInfo.functionId}.function_name
   function_version = terraform_data.${handlerInfo.functionId}_version_active.output
+}
+</#if>
+<#if handlerInfo.publishedQueues?has_content>
+
+# The queues the function sends to (@Queue); granted to its identity.
+resource "aws_iam_role_policy" "${handlerInfo.functionId}_publish" {
+  name = "${"$"}{var.cloudhopper_name_prefix}${handlerInfo.functionId}-publish"
+  role = aws_iam_role.identity_${handlerInfo.identity}.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["sqs:SendMessage"]
+      Resource = [
+<#list handlerInfo.publishedQueues as q>
+        "arn:aws:sqs:${"$"}{data.aws_region.cloudhopper.region}:${"$"}{data.aws_caller_identity.current.account_id}:${queueName(q)}"<#sep>,</#sep>
+</#list>
+      ]
+    }]
+  })
 }
 </#if>

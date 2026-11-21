@@ -69,8 +69,25 @@ public class TerraformDeployer {
         // pre-deploy cleanup, or cleanup after a deploy that failed during init).
         // terraform init is idempotent, so this is safe to repeat.
         init();
-        run("destroy", "-auto-approve");
+        // A destroy can fail on a rate limit of the cloud (e.g. Cloud Run's write requests per
+        // minute); what is left stays in the state, so a second destroy a minute later removes it.
+        // Resources left behind would make the next run fail with "already exists".
+        for (int attempt = 1; ; attempt++) {
+            try {
+                run("destroy", "-auto-approve");
+                return;
+            } catch (RuntimeException e) {
+                if (attempt == DESTROY_ATTEMPTS) {
+                    throw e;
+                }
+                System.out.println("⚠️ terraform destroy failed (attempt " + attempt + " of " + DESTROY_ATTEMPTS
+                        + "), destroying the rest in 60 s: " + e.getMessage());
+                Thread.sleep(60_000);
+            }
+        }
     }
+
+    private static final int DESTROY_ATTEMPTS = 3;
 
     private void run(String... args) throws IOException, InterruptedException {
         List<String> command = new ArrayList<>();

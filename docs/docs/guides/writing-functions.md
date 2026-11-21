@@ -240,6 +240,53 @@ event is redelivered. Checked exceptions reach the platform wrapped in
 
 ---
 
+## Sending messages
+
+A function sends messages to a queue through a `Publisher` parameter annotated
+with `@Queue`. A typical use is fanning out work: a scheduled function sends one
+message per item, and a queue-triggered function processes each of them.
+
+```java
+@Function(name = "startCollection")
+@ScheduledTrigger(cron = "0 4 * * *")
+public void start(@Queue(name = "collect") Publisher<CollectRequest> queue) {
+    queue.sendAll(accounts().stream().map(CollectRequest::new).toList());
+}
+
+@Function(name = "collectOne")
+@EventTrigger(source = EventSource.QUEUE, name = "collect")
+public void collect(CollectRequest request) {
+    // ...
+}
+```
+
+- `@Queue(name)` refers to a queue that an `@EventTrigger(source = QUEUE)` of the
+  same project creates. The generator uses its deployed name, gives the sending
+  function's [identity](#identities-and-permissions) permission to send to exactly
+  this queue, and passes the queue's address to the runtime.
+- A queue that another system owns is declared with
+  `@Queue(name = "...", existing = true)`; it is used under exactly this name.
+- A `@Queue` that is neither is a build error, so messages cannot end up in a
+  queue nobody reads.
+- A `String` is sent as it is, any other message as JSON, the way queue triggers
+  read their input; the consumer receives the message as its input type.
+- `sendAll` sends in as few requests as the queue's batch limits allow. If the
+  queue does not accept a message after retries, `send` and `sendAll` throw
+  `PublishException`.
+
+The target needs a runtime module for this, which the archetype adds; if it is
+missing, the build names the dependency. Which targets support `@Queue` is listed
+in the [support matrix](../platforms/generator-overview.md#support-matrix).
+
+Cloudhopper sends with small HTTP clients of its own instead of the cloud SDKs:
+the SQS client of the AWS SDK alone would more than double the size of a
+function's runtime and its cold start, and SDKs often conflict with the
+dependencies of the project. The cloud APIs these clients call are stable and
+versioned. An implementation based on an SDK can replace them through the
+`eu.cloudhopper.mc.runtime.spi.PublisherFactory` service interface.
+
+---
+
 ## Configuration
 
 Values that differ per deployment, such as resource names, endpoints or limits,

@@ -88,4 +88,22 @@ public @interface GeneratorFeature {
      * @return the supported values per attribute
      */
     SupportedValues[] supportedValues() default {};
+
+    /**
+     * The runtime module the function project needs for this feature on this target, as
+     * {@code groupId:artifactId}, e.g. {@code eu.cloudhopper.mc:provider-aws-publisher} for
+     * {@code @Queue}. The processor checks that the module is on the classpath when a function
+     * uses the feature, and names it if not. Empty if the feature needs no module of its own.
+     *
+     * @return the module coordinates, or an empty string
+     */
+    String runtimeModule() default "";
+
+    /**
+     * A class of {@link #runtimeModule()}, e.g. its {@code PublisherFactory}; the processor checks
+     * that it is on the classpath.
+     *
+     * @return the fully qualified class name, or an empty string
+     */
+    String runtimeClass() default "";
 }

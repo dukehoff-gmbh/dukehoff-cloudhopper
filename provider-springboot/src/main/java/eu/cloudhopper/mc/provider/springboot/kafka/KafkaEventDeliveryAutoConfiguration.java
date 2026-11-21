@@ -64,6 +64,12 @@ import org.springframework.kafka.core.KafkaOperations;
 @ConditionalOnProperty(name = "cloudhopper.events.broker", havingValue = "kafka")
 public class KafkaEventDeliveryAutoConfiguration {
 
+    /** {@code @Queue} publishers send to the queue's topic. */
+    @Bean
+    eu.cloudhopper.mc.runtime.spi.PublisherFactory cloudhopperKafkaPublisherFactory(KafkaOperations<?, ?> kafka) {
+        return new eu.cloudhopper.mc.provider.springboot.publisher.KafkaPublisherFactory(kafka);
+    }
+
     @Bean
     KafkaEventListeners cloudhopperKafkaEventListeners(List<EventEndpoint> endpoints,
             ConsumerFactory<?, ?> consumerFactory,
