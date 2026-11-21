@@ -62,6 +62,13 @@ public class PublisherCompatibilityTest implements FeatureAwareTest {
             received = logs.stream().anyMatch(line -> line.contains("Queue message received: " + name));
             System.out.println("📜 Attempt " + attempt + ": " + (received ? "received" : "not yet received"));
         }
+        if (!received) {
+            for (String function : List.of(PUBLISHER, CONSUMER)) {
+                List<String> logs = context.fetchLogs(function);
+                System.out.println("📜 Last log lines of " + function + ":");
+                logs.subList(Math.max(0, logs.size() - 40), logs.size()).forEach(line -> System.out.println("  " + line));
+            }
+        }
         Assert.assertTrue("The consumer did not log the published message " + name, received);
     }
 
