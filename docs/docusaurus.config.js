@@ -148,8 +148,8 @@ const config = {
                                             href: 'https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues',
                                         },
                                         {
-                                            label: 'Roadmap',
-                                            to: '/docs/roadmap',
+                                            label: 'Release notes',
+                                            to: '/docs/release-notes',
                                         },
                                     ],
                                 },
