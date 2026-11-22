@@ -2,41 +2,57 @@
 
 **You code, we take out the YAML**
 
-Managing serverless functions sounds simple — until you're buried under a mountain of deployment files, integration classes,
- and cloud-specific configs. And every time you add a function, the pile gets bigger.
- Cloudhopper helps you escape that trap by generating the boilerplate from configurable templates, so you can ship faster and spend less time plumbing.
+Cloudhopper turns annotated Java methods into serverless functions. You write a plain
+method and pick the target in the build; Cloudhopper generates the handler classes and
+the deployment configuration: Terraform, OpenAPI descriptions, a Helm chart or a
+Spring Boot application. You write no deployment files, and adding a function adds no
+copy-paste.
 
-### Stop copy-pasting deployment files
+```java
+@Function(name = "hello")
+@HttpTrigger(method = "GET", path = "/hello/{name}")
+public String hello(@PathParam String name) {
+    return "hello " + name;
+}
+```
 
-Terraform, OpenAPI specs, integration classes - it only takes one bad copy-paste to quietly burn your budget.  
-Cloudhopper generates all of it automatically based on your code — consistent, reliable, and boring in the best possible way.
+## One code base, six targets
 
-### Don't lock yourself into one cloud
+The same code builds for each target with a Maven profile:
 
-Cloud-specific deployments are a trap! 
-With Cloudhopper, your application stays platform-independent from day one.
+- **AWS Lambda**, **Azure Functions** and **Google Cloud Functions**, with Terraform
+- **Spring Boot**, as a service on your own servers or a local machine
+- **Knative**, as a Helm chart for any Kubernetes cluster
+- **Scaleway Serverless Containers**, with Terraform
 
-### Try new cloud providers without rebuilding everything
+Beyond HTTP, functions use schedules, queue and storage events, send messages with
+`@Queue`, read configuration and secrets with MicroProfile Config, and run with their
+own permissions per identity. What each target generates is described on its page under
+[Cloud Providers](platforms/generator-overview.md).
 
-Want to see if GCP or Azure would be faster, cheaper, or more reliable?  
-Cloudhopper makes it easy to deploy the same app across different clouds.
+## You see what a target supports
 
-### On-premise deployments without the drama
+- **Declared support:** every target declares the annotations and attributes it
+  supports. The [support matrix](platforms/generator-overview.md#support-matrix) is
+  generated from these declarations.
+- **Build warnings:** when you build for a target, the build warns about everything
+  the target would ignore, so nothing is dropped silently.
+- **Compatibility tests:** a test suite (TCK) deploys the same test functions to every
+  target in the cloud and checks every declared feature.
 
-Your customers want an on-premise installation because of their policies, security, or regulations?  
-Cloudhopper makes it easy to offer both cloud and on-prem options — from the same codebase.
+## The output is yours
 
-## How it Works
+The generated Terraform and Java are plain, readable files in `target/`. You can apply
+them with your own pipeline, check them into a repository, or keep them if you stop
+using Cloudhopper; the license leaves the generated code to you. To change what is
+generated, override a template or add a target of your own through the service
+interfaces; see [Customizing targets](guides/customizing-targets.md).
 
-Just use our simple Java API and add a few annotations.  
-Cloudhopper takes care of:
-- Generating the provider specific integration classes
-- Generating infrastructure as code (Terraform, OpenAPI)
-- Handling cloud-specific quirks
-- Keeping your deployments repeatable, reliable, and boring
+## Get started
 
-No boilerplate. No endless YAML. No regrets.
-
-## Get Started
-
-👉 [Quickstart Guide](guides/quickstart.md)  
+- [Quickstart](guides/quickstart.md): a function running locally in two minutes, then
+  in the cloud
+- [Writing functions](guides/writing-functions.md): triggers, events, messages,
+  configuration, identities
+- [Cloud Providers](platforms/generator-overview.md): what each target generates and
+  supports
