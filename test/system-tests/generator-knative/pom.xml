@@ -67,6 +67,11 @@
             <artifactId>spring-boot-starter-webmvc</artifactId>
             <version>${spring-boot.version}</version> 
         </dependency>
+        <!-- @Queue publishers send to the Kafka topics -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
+        </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>test-tck-core</artifactId>

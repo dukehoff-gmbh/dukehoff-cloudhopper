@@ -30,6 +30,7 @@ import eu.cloudhopper.mc.runtime.Publishers;
 import eu.cloudhopper.mc.runtime.spi.PublisherFactory;
 import java.time.Duration;
 import java.util.List;
+import java.util.ServiceLoader;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -37,19 +38,39 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
 /**
- * Makes {@code @Queue} publishers work in the Spring Boot runtime: with Kafka
- * ({@code cloudhopper.events.broker=kafka}) they send to the topic of the queue, otherwise they
- * deliver to the consuming functions of the same service.
+ * Makes {@code @Queue} publishers work in the Spring Boot runtime. With Kafka
+ * ({@code cloudhopper.events.broker=kafka}, or {@code cloudhopper.publisher=kafka} to only send)
+ * they send to the topic of the queue. Otherwise a {@link PublisherFactory} of another runtime
+ * module found through {@link ServiceLoader} is used, e.g. the SQS client of
+ * {@code provider-aws-publisher}; without one they deliver to the consuming functions of the
+ * same service.
  */
-@AutoConfiguration(afterName = "eu.cloudhopper.mc.provider.springboot.kafka.KafkaEventDeliveryAutoConfiguration")
+@AutoConfiguration(afterName = {
+        "eu.cloudhopper.mc.provider.springboot.kafka.KafkaEventDeliveryAutoConfiguration",
+        "eu.cloudhopper.mc.provider.springboot.kafka.KafkaPublisherAutoConfiguration"})
 public class PublisherAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(PublisherFactory.class)
-    PublisherFactory cloudhopperInProcessPublisherFactory(List<EventEndpoint> endpoints, Environment environment) {
+    PublisherFactory cloudhopperDefaultPublisherFactory(List<EventEndpoint> endpoints, Environment environment) {
+        PublisherFactory discovered = discovered();
+        if (discovered != null) {
+            return discovered;
+        }
         return new InProcessPublisherFactory(endpoints,
                 environment.getProperty("cloudhopper.events.in-process.max-attempts", Integer.class, 3),
                 environment.getProperty("cloudhopper.events.in-process.backoff", Duration.class, Duration.ofSeconds(1)));
+    }
+
+    /** The factory of another runtime module on the classpath, or {@code null}. */
+    static PublisherFactory discovered() {
+        for (PublisherFactory factory : ServiceLoader.load(PublisherFactory.class,
+                PublisherAutoConfiguration.class.getClassLoader())) {
+            if (!(factory instanceof SpringPublisherFactory)) {
+                return factory;
+            }
+        }
+        return null;
     }
 
     @Bean

@@ -67,6 +67,22 @@
             <artifactId>spring-boot-starter-webmvc</artifactId>
             <version>${spring-boot.version}</version> 
         </dependency>
+        <!-- @Queue publishers send through the SQS API of Scaleway Queues -->
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>provider-aws-publisher</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.amazonaws</groupId>
+                    <artifactId>aws-lambda-java-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.amazonaws</groupId>
+                    <artifactId>aws-lambda-java-events</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>test-tck-core</artifactId>
