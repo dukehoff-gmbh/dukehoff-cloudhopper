@@ -46,6 +46,7 @@ public class CompatibilityTestRunner {
         List<CompatibilityTest> availableTests = List.of(
                 new PlainFunctionCompatibilityTest(),
                 new ConfigPropertyCompatibilityTest(),
+                new SecretCompatibilityTest(),
                 new DirectCallToAPIFunctionCompatibilityTest(),
                 new MemoryFunctionCompatibilityTest(),
                 new TimeoutFunctionCompatibilityTest(),
@@ -79,7 +80,9 @@ public class CompatibilityTestRunner {
                 List<RequiredFeature> required = fat.requiredFeatures();
                 boolean extensionsSupported = !(test instanceof ExtensionAwareTest eat)
                         || context.supportedExtensions().containsAll(eat.requiredExtensions());
-                if (supportsAllFeatures(required, info) && extensionsSupported) {
+                boolean capabilitiesSupported = !(test instanceof eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest cat)
+                        || context.supportedCapabilities().containsAll(cat.requiredCapabilities());
+                if (supportsAllFeatures(required, info) && extensionsSupported && capabilitiesSupported) {
                     selectedTests.add(test);
                 } else {
                     unsupportedTests.put(test, required);
