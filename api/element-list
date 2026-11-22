@@ -13,7 +13,11 @@ eu.cloudhopper.mc.provider.aws
 eu.cloudhopper.mc.provider.aws.auth
 eu.cloudhopper.mc.provider.aws.publisher
 eu.cloudhopper.mc.provider.azure
+eu.cloudhopper.mc.provider.azure.auth
+eu.cloudhopper.mc.provider.azure.publisher
 eu.cloudhopper.mc.provider.gcp
+eu.cloudhopper.mc.provider.gcp.auth
+eu.cloudhopper.mc.provider.gcp.publisher
 eu.cloudhopper.mc.provider.http
 eu.cloudhopper.mc.provider.springboot
 eu.cloudhopper.mc.provider.springboot.kafka
