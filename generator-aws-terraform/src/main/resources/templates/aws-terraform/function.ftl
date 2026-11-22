@@ -43,17 +43,52 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
       # @Queue(name = "${q.name}")
       ${q.urlEnvironmentName} = "https://sqs.${"$"}{data.aws_region.cloudhopper.region}.amazonaws.com/${"$"}{data.aws_caller_identity.current.account_id}/${queueName(q)}"
 </#list>
+<#if configNames?has_content>
+      # the secrets of the properties the function reads, read by the runtime from Secrets Manager
+      CLOUDHOPPER_SECRETS = jsonencode({ for name, ref in var.cloudhopper_secrets : name => ref if contains([${configNames}], name) })
+</#if>
     })
   }
-<#if requiredNames?has_content>
+<#if configNames?has_content>
   lifecycle {
+<#if requiredNames?has_content>
     precondition {
-      condition     = alltrue([for name in [${requiredNames}] : contains(keys(var.cloudhopper_config), name)])
-      error_message = "Function ${handlerInfo.functionId} reads configuration properties without a default that cloudhopper_config does not set: ${"$"}{join(", ", [for name in [${requiredNames}] : name if !contains(keys(var.cloudhopper_config), name)])}"
+      condition     = alltrue([for name in [${requiredNames}] : contains(keys(var.cloudhopper_config), name) || contains(keys(var.cloudhopper_secrets), name)])
+      error_message = "Function ${handlerInfo.functionId} reads configuration properties without a default that neither cloudhopper_config nor cloudhopper_secrets sets: ${"$"}{join(", ", [for name in [${requiredNames}] : name if !contains(keys(var.cloudhopper_config), name) && !contains(keys(var.cloudhopper_secrets), name)])}"
+    }
+</#if>
+    precondition {
+      condition     = length(setintersection(keys(var.cloudhopper_config), keys(var.cloudhopper_secrets))) == 0
+      error_message = "Properties are set in both cloudhopper_config and cloudhopper_secrets: ${"$"}{join(", ", setintersection(keys(var.cloudhopper_config), keys(var.cloudhopper_secrets)))}"
     }
   }
 </#if>
 }
+<#if configNames?has_content>
+
+# Read access to the secrets the function reads (cloudhopper_secrets), granted to its identity.
+# A secret given by name matches its ARN with the random suffix Secrets Manager appends.
+locals {
+  ${handlerInfo.functionId}_secret_arns = [for name, ref in var.cloudhopper_secrets :
+    startswith(ref, "arn:") ? ref : "arn:aws:secretsmanager:${"$"}{data.aws_region.cloudhopper.region}:${"$"}{data.aws_caller_identity.current.account_id}:secret:${"$"}{ref}-??????"
+  if contains([${configNames}], name)]
+}
+
+resource "aws_iam_role_policy" "${handlerInfo.functionId}_secrets" {
+  count = length(local.${handlerInfo.functionId}_secret_arns) > 0 ? 1 : 0
+  name  = "${"$"}{var.cloudhopper_name_prefix}${handlerInfo.functionId}-secrets"
+  role  = aws_iam_role.identity_${handlerInfo.identity}.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue"]
+      Resource = local.${handlerInfo.functionId}_secret_arns
+    }]
+  })
+}
+</#if>
 
 # The log group Lambda writes to, created before the function so that Lambda does not
 # create it on the first invocation (without retention, outside of Terraform's state).

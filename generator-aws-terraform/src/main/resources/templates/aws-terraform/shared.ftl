@@ -21,6 +21,16 @@ variable "cloudhopper_config" {
   default     = {}
 }
 
+# Secrets the functions read with @ConfigProperty, by property name: the ARN or name of a Secrets
+# Manager secret, e.g. { "report.api-key" = "arn:aws:secretsmanager:eu-central-1:123456789012:secret:report-key-AbCdEf" }.
+# Only the reference is deployed; a function reads the value at runtime, and its identity may read
+# exactly the secrets of the properties it reads.
+variable "cloudhopper_secrets" {
+  description = "Secrets Manager secrets (ARN or name) of the functions' configuration properties (@ConfigProperty), by property name"
+  type        = map(string)
+  default     = {}
+}
+
 # Name of the API Gateway stage. "$default" serves the API at the root of its endpoint
 # (no stage segment in the URLs); any other name becomes the first path segment.
 variable "api_stage_name" {

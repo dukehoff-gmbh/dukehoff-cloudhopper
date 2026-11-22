@@ -76,6 +76,38 @@ the function's execution role, without the AWS SDK. The generated Terraform pass
 the queue URL as the environment variable `CLOUDHOPPER_QUEUE_<NAME>_URL` and grants
 the function's identity `sqs:SendMessage` on exactly that queue.
 
+## Secrets
+
+The Terraform variable `cloudhopper_secrets` maps a property name to a secret in
+AWS Secrets Manager, by ARN or by name:
+
+```hcl
+cloudhopper_secrets = {
+  "prices.gcp-credentials" = "arn:aws:secretsmanager:eu-central-1:123456789012:secret:gcp-credentials-AbCdEf"
+  "report.api-key"         = "report-api-key"
+}
+```
+
+- A function gets the references of the properties it reads in the environment
+  variable `CLOUDHOPPER_SECRETS`. On first access, `provider-aws` reads the value
+  with `GetSecretValue`, signed with the credentials of the execution role,
+  without the AWS SDK. The value stays in memory for the life of the instance.
+  A binary secret is read as UTF-8.
+- The role of the function's identity gets `secretsmanager:GetSecretValue` on
+  exactly these secrets (policy `<function>-secrets`). A secret given by name
+  matches any ARN of that name with the random suffix that Secrets Manager
+  appends. A secret encrypted with a customer managed KMS key also needs
+  `kms:Decrypt` on that key; attach it to `aws_iam_role.identity_<identity>`.
+- `terraform plan` fails if a property is set in both `cloudhopper_config` and
+  `cloudhopper_secrets`. A property without `defaultValue` must be in one of the
+  two maps.
+- Create the secrets yourself, in your own Terraform or outside it; the generated
+  Terraform only references them.
+
+A non-secret parameter, e.g. from the SSM Parameter Store, needs no runtime lookup:
+pass its value through `cloudhopper_config`, for example read in the deployment
+pipeline and set as `TF_VAR_cloudhopper_config` or in a `.tfvars` file.
+
 ## Identities and permissions
 
 Every [identity](../guides/writing-functions.md#identities-and-permissions) becomes an

@@ -83,13 +83,26 @@ public class TestContextAws implements TestContext {
     // resolves the prefixed Lambda names that were actually deployed.
     private final String namePrefix = System.getenv().getOrDefault("TF_VAR_cloudhopper_name_prefix", "");
 
+    /**
+     * The TCK's configuration, plus the secret: main.tf stores it in Secrets Manager as
+     * {@code <prefix>cloudhopper-tck-secret}, and cloudhopper_secrets references it by name.
+     */
+    private java.util.Map<String, String> terraformEnvironment() {
+        java.util.Map<String, String> env = new java.util.HashMap<>(
+                eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment());
+        env.put("TF_VAR_tck_secret", eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET);
+        env.put("TF_VAR_cloudhopper_secrets", "{\"" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET_PROPERTY
+                + "\" = \"" + namePrefix + "cloudhopper-tck-secret\"}");
+        return env;
+    }
+
     @Override
     public void deployTestFunctions() {
         try {
             System.out.println("🌍 CWD (user.dir): " + System.getProperty("user.dir"));
             System.out.println("📁 Terraform dir: " + terraformDir.toAbsolutePath());
             createExistingResources();
-            TerraformDeployer deployer = new TerraformDeployer(terraformDir, eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment());
+            TerraformDeployer deployer = new TerraformDeployer(terraformDir, terraformEnvironment());
             deployer.init();
             deployer.apply();
         } catch (Exception e) {
@@ -113,7 +126,7 @@ public class TestContextAws implements TestContext {
 
         // Then destroy infrastructure
         try {
-            new TerraformDeployer(terraformDir, eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment()).destroy();
+            new TerraformDeployer(terraformDir, terraformEnvironment()).destroy();
         } catch (Exception e) {
             throw new RuntimeException("Failed to destroy deployed functions", e);
         }
@@ -247,6 +260,11 @@ public class TestContextAws implements TestContext {
     @Override
     public java.util.Set<String> supportedExtensions() {
         return java.util.Set.of("x-aws-snapstart"); // ExtensionKeys.Aws.SnapStart.KEY
+    }
+
+    @Override
+    public java.util.Set<String> supportedCapabilities() {
+        return java.util.Set.of(eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest.SECRETS);
     }
 
     @Override

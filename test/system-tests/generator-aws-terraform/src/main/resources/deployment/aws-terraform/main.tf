@@ -40,6 +40,26 @@ variable "environment" {
 }
 
 data "aws_caller_identity" "current" {}
+
+# The secret that the TCK function "secret" reads: referenced by name in cloudhopper_secrets,
+# never part of cloudhopper_config. Deleted without a recovery window, so the next run can
+# create it again under the same name.
+variable "tck_secret" {
+  description = "The value of the TCK secret"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+resource "aws_secretsmanager_secret" "tck" {
+  name                    = "${var.cloudhopper_name_prefix}cloudhopper-tck-secret"
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "tck" {
+  secret_id     = aws_secretsmanager_secret.tck.id
+  secret_string = var.tck_secret
+}
 #resource "aws_cognito_user_pool" "main" {
 #  name = "cloudhopper-user-pool"
 #}

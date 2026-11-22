@@ -97,6 +97,15 @@ On AWS and GCP, `terraform plan` fails if a function reads a property without
 Values are plain environment variables of the function: keep secrets out of
 them.
 
+### Secrets
+
+[Secrets](../guides/writing-functions.md#secrets) are referenced, not copied:
+
+| Target | How to reference secrets |
+|---|---|
+| `aws-terraform` | Terraform variable `cloudhopper_secrets`, property name to the ARN or name of a Secrets Manager secret; see [AWS](aws.md#secrets) |
+| other targets | not supported yet; set the value like any other property |
+
 On Spring Boot, `@ConfigProperty` reads MicroProfile Config, not Spring's
 `application.properties`; set the values as environment variables or system
 properties.
