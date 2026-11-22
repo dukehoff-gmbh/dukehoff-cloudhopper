@@ -39,7 +39,7 @@ aws configure
 Provide:
 - Access Key ID
 - Secret Access Key
-- Default region (e.g. `us-east-1`)
+- Default region (e.g. `eu-central-1`)
 
 These credentials will be used by Terraform.
 
