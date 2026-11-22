@@ -16,6 +16,7 @@ eu.cloudhopper.mc.provider.aws.secrets
 eu.cloudhopper.mc.provider.azure
 eu.cloudhopper.mc.provider.azure.auth
 eu.cloudhopper.mc.provider.azure.publisher
+eu.cloudhopper.mc.provider.azure.secrets
 eu.cloudhopper.mc.provider.gcp
 eu.cloudhopper.mc.provider.gcp.auth
 eu.cloudhopper.mc.provider.gcp.publisher
