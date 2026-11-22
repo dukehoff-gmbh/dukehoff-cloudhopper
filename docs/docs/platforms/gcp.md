@@ -45,9 +45,43 @@ Give a function that sends at least 256 MB (`@Function(memory = 256)`): with the
 default of 128 MB, a Java function that sends over HTTP exceeds the limit on GCP and
 is terminated.
 
-The functions run as the project's default compute service account, which needs
-`roles/pubsub.publisher` on the topics (the role Editor includes it). A service
-account per [identity](aws.md#identities-and-permissions) is planned for GCP as well.
+The identity of a sending function gets `roles/pubsub.publisher` on exactly the
+topics it sends to (`publishers.tf`).
+
+## Identities and permissions
+
+Every [identity](../guides/writing-functions.md#identities-and-permissions) becomes a
+service account, `google_service_account.identity_<identity>`, and its functions run
+as it instead of the project's default compute service account, which usually has
+the role Editor. Service account IDs have 6 to 30 characters, so the ID is
+`project_name` and the identity, shortened, with a hash of both; the display name is
+`<project_name> <identity>`.
+
+The generated Terraform grants a service account only what its functions' own
+resources need, such as `roles/pubsub.publisher` on the topics they send to. Triggers
+(Cloud Scheduler, Eventarc) still run as `cloudscheduler_service_account_email`.
+Grant further permissions in your own `.tf` file, to the member of the identity's
+service account:
+
+```hcl
+resource "google_storage_bucket_iam_member" "reports_reader" {
+  bucket = "my-reports"
+  role   = "roles/storage.objectViewer"
+  member = google_service_account.identity_reporting.member
+}
+```
+
+The output `identity_<identity>_email` gives the account's email address.
+
+Deploying needs permission to create service accounts (`roles/iam.serviceAccountAdmin`),
+to deploy functions that run as them (`roles/iam.serviceAccountUser`), and to grant
+roles on topics (`roles/pubsub.admin`).
+
+:::note Upgrading from 1.4 or earlier
+The functions used to run as the default compute service account. Permissions they got
+through it, e.g. Editor, are gone: grant what a function needs to the service account of
+its identity.
+:::
 
 ## Runtime modules
 

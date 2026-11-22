@@ -16,6 +16,7 @@ resource "google_cloudfunctions2_function" "${handlerInfo.functionId}_api" {
   }
 
   service_config {
+    service_account_email = google_service_account.identity_${handlerInfo.identity}.email
     available_memory   = "${handlerInfo.memory}Mi"
     timeout_seconds    = ${handlerInfo.timeout}
     min_instance_count = ${handlerInfo.minInstances?c}

@@ -164,6 +164,17 @@ public class TestContextGcp implements TestContext {
     }
 
     @Override
+    public String getDeployedIdentity(String functionName) {
+        usedFunctions.add(functionName);
+        try {
+            // the service account the function runs as, read back from the function after apply
+            return TerraformUtil.getOutputString(terraformDir, functionName + "_service_account").trim();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read the service account of " + functionName + " from the Terraform output", e);
+        }
+    }
+
+    @Override
     public String getDeployedScheduleTimezone(String functionName) {
         usedFunctions.add(functionName);
         try {
