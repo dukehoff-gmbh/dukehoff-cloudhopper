@@ -22,7 +22,7 @@ together with the full list of changes. What is being worked on is tracked in th
   variable `cloudhopper_config`; see
   [Configuration](guides/writing-functions.md#configuration)
 - AWS: SnapStart with the vendor extension `x-aws-snapstart`; see
-  [SnapStart](platforms/generator-overview.md#snapstart)
+  [SnapStart](platforms/aws.md#snapstart)
 - AWS: a direct invocation of a function passes its input to the function
 
 ## 1.3.1
@@ -57,14 +57,14 @@ together with the full list of changes. What is being worked on is tracked in th
 
 - **Dependencies:** add the generator in `provided` scope and the runtime
   library of the cloud, e.g. `provider-aws`; see the
-  [AWS generator](modules/generator-aws-terraform.md#1-add-the-maven-dependency)
+  [AWS generator](platforms/aws.md#runtime-modules)
 - **Spring Boot targets:** the application needs Spring Boot 4: replace
   `spring-boot-starter-web` with `spring-boot-starter-webmvc`, and for Kafka add
   `spring-boot-starter-kafka`; see
-  [Spring Boot](platforms/generator-overview.md#spring-boot-springboot-http)
+  [Spring Boot](platforms/springboot.md)
 - **AWS:** URLs no longer contain `/test`; set `api_stage_name = "test"` to keep
   them. Import the existing log groups once before the next `apply`; see
-  [AWS](platforms/generator-overview.md#aws-aws-terraform)
+  [AWS](platforms/aws.md)
 - **Terraform:** add provider version constraints to your `main.tf`; see
   [Terraform and provider versions](platforms/generator-overview.md#terraform-and-provider-versions)
 

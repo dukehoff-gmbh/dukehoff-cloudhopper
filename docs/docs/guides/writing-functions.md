@@ -135,9 +135,9 @@ public void onOrder(Order order, EventMetadata meta) {
 | `aws-terraform` | SQS queue | One message per invocation; failed messages are reported individually and delivered again |
 | `azure-terraform` | Storage queue in the function app's storage account | Messages must be Base64-encoded; after five failed attempts a message moves to `<name>-poison` |
 | `gcp-terraform` | Pub/Sub topic, delivered through Eventarc | Requires the Eventarc and Pub/Sub APIs in the project |
-| `springboot-http` | `POST /events/<function name>`, or a Kafka topic | The body is the message; optional `ce-id`, `ce-source` and `ce-time` headers (CloudEvents) fill the metadata. Answers `204`, or an error status if the function throws. With `spring-boot-starter-kafka` and `cloudhopper.events.broker=kafka`, the function consumes the topic `<name>`; after five failed attempts a message moves to `<name>.DLT`, see [Queues from Kafka](../platforms/generator-overview.md#queues-from-kafka) |
-| `knative` | Kafka topic `<name>`, delivered by a `KafkaSource` | Delivered again up to four times with exponential backoff, then written to `<name>.DLT`; see [Knative](../platforms/generator-overview.md#knative-knative) |
-| `scaleway-terraform` | Scaleway Queue (SQS) `<name>` with a trigger | Called up to four times per receive, then moved to `<name>-dlq` after `queue_max_receive_count` receives (default 1); see [Scaleway](../platforms/generator-overview.md#scaleway-scaleway-terraform) |
+| `springboot-http` | `POST /events/<function name>`, or a Kafka topic | The body is the message; optional `ce-id`, `ce-source` and `ce-time` headers (CloudEvents) fill the metadata. Answers `204`, or an error status if the function throws. With `spring-boot-starter-kafka` and `cloudhopper.events.broker=kafka`, the function consumes the topic `<name>`; after five failed attempts a message moves to `<name>.DLT`, see [Queues from Kafka](../platforms/springboot.md#queues-from-kafka) |
+| `knative` | Kafka topic `<name>`, delivered by a `KafkaSource` | Delivered again up to four times with exponential backoff, then written to `<name>.DLT`; see [Knative](../platforms/knative.md) |
+| `scaleway-terraform` | Scaleway Queue (SQS) `<name>` with a trigger | Called up to four times per receive, then moved to `<name>-dlq` after `queue_max_receive_count` receives (default 1); see [Scaleway](../platforms/scaleway.md) |
 
 #### Storage buckets
 
@@ -360,7 +360,7 @@ functions need, such as receiving from the function's queue. Nothing else: a fun
 that reads another bucket, writes to a database or calls another account needs
 permissions from your own deployment configuration, attached to the identity. How to
 refer to the identity is described per target in
-[Targets and what they support](../platforms/generator-overview.md#aws-aws-terraform).
+[Targets and what they support](../platforms/aws.md).
 
 The name of an identity does not depend on the function names. Renaming a function
 keeps its identity, so policies elsewhere that refer to it, for example a role in
@@ -398,7 +398,7 @@ ignore it.
 | Key | Values | Target | Effect |
 |---|---|---|---|
 | `x-aws-architecture` (`ExtensionKeys.Aws.Architecture`) | `arm64`, `x86_64` | `aws-terraform` | CPU architecture of the Lambda function |
-| `x-aws-snapstart` (`ExtensionKeys.Aws.SnapStart`) | `PublishedVersions` | `aws-terraform` | [Lambda SnapStart](../platforms/generator-overview.md#snapstart) for shorter cold starts |
+| `x-aws-snapstart` (`ExtensionKeys.Aws.SnapStart`) | `PublishedVersions` | `aws-terraform` | [Lambda SnapStart](../platforms/aws.md#snapstart) for shorter cold starts |
 
 ---
 
