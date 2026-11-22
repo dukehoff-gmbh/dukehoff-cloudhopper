@@ -20,3 +20,9 @@ println "Project directory is: $projectDir"
     FileUtils.deleteDirectory(tfDir)
   }
 }
+// The Agent Skill: .agents/skills is read by Codex, Gemini CLI, Cursor and GitHub Copilot,
+// .claude/skills by Claude Code (and GitHub Copilot)
+def skills = new File(projectDir, '.agents/skills')
+if (skills.isDirectory()) {
+  FileUtils.copyDirectory(skills, new File(projectDir, '.claude/skills'))
+}

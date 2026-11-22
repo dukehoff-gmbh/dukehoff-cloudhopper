@@ -78,6 +78,9 @@ The generated project looks like this:
 
 ```
 my-function
+├── AGENTS.md                                   // instructions for coding agents
+├── .agents/skills/cloudhopper/SKILL.md         // Agent Skill (Codex, Gemini CLI, Cursor, Copilot)
+├── .claude/skills/cloudhopper/SKILL.md         // the same skill for Claude Code
 ├── pom.xml
 ├── README.md
 └── src
@@ -97,6 +100,22 @@ my-function
                     ├── gcp.auto.tfvars         // customize to provide service account, etc.
                     └── main.tf                 // customize to provide credentials, etc. 
 ```
+
+### Coding agents
+
+The project contains instructions for coding agents, so that an agent works with the
+annotations instead of writing handlers and Terraform by hand:
+
+- `AGENTS.md`, read by agents that support it (e.g. Codex, Cursor, GitHub Copilot,
+  Gemini CLI; Claude Code when the project has no `CLAUDE.md`): the rules of a
+  Cloudhopper project and the build commands of its profiles.
+- The [Agent Skill](https://agentskills.io) `cloudhopper`, in `.agents/skills/` and
+  `.claude/skills/`, with short recipes for functions, triggers, messages,
+  configuration, secrets, identities and deployment. Its description names the
+  annotations and profiles, so that agents load it when they come up; whether to
+  load it is up to the agent.
+
+Keep, change or delete them like any other file of the project.
 
 ## Build the project
 
