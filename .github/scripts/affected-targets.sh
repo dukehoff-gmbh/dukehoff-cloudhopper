@@ -19,9 +19,9 @@ target_of() {
   case "$1" in
     generator-aws-terraform/*|provider-aws/*|provider-aws-publisher/*|test/system-tests/generator-aws-terraform/*|test/tck/generator-bindings/aws-terraform/*)
       echo aws ;;
-    generator-azure-terraform/*|provider-azure/*|test/system-tests/generator-azure-terraform/*|test/tck/generator-bindings/azure-terraform/*)
+    generator-azure-terraform/*|provider-azure/*|provider-azure-publisher/*|test/system-tests/generator-azure-terraform/*|test/tck/generator-bindings/azure-terraform/*)
       echo azure ;;
-    generator-gcp-terraform/*|provider-gcp/*|test/system-tests/generator-gcp-terraform/*|test/tck/generator-bindings/gcp-terraform/*)
+    generator-gcp-terraform/*|provider-gcp/*|provider-gcp-publisher/*|test/system-tests/generator-gcp-terraform/*|test/tck/generator-bindings/gcp-terraform/*)
       echo gcp ;;
     generator-springboot/*|provider-springboot/*|test/system-tests/generator-springboot/*|test/tck/generator-bindings/springboot-http/*)
       echo "springboot knative scaleway" ;;

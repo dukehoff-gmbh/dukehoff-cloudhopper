@@ -189,6 +189,16 @@ The variable `log_retention_days` (default `30`) sets how long Application Insig
 keeps telemetry and logs. Application Insights accepts 30, 60, 90, 120, 180, 270, 365,
 550 or 730 days. Before, the Azure default of 90 days applied.
 
+#### Sending messages (Azure)
+
+A function with a [`@Queue`](../guides/writing-functions.md#sending-messages)
+parameter needs the dependency `eu.cloudhopper.mc:provider-azure-publisher`; the
+archetype adds it. It sends to the Storage queue of that name in the function app's
+storage account, signed with the account key from the app's `AzureWebJobsStorage`
+setting, without the Azure SDK. A message can be at most 64 KiB after Base64
+encoding, and the Queue service has no batches, so `sendAll` sends one request per
+message. Queues of other storage accounts (`existing = true`) are not supported yet.
+
 ### GCP (`gcp-terraform`)
 
 | Template | Output | Purpose |
@@ -206,6 +216,24 @@ keeps telemetry and logs. Application Insights accepts 30, 60, 90, 120, 180, 270
 
 Function logs go to Cloud Logging. The project's `_Default` log bucket keeps them for
 30 days unless its retention was changed; the generated Terraform does not manage it.
+
+#### Sending messages (GCP)
+
+A function with a [`@Queue`](../guides/writing-functions.md#sending-messages)
+parameter needs the dependency `eu.cloudhopper.mc:provider-gcp-publisher`; the
+archetype adds it. It publishes to the Pub/Sub topic of the queue's name in the
+function's project through the Pub/Sub REST API, with a token of the function's
+service account from the metadata server, without the Google client libraries.
+The configuration property `cloudhopper.queue.<name>.url`
+(`projects/<project>/topics/<topic>`) names another topic.
+
+Give a function that sends at least 256 MB (`@Function(memory = 256)`): with the
+default of 128 MB, a Java function that sends over HTTP exceeds the limit on GCP and
+is terminated.
+
+The functions run as the project's default compute service account, which needs
+`roles/pubsub.publisher` on the topics (the role Editor includes it). A service
+account per [identity](#identities-and-permissions) is planned for GCP as well.
 
 ### Spring Boot (`springboot-http`)
 

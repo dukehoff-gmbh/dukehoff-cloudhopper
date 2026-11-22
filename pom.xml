@@ -79,7 +79,9 @@
         <module>provider-aws</module>
         <module>provider-aws-publisher</module>
         <module>provider-azure</module>
+        <module>provider-azure-publisher</module>
         <module>provider-gcp</module>
+        <module>provider-gcp-publisher</module>
         <module>provider-http</module>
         <module>provider-springboot</module>
         <module>test/tck/api</module>

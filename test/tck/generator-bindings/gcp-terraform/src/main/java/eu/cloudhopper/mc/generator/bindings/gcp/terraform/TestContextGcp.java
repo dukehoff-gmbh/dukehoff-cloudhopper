@@ -210,12 +210,6 @@ public class TestContextGcp implements TestContext {
             System.out.println("Calling " + functionUrl);
 
             ObjectMapper mapper = new ObjectMapper();
-            ObjectNode payloadJson = mapper.createObjectNode();
-            if (input != null) {
-                payloadJson.set("data", mapper.valueToTree(input));
-            } else {
-                payloadJson.putNull("data");
-            }
 
             HttpRequest request;
             if (input == null) {
@@ -225,7 +219,8 @@ public class TestContextGcp implements TestContext {
                         .GET()
                         .build();
             } else {
-                String payload = mapper.writeValueAsString(payloadJson);
+                // the function's input is the request body itself, as for every HTTP call of the function
+                String payload = mapper.writeValueAsString(input);
                 request = HttpRequest.newBuilder()
                         .uri(URI.create(functionUrl))
                         .header("Authorization", "Bearer " + idToken)

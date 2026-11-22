@@ -62,6 +62,12 @@
             <scope>test</scope>
             <type>jar</type>
         </dependency>
+        <!-- @Queue publishers -->
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>provider-azure-publisher</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>test-tck-core</artifactId>

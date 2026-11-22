@@ -36,7 +36,8 @@ import eu.cloudhopper.mc.test.domain.Player;
  */
 public class PublishPlayerFunction {
 
-    @Function(name = "publishplayer")
+    // GCP: a Java function sending over HTTP exceeds 128 MB
+    @Function(name = "publishplayer", memory = 256)
     public String publish(Player player, @Queue(name = "cloudhopper-tck-players") Publisher<Player> players) {
         players.send(player);
         return "sent";
