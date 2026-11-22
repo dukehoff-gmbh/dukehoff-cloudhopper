@@ -1,6 +1,8 @@
-# Deploy Your First Cloud Function
+# Quickstart
 
-Want to see Cloudhopper in action? This guide walks you through generating, deploying, and testing a serverless function on your favorite cloud.
+This guide creates a project with one function, runs it locally as a Spring Boot
+application, and then deploys the same code to a cloud. The local run needs no cloud
+account and no Terraform, and takes about two minutes.
 
 ---
 
@@ -10,14 +12,14 @@ You’ll need:
 
 - **Java 21+**
 - **[Maven 3.8+](https://maven.apache.org/install.html)**
-- **[Terraform 1.5+](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)**
-- A cloud account and CLI set up for one of the following:
-  - [AWS →](../setup/aws-prerequisites.md)
-  - [GCP →](../setup/gcp-prerequisites.md)
-  - [Azure →](../setup/azure-prerequisites.md)
 
-For the `springboot-http` target, which runs your functions as a local Spring
-Boot application, you need neither Terraform nor a cloud account.
+For a cloud deployment (Step 4 and later), in addition:
+
+- **[Terraform 1.5+](https://developer.hashicorp.com/terraform/install)**
+- A cloud account and CLI set up for one of the targets:
+  [AWS](../setup/aws-prerequisites.md), [GCP](../setup/gcp-prerequisites.md),
+  [Azure](../setup/azure-prerequisites.md) or [Scaleway](../setup/scaleway-prerequisites.md),
+  or a Kubernetes cluster with [Knative](../setup/knative-prerequisites.md)
 
 ---
 
@@ -37,9 +39,10 @@ mvn archetype:generate \
   -B
 ```
 
-> `generatorIds` lists the targets the project is prepared for:
-> `aws-terraform`, `gcp-terraform`, `azure-terraform` and `springboot-http`.
-> Keep only the ones you need.
+> `generatorIds` lists the targets the project is prepared for, one Maven profile
+> each: `aws-terraform`, `gcp-terraform`, `azure-terraform`, `springboot-http`,
+> `knative` and `scaleway-terraform`. Keep `springboot-http` for the local run and add
+> the clouds you want to use.
 
 ---
 
@@ -67,9 +70,40 @@ parameters, scheduled triggers — see the
 
 ---
 
-## Step 3: Configure Terraform deployment (for deploy-with-terraform profile)
+## Step 3: Run It Locally
 
-The generated project contains terraform files that allow you to set variables
+Build the project for the `springboot-http` target and start the application:
+
+```bash
+cd my-function
+mvn clean install -Pspringboot-http
+java -jar target/my-function-1.0-SNAPSHOT-springboot-http.jar
+```
+
+In a second terminal:
+
+```bash
+curl localhost:8080/hello/world
+```
+
+Expected response:
+
+```json
+"hello world"
+```
+
+The same method now runs as an HTTP endpoint of a Spring Boot application. Every
+function also gets `POST /functions/<function name>` for a direct call; schedules run
+in the application. Stop it with `Ctrl+C`. The [Spring Boot](../platforms/springboot.md)
+page describes what is generated.
+
+---
+
+## Step 4: Configure the Terraform deployment
+
+The cloud targets deploy with Terraform; Knative deploys with Helm, see the [Knative setup guide](../setup/knative-prerequisites.md).
+
+The generated project contains Terraform files that allow you to set variables
 required for deployment and add additional variables and resources. You will need
 to configure these only if you're planning to use the terraform deployment profile.
 
@@ -87,7 +121,7 @@ You need to provide your region and adjust authentication details or the Terrafo
 
 ```hcl
 provider "aws" {
-  region = "us-east-1"
+  region = "eu-central-1"
 }
 ```
 
@@ -104,17 +138,16 @@ provider "azurerm" {
 ```hcl
 provider "google" {
   project = "your-project-id"
-  region  = "us-central1"
+  region  = "europe-west3"
 }
 ```
 
 For more advanced setups (IAM roles, VPC config), see [Terraform AWS Provider Docs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs).
 
 
-## Step 4: Build and Generate Deployment Artifacts
+## Step 5: Build and Generate Deployment Artifacts
 
 ```bash
-cd my-function
 mvn clean install -Paws-terraform
 ```
 
@@ -125,7 +158,7 @@ This compiles your function, processes annotations, builds the Lambda jar with a
 target/deployment/aws-terraform/
 ```
 
-The folder contains the generated files and your `main.tf` from Step 3, so you can run
+The folder contains the generated files and your `main.tf` from Step 4, so you can run
 `terraform init` and `terraform apply` there.
 
 
@@ -135,7 +168,7 @@ proceed with the next step.
 
 ---
 
-## Step 5: Deploy the Function with deploy-with-terraform profile
+## Step 6: Deploy the Function with the deploy-with-terraform profile
 
 For the three cloud provider profiles you need to configure the terraform executable.
 
@@ -157,7 +190,7 @@ Terraform will create the function and related infrastructure.
 
 ---
 
-## Step 6: Test Your Function
+## Step 7: Test Your Function
 
 Find the deployed URL in Terraform output or your cloud console, then test it:
 
@@ -174,6 +207,6 @@ Expected response:
 
 ## What’s Next?
 
-- [Write your own functions →](writing-functions.md)
-- [Explore the Maven Archetype →](../modules/maven-archetype.md)
-- [Annotation & runtime API reference →](../modules/deployment-config-api.md)
+- [Write your own functions](writing-functions.md): request bodies, schedules, queue and storage events, messages, configuration and secrets
+- [Cloud Providers](../platforms/generator-overview.md): what each target generates and supports
+- [Maven archetype](../modules/maven-archetype.md): the generated project and its profiles

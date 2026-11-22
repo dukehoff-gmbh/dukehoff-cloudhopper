@@ -4,8 +4,9 @@
 
 Serverless Java that doesn't know which cloud it runs on. Annotate a plain method, pick the
 target in the build, and Cloudhopper generates the handler classes and the deployment
-configuration for it: Terraform for AWS Lambda, Azure Functions and Google Cloud Functions,
-or a Spring Boot application for your own servers.
+configuration for it: Terraform for AWS Lambda, Azure Functions, Google Cloud Functions and
+Scaleway Serverless Containers, a Helm chart for Knative, or a Spring Boot application for
+your own servers.
 
 ```java
 public class HelloFunction {
@@ -19,8 +20,13 @@ public class HelloFunction {
 ```
 
 ```bash
-mvn clean install -Paws-terraform   # or -Pazure-terraform, -Pgcp-terraform, -Pspringboot-http
+mvn clean install -Pspringboot-http   # run locally: java -jar target/*-springboot-http.jar
+mvn clean install -Paws-terraform     # or -Pazure-terraform, -Pgcp-terraform, -Pknative, -Pscaleway-terraform
 ```
+
+Every target declares what it supports, the build warns about anything a target would
+ignore, and a compatibility test suite deploys the same functions to every target. The
+generated Terraform and Java are plain files that you keep.
 
 ## Documentation
 
