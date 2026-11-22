@@ -83,3 +83,24 @@ variable "cloudscheduler_service_account_email" {
 #output "terraform_state_bucket" {
 #  value = google_storage_bucket.terraform_state.name
 #}
+# The secret that the TCK function "secret" reads: referenced by name in cloudhopper_secrets,
+# never part of cloudhopper_config. The binding applies it first, since the generated access
+# grant refers to it by name.
+variable "tck_secret" {
+  description = "The value of the TCK secret"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+resource "google_secret_manager_secret" "tck" {
+  secret_id = "cloudhopper-tck-secret"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "tck" {
+  secret      = google_secret_manager_secret.tck.id
+  secret_data = var.tck_secret
+}

@@ -60,6 +60,10 @@ public class TestContextGcp implements TestContext {
             createExistingResources();
             TerraformDeployer deployer = new TerraformDeployer(terraformDir, terraformEnvironment());
             deployer.init();
+            // the secret first: the generated access grant refers to it by name
+            java.util.Map<String, String> secretOnly = new java.util.HashMap<>(terraformEnvironment());
+            secretOnly.put("TF_CLI_ARGS_apply", "-parallelism=4 -target=google_secret_manager_secret_version.tck");
+            new TerraformDeployer(terraformDir, secretOnly).apply();
             deployer.apply();
         } catch (Exception e) {
             throw new RuntimeException("Failed to deploy functions via Terraform", e);
@@ -161,6 +165,11 @@ public class TestContextGcp implements TestContext {
         } catch (Exception e) {
             throw new RuntimeException("Failed to read min_instance_count of " + functionName + " from the Terraform output", e);
         }
+    }
+
+    @Override
+    public java.util.Set<String> supportedCapabilities() {
+        return java.util.Set.of(eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest.SECRETS);
     }
 
     @Override
@@ -384,6 +393,10 @@ public class TestContextGcp implements TestContext {
                 eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment());
         environment.put("TF_CLI_ARGS_apply", "-parallelism=4");
         environment.put("TF_CLI_ARGS_destroy", "-parallelism=4");
+        // the secret that the function "secret" reads, stored in Secret Manager by main.tf
+        environment.put("TF_VAR_tck_secret", eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET);
+        environment.put("TF_VAR_cloudhopper_secrets", "{\"" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET_PROPERTY
+                + "\" = \"cloudhopper-tck-secret\"}");
         return environment;
     }
 }

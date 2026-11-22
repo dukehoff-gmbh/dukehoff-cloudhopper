@@ -48,6 +48,31 @@ is terminated.
 The identity of a sending function gets `roles/pubsub.publisher` on exactly the
 topics it sends to (`publishers.tf`).
 
+## Secrets
+
+The Terraform variable `cloudhopper_secrets` maps a property name to a secret in
+Secret Manager, by name in the project or as `projects/<project>/secrets/<name>`:
+
+```hcl
+cloudhopper_secrets = {
+  "report.api-key" = "report-key"
+}
+```
+
+- Cloud Functions sets the latest version of each secret a function reads as the
+  environment variable of the property (`report.api-key` → `REPORT_API_KEY`) when an
+  instance starts; no runtime code is involved. A new version reaches new instances.
+- The service account of each [identity](#identities-and-permissions) gets
+  `roles/secretmanager.secretAccessor` on exactly the secrets its functions read
+  (`secrets.tf`). Cloud Functions checks this access when it deploys a function, so
+  a missing permission fails the deployment instead of the call.
+- `terraform plan` fails if a property is set in both `cloudhopper_config` and
+  `cloudhopper_secrets`. A property without `defaultValue` must be in one of the
+  two maps.
+- Create the secrets yourself, with the Secret Manager API enabled in the project;
+  the generated Terraform only references them. Deploying needs permission to grant
+  roles on them, e.g. `roles/secretmanager.admin`.
+
 ## Identities and permissions
 
 Every [identity](../guides/writing-functions.md#identities-and-permissions) becomes a

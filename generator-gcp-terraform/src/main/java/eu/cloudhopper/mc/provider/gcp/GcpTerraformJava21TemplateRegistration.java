@@ -174,6 +174,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
             ),
             @Template(
                     phase = GenerationPhase.FINALIZE,
+                    templateName = "secrets.ftl",
+                    description = "Grants the identities roles/secretmanager.secretAccessor on the secrets their functions read (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    outputFileName = "secrets.tf",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.FINALIZE,
                     templateName = "publishers.ftl",
                     description = "Grants the identities that send with @Queue roles/pubsub.publisher on the topics (Terraform)",
                     outputFileExtension = "tf",
