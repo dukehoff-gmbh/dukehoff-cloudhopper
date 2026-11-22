@@ -56,6 +56,7 @@ class KnativeGeneratedChartTest {
         String service = read(CHART.resolve("templates").resolve("service.yaml"));
         assertTrue(service.contains("kind: Service"), service);
         assertTrue(service.contains("--cloudhopper.schedules.in-process=false"), service);
+        assertTrue(service.contains("--cloudhopper.publisher=kafka"), service);
     }
 
     @Test

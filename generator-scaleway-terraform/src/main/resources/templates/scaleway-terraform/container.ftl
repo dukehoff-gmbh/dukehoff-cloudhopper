@@ -117,8 +117,8 @@ resource "scaleway_container" "app" {
   cpu_limit                    = var.cpu_limit
   timeout                      = var.timeout
   privacy                      = var.privacy
-  environment_variables        = merge({ for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, var.environment_variables)
-  secret_environment_variables = var.secret_environment_variables
+  environment_variables        = merge({ for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, local.cloudhopper_publisher_environment, var.environment_variables)
+  secret_environment_variables = merge(local.cloudhopper_publisher_secrets, var.secret_environment_variables)
   # the cron triggers call the schedules; an in-process schedule would run in every instance
   args = ["--cloudhopper.schedules.in-process=false"]
 }

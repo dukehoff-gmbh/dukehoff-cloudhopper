@@ -265,7 +265,11 @@ to the queue-triggered functions of the same service: in-process, on a backgroun
 thread, retried up to `cloudhopper.events.in-process.max-attempts` times (default
 3, pause `cloudhopper.events.in-process.backoff`, default 1 s) and dropped with a
 log entry after that; messages do not survive a restart. With Kafka (below), it
-sends to the topic of the queue instead and waits for Kafka's acknowledgement.
+sends to the topic of the queue instead and waits for Kafka's acknowledgement;
+`cloudhopper.publisher=kafka` sends to Kafka without consuming the topics in the
+application, for platforms that deliver them to `POST /events/<function name>`
+themselves. A `PublisherFactory` of another runtime module on the classpath, such
+as `provider-aws-publisher`, takes precedence over in-process delivery.
 
 #### Queues from Kafka
 
@@ -352,6 +356,16 @@ while the service is scaled to zero:
   (id `partition:<p>/offset:<o>`, the record time). The source does not report
   the delivery attempt, so it is always 0.
 
+#### Sending messages (Knative)
+
+A [`@Queue`](../guides/writing-functions.md#sending-messages) publisher sends to
+the Kafka topic of the queue's name, which the `KafkaSource` of the consuming
+function delivers. The application needs `spring-boot-starter-kafka`; the
+archetype adds it. With `kafka.bootstrapServers` set, the chart starts the
+application with `cloudhopper.publisher=kafka` and these servers, so the
+application only sends and leaves consuming to the `KafkaSource`s.
+`existing = true` sends to a topic of that name in the same Kafka cluster.
+
 `@Function` settings for memory, timeout and instances are not claimed: all
 functions run in one container, so these are set for the whole service in
 `values.yaml` (`resources`, `timeoutSeconds`, `scaling`).
@@ -370,6 +384,7 @@ Container. The account setup and the deployment are described in the
 | `cronTrigger.ftl` | `<function>_schedule_cronTrigger.tf` | Cron trigger with `schedule` and `timezone` that calls `POST /schedules/<function name>` |
 | `queueTrigger.ftl` | `<function>_event_queueTrigger.tf` | For a queue: the queue `<cloudhopper_name_prefix><queue>`, the dead-letter queue `<cloudhopper_name_prefix><queue>-dlq` and a trigger that delivers to `POST /events/<function name>` |
 | `sqs.ftl` | `sqs.tf` | Activates Scaleway Queues in the project and creates the credentials of the queues and triggers; written once for all event functions |
+| `publisher.ftl` | `publisher.tf` | For `@Queue` publishers: credentials that may only publish, and the queue URLs and credentials as environment of the container |
 
 The container pulls the image given in the variable `image`. Build it from the
 generated Dockerfile for `linux/amd64` and push it to a registry first; the
@@ -387,6 +402,17 @@ while the container is scaled to zero:
   `queue_max_receive_count` receives (default 1) the message moves to the
   dead-letter queue. The trigger sends no message ID and no attempt count, so
   `EventMetadata` stays empty and the attempt is always 0.
+
+#### Sending messages (Scaleway)
+
+A [`@Queue`](../guides/writing-functions.md#sending-messages) publisher sends to
+the Scaleway Queue of the consuming function through the SQS API of Scaleway
+Queues, with the SQS client of `eu.cloudhopper.mc:provider-aws-publisher`; the
+archetype adds it without the AWS Lambda libraries. The generated `publisher.tf`
+creates credentials that may only publish and passes them, the region and the
+queue URLs to the container. The SQS limits apply: at most 256 KiB per message
+and 10 messages per batch. Queues outside the project (`existing = true`) are not
+supported yet.
 
 `@Function` settings for memory, timeout and instances are not claimed: all
 functions run in one container, so these are set for the whole container with

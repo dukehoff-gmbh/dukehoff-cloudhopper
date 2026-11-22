@@ -45,11 +45,22 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
  * that runs it on Knative. The chart contains a Knative {@code Service}, a {@code PingSource}
  * per scheduled function and a {@code KafkaSource} per queue function, which deliver to the
  * application's {@code /schedules/<function>} and {@code /events/<function>} endpoints.
+ * {@code @Queue} publishers send to the Kafka topics with {@code spring-boot-starter-kafka}.
  * Install it with {@code helm upgrade --install <release> target/deployment/knative/chart}.
  */
 @GeneratorFeatures(
     generatorId = "knative",
     supportedFeatures = {
+        @GeneratorFeature(
+            supportedAnnotation = eu.cloudhopper.mc.annotations.Queue.class,
+            supportedAttributes = {
+                eu.cloudhopper.mc.annotations.Queue.QueueAttribute.NAME,
+                eu.cloudhopper.mc.annotations.Queue.QueueAttribute.EXISTING
+            },
+            // publishers send to the Kafka topic of the queue (cloudhopper.publisher=kafka)
+            runtimeClass = "org.springframework.kafka.core.KafkaOperations",
+            runtimeModule = "org.springframework.boot:spring-boot-starter-kafka"
+        ),
         @GeneratorFeature(
             supportedAnnotation = Function.class,
             supportedAttributes = {

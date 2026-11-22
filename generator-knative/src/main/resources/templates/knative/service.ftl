@@ -18,8 +18,14 @@ spec:
       containers:
       - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
         # the PingSources trigger the schedules; an in-process schedule would fire in every replica
-        args: ["--cloudhopper.schedules.in-process=false"]
+        - --cloudhopper.schedules.in-process=false
+        {{- with .Values.kafka.bootstrapServers }}
+        # @Queue publishers send to the Kafka topics; the KafkaSources deliver them
+        - --cloudhopper.publisher=kafka
+        - --spring.kafka.bootstrap-servers={{ join "," . }}
+        {{- end }}
         ports:
         - containerPort: 8080
         {{- with .Values.env }}

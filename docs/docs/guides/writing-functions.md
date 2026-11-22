@@ -279,7 +279,8 @@ missing, the build names the dependency. Which targets support `@Queue` is liste
 in the [support matrix](../platforms/generator-overview.md#support-matrix).
 
 Cloudhopper sends with small HTTP clients of its own instead of the cloud SDKs
-(SQS on AWS, Pub/Sub on GCP, Storage queues on Azure): the SQS client of the AWS
+(SQS on AWS and Scaleway, Pub/Sub on GCP, Storage queues on Azure; Kafka on
+Knative uses the Kafka client of Spring): the SQS client of the AWS
 SDK alone would more than double the size of a function's runtime and its cold
 start, and SDKs often conflict with the
 dependencies of the project. The cloud APIs these clients call are stable and

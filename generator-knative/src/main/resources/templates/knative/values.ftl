@@ -8,7 +8,7 @@ image:
   pullPolicy: IfNotPresent
 
 kafka:
-  # required when a function has @EventTrigger(source = QUEUE); e.g. ["my-kafka.kafka.svc:9092"]
+  # required when a function has @EventTrigger(source = QUEUE) or sends with @Queue; e.g. ["my-kafka.kafka.svc:9092"]
   bootstrapServers: []
   # consumer group per function: <consumerGroupPrefix><function>
   consumerGroupPrefix: cloudhopper-

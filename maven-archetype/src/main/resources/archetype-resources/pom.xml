@@ -121,6 +121,33 @@
                     <version>${spring-boot.version}</version>
                 </dependency>
 #end
+#if($generator == "knative")
+                <!-- @Queue publishers send to the Kafka topics that the KafkaSources deliver -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-kafka</artifactId>
+                    <version>${spring-boot.version}</version>
+                </dependency>
+#end
+#if($generator == "scaleway-terraform")
+                <!-- @Queue publishers send to Scaleway Queues through its SQS API -->
+                <dependency>
+                    <groupId>eu.cloudhopper.mc</groupId>
+                    <artifactId>provider-aws-publisher</artifactId>
+                    <version>${cloudhopper.version}</version>
+                    <exclusions>
+                        <!-- only Lambda functions need these -->
+                        <exclusion>
+                            <groupId>com.amazonaws</groupId>
+                            <artifactId>aws-lambda-java-core</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.amazonaws</groupId>
+                            <artifactId>aws-lambda-java-events</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+#end
 #if($generator == "azure-terraform")
                 <dependency>
                     <groupId>com.microsoft.azure.functions</groupId>

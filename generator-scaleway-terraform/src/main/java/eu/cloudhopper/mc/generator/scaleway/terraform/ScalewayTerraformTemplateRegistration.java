@@ -53,6 +53,15 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
     generatorId = "scaleway-terraform",
     supportedFeatures = {
         @GeneratorFeature(
+            supportedAnnotation = eu.cloudhopper.mc.annotations.Queue.class,
+            supportedAttributes = {
+                eu.cloudhopper.mc.annotations.Queue.QueueAttribute.NAME
+            },
+            // the SQS client of provider-aws-publisher; Scaleway Queues speak the SQS API
+            runtimeClass = "eu.cloudhopper.mc.provider.aws.publisher.SqsPublisherFactory",
+            runtimeModule = "eu.cloudhopper.mc:provider-aws-publisher"
+        ),
+        @GeneratorFeature(
             supportedAnnotation = Function.class,
             supportedAttributes = {
                 FunctionAttribute.NAME
@@ -120,6 +129,14 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
             description = "Generates a queue, its dead-letter queue and a queue trigger that delivers to POST /events/<function>",
             outputFileExtension = "tf",
             outputSubDirectory = ""
+        ),
+        @Template(
+            phase = GenerationPhase.FINALIZE,
+            templateName = "publisher.ftl",
+            description = "Generates the SQS credentials and the container settings of the @Queue publishers",
+            outputFileExtension = "tf",
+            outputSubDirectory = "",
+            outputFileName = "publisher.tf"
         )
     }
 )
