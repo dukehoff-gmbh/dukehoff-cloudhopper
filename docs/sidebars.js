@@ -15,18 +15,6 @@ const sidebars = {
                 'guides/writing-functions',
                 'guides/customizing-targets',
                 'modules/maven-archetype',
-                {
-                    type: 'category',
-                    label: 'Provider Setup',
-                    collapsed: true,
-                    items: [
-                        'setup/aws-prerequisites',
-                        'setup/gcp-prerequisites',
-                        'setup/azure-prerequisites',
-                        'setup/knative-prerequisites',
-                        'setup/scaleway-prerequisites',
-                    ],
-                }
             ],
         },
         {
@@ -37,6 +25,7 @@ const sidebars = {
                 'modules/deployment-config-api',
                 'modules/deployment-config-generator-api',
                 'modules/deployment-config-generator-generic',
+                'modules/overview',
                         // planned: 'concepts/how-annotations-work',
                         // planned: 'concepts/templating-engine',
             ],
@@ -46,29 +35,46 @@ const sidebars = {
             label: 'Cloud Providers',
             collapsed: true,
             items: [
-                'platforms/generator-overview',
+                {type: 'doc', id: 'platforms/generator-overview', label: 'Overview'},
                 {
                     type: 'category',
                     label: 'AWS',
                     items: [
-                        'modules/generator-aws-terraform',
-                        'modules/provider-aws',
+                        {type: 'doc', id: 'setup/aws-prerequisites', label: 'Setup'},
+                        'platforms/aws',
                     ],
                 },
                 {
                     type: 'category',
                     label: 'Azure',
                     items: [
-                        'modules/generator-azure-terraform',
-                        'modules/provider-azure',
+                        {type: 'doc', id: 'setup/azure-prerequisites', label: 'Setup'},
+                        'platforms/azure',
                     ],
                 },
                 {
                     type: 'category',
                     label: 'GCP',
                     items: [
-                        'modules/generator-gcp-terraform',
-                        'modules/provider-gcp',
+                        {type: 'doc', id: 'setup/gcp-prerequisites', label: 'Setup'},
+                        'platforms/gcp',
+                    ],
+                },
+                'platforms/springboot',
+                {
+                    type: 'category',
+                    label: 'Knative',
+                    items: [
+                        {type: 'doc', id: 'setup/knative-prerequisites', label: 'Setup'},
+                        'platforms/knative',
+                    ],
+                },
+                {
+                    type: 'category',
+                    label: 'Scaleway',
+                    items: [
+                        {type: 'doc', id: 'setup/scaleway-prerequisites', label: 'Setup'},
+                        'platforms/scaleway',
                     ],
                 },
             ],
