@@ -28,9 +28,19 @@ spec:
         {{- end }}
         ports:
         - containerPort: 8080
-        {{- with .Values.env }}
+        {{- if or .Values.env .Values.secrets }}
         env:
+          {{- with .Values.env }}
           {{- toYaml . | nindent 10 }}
+          {{- end }}
+          {{- range .Values.secrets }}
+          # @ConfigProperty "{{ .property }}" from the Kubernetes secret {{ .secret }}
+          - name: {{ regexReplaceAll "[^A-Za-z0-9]" .property "_" | upper }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .secret }}
+                key: {{ .key }}
+          {{- end }}
         {{- end }}
         {{- with .Values.resources }}
         resources:

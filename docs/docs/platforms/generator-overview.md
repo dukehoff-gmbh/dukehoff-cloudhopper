@@ -104,7 +104,10 @@ them.
 | Target | How to reference secrets |
 |---|---|
 | `aws-terraform` | Terraform variable `cloudhopper_secrets`, property name to the ARN or name of a Secrets Manager secret; see [AWS](aws.md#secrets) |
-| other targets | not supported yet; set the value like any other property |
+| `knative` | Helm value `secrets`: property name, Kubernetes secret and key; see [Knative](knative.md#secrets) |
+| `scaleway-terraform` | Terraform variable `cloudhopper_secrets`, property name to the value, passed as a secret environment variable; the value is stored in the Terraform state; see [Scaleway](scaleway.md#secrets) |
+| `springboot-http` | environment variables or system properties of the process, set from the secret store of the platform |
+| `azure-terraform`, `gcp-terraform` | not supported yet; set the value like any other property |
 
 On Spring Boot, `@ConfigProperty` reads MicroProfile Config, not Spring's
 `application.properties`; set the values as environment variables or system

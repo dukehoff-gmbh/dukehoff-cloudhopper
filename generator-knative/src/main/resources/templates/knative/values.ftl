@@ -38,3 +38,10 @@ resources: {}
 
 # additional environment variables, e.g. [{name: SPRING_PROFILES_ACTIVE, value: prod}]
 env: []
+
+# configuration properties (@ConfigProperty) read from Kubernetes secrets in the release's
+# namespace; the value is not part of the chart, e.g.
+#   - property: report.api-key
+#     secret: report
+#     key: api-key
+secrets: []

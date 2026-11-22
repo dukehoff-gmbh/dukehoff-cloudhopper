@@ -55,6 +55,26 @@ application with `cloudhopper.publisher=kafka` and these servers, so the
 application only sends and leaves consuming to the `KafkaSource`s.
 `existing = true` sends to a topic of that name in the same Kafka cluster.
 
+## Secrets
+
+[Secrets](../guides/writing-functions.md#secrets) come from Kubernetes secrets in
+the release's namespace. The Helm value `secrets` lists, per property, the secret
+and the key; the chart passes each one with `secretKeyRef` as the environment
+variable of the property (`report.api-key` → `REPORT_API_KEY`), so the value is not
+part of the chart or the release:
+
+```yaml
+secrets:
+  - property: report.api-key
+    secret: report
+    key: api-key
+```
+
+Create the secret before the release, e.g.
+`kubectl create secret generic report --from-literal=api-key=...`. The pod does not
+start while a referenced secret or key is missing. A changed secret reaches the
+service with the next revision. Do not set the same property in `env` as well.
+
 ## Resources and scaling
 
 `@Function` settings for memory, timeout and instances are not claimed: all

@@ -96,6 +96,11 @@ public class TestContextScaleway implements TestContext {
     private JsonNode outputs;
 
     @Override
+    public java.util.Set<String> supportedCapabilities() {
+        return java.util.Set.of(eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest.SECRETS);
+    }
+
+    @Override
     public void deployTestFunctions() {
         try {
             Path jar = findExecutableJar();
@@ -263,6 +268,8 @@ public class TestContextScaleway implements TestContext {
                 "-var", "registry_namespace=" + registryNamespace,
                 "-var", "cloudhopper_name_prefix=" + namePrefix,
                 "-var", "cloudhopper_config=" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformVariable(),
+                "-var", "cloudhopper_secrets={\"" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET_PROPERTY
+                        + "\" = \"" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET + "\"}",
                 // one instance stays up, so that the cron triggers and the logs do not wait for cold starts
                 "-var", "min_scale=1",
                 "-var", "max_scale=1"));

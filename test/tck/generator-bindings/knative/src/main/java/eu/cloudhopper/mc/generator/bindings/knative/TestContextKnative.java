@@ -82,6 +82,14 @@ public class TestContextKnative implements TestContext {
 
     private String baseUrl;
 
+    /** The Kubernetes secret with the TCK secret, in the release's namespace. */
+    private static final String SECRET_NAME = "cloudhopper-tck-secret";
+
+    @Override
+    public java.util.Set<String> supportedCapabilities() {
+        return java.util.Set.of(eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest.SECRETS);
+    }
+
     @Override
     public void deployTestFunctions() {
         try {
@@ -94,6 +102,10 @@ public class TestContextKnative implements TestContext {
                     "-f", deploymentDir.resolve("shared-resources_dockerfile..dockerfile").toString(), ".");
             run(moduleDir, "kind", "load", "docker-image", repository + ":" + tag, "--name", kindCluster);
 
+            // the secret that the function "secret" reads; the chart references it with secretKeyRef
+            run(moduleDir, "kubectl", "delete", "secret", SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
+            run(moduleDir, "kubectl", "create", "secret", "generic", SECRET_NAME, "--namespace", namespace,
+                    "--from-literal=value=" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET);
             System.out.println("⎈ Installing the chart as release " + RELEASE + " in namespace " + namespace);
             List<String> helm = new ArrayList<>(List.of("helm", "upgrade", "--install", RELEASE,
                     deploymentDir.resolve("chart").toString(), "--namespace", namespace));
@@ -104,6 +116,9 @@ public class TestContextKnative implements TestContext {
                 index++;
             }
             helm.addAll(List.of(
+                    "--set-string", "secrets[0].property=" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET_PROPERTY,
+                    "--set-string", "secrets[0].secret=" + SECRET_NAME,
+                    "--set-string", "secrets[0].key=value",
                     "--set", "image.repository=" + repository,
                     "--set", "image.tag=" + tag,
                     "--set", "kafka.bootstrapServers={" + clusterKafka + "}",
@@ -130,6 +145,7 @@ public class TestContextKnative implements TestContext {
     public void cleanupTestFunctions() {
         try {
             run(moduleDir, "helm", "uninstall", RELEASE, "--namespace", namespace, "--ignore-not-found", "--wait");
+            run(moduleDir, "kubectl", "delete", "secret", SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
         } catch (IOException e) {
             throw new RuntimeException("Failed to uninstall the release " + RELEASE, e);
         }
