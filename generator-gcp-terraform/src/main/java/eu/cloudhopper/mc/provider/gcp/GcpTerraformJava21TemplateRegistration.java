@@ -57,7 +57,8 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                         FunctionAttribute.NAME,
                         FunctionAttribute.MEMORY,
                         FunctionAttribute.TIMEOUT,
-                        FunctionAttribute.MIN_INSTANCES
+                        FunctionAttribute.MIN_INSTANCES,
+                        FunctionAttribute.IDENTITY
                     }
             ),
             @GeneratorFeature(
@@ -161,6 +162,23 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     description = "Generates a google_cloud_scheduler_job resource",
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.IDENTITY,
+                    templateName = "identity.ftl",
+                    description = "Generates the service account of an identity (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.FINALIZE,
+                    templateName = "publishers.ftl",
+                    description = "Grants the identities that send with @Queue roles/pubsub.publisher on the topics (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    outputFileName = "publishers.tf",
                     javaFile = false
             ),
             @Template(

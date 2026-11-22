@@ -122,6 +122,10 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
     private final Map<String, eu.cloudhopper.mc.generator.api.QueueInfo> publishedQueues = new java.util.TreeMap<>();
     /** The function that consumes each queue (@EventTrigger QUEUE), by queue name, for the FINALIZE phase. */
     private final Map<String, String> queueConsumers = new java.util.TreeMap<>();
+    /** Whether the consuming function creates the queue (@EventTrigger create), by queue name. */
+    private final Map<String, Boolean> queueCreated = new java.util.TreeMap<>();
+    /** The identities of the functions that send to each queue (@Queue), by queue name. */
+    private final Map<String, Set<String>> queuePublishers = new java.util.TreeMap<>();
     private String generatorId;
 
     public GenericDeploymentConfigGenerator(ProcessingEnvironment processingEnv) {
@@ -178,7 +182,11 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
                 runPhase(processingEnv, GenerationPhase.IDENTITY, dataModel, handlerInfo, outputDir,
                         handlerInfo.getIdentity());
             }
-            handlerInfo.getPublishedQueues().forEach(queue -> publishedQueues.putIfAbsent(queue.getName(), queue));
+            handlerInfo.getPublishedQueues().forEach(queue -> {
+                publishedQueues.putIfAbsent(queue.getName(), queue);
+                queuePublishers.computeIfAbsent(queue.getName(), name -> new java.util.TreeSet<>())
+                        .add(handlerInfo.getIdentity());
+            });
             runPhase(processingEnv, GenerationPhase.FUNCTION, dataModel, handlerInfo, outputDir, handlerInfo.getFunctionId().toLowerCase());
         } catch (ConfigGenerationException e) {
             throw new ConfigGenerationException("Failed to generate function config for generator: " + generatorId, e);
@@ -213,6 +221,8 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         // targets that run all functions in one deployment unit configure the publishers there
         dataModel.put("publishedQueues", new ArrayList<>(publishedQueues.values()));
         dataModel.put("queueConsumers", queueConsumers);
+        dataModel.put("queueCreated", queueCreated);
+        dataModel.put("queuePublishers", queuePublishers);
 
         try {
             runPhase(processingEnv, GenerationPhase.FINALIZE, dataModel, null, configOutputDir, "api");
@@ -255,6 +265,7 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         dataModel.put("eventCreate", eventTrigger.create());
         if (eventTrigger.source() == eu.cloudhopper.mc.annotations.EventSource.QUEUE) {
             queueConsumers.putIfAbsent(eventTrigger.name(), handlerInfo.getFunctionId());
+            queueCreated.putIfAbsent(eventTrigger.name(), eventTrigger.create());
         }
         runPhase(processingEnv, GenerationPhase.EVENT, dataModel, handlerInfo, configOutputDir,
                 handlerInfo.getFunctionId().toLowerCase() + "_event");

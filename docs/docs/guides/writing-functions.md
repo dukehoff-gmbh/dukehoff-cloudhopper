@@ -360,7 +360,7 @@ in a constructor or static initializer, so they are not part of the snapshot.
 ## Identities and permissions
 
 Every function runs as an identity: the principal its permissions are granted to, an
-IAM role on AWS. By default, every function has an identity of its own, so a function
+IAM role on AWS, a service account on GCP. By default, every function has an identity of its own, so a function
 gets only the permissions meant for it. Functions that need the same permissions can
 share one identity:
 
@@ -384,8 +384,8 @@ The generator grants an identity logging and the permissions the triggers of its
 functions need, such as receiving from the function's queue. Nothing else: a function
 that reads another bucket, writes to a database or calls another account needs
 permissions from your own deployment configuration, attached to the identity. How to
-refer to the identity is described per target in
-[Targets and what they support](../platforms/aws.md).
+refer to the identity is described per target: [AWS](../platforms/aws.md#identities-and-permissions),
+[GCP](../platforms/gcp.md#identities-and-permissions).
 
 The name of an identity does not depend on the function names. Renaming a function
 keeps its identity, so policies elsewhere that refer to it, for example a role in

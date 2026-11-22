@@ -20,6 +20,8 @@ resource "google_cloudfunctions2_function" "${handlerInfo.functionId}" {
   }
 
   service_config {
+    # the service account of the function's identity
+    service_account_email = google_service_account.identity_${handlerInfo.identity}.email
     available_memory   = "${handlerInfo.memory}Mi"
     timeout_seconds    = ${handlerInfo.timeout}
     min_instance_count = ${handlerInfo.minInstances?c}
@@ -51,6 +53,10 @@ resource "google_cloud_run_v2_service_iam_member" "${handlerInfo.functionId}_inv
 
 output "${handlerInfo.functionId}_direct_url" {
   value = google_cloudfunctions2_function.${handlerInfo.functionId}.service_config[0].uri
+}
+
+output "${handlerInfo.functionId}_service_account" {
+  value = google_cloudfunctions2_function.${handlerInfo.functionId}.service_config[0].service_account_email
 }
 
 output "${handlerInfo.functionId}_min_instance_count" {
