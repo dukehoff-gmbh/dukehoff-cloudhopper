@@ -42,6 +42,15 @@ public final class TckConfiguration {
     /** The value the TCK sets for {@link #GREETING_PROPERTY}. */
     public static final String GREETING = "hello from the deployment";
 
+    /** Read by the function {@code secret} with {@code @ConfigProperty(name = "tck.secret")}. */
+    public static final String SECRET_PROPERTY = "tck.secret";
+
+    /**
+     * The value of the secret that the binding stores in the target's secret store and references
+     * from the deployment; never part of {@link #VALUES}.
+     */
+    public static final String SECRET = "a secret from the secret store";
+
     /** The properties and their values. */
     public static final Map<String, String> VALUES = Map.of(GREETING_PROPERTY, GREETING);
 

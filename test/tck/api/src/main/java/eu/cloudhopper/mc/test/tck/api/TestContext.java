@@ -87,6 +87,16 @@ public interface TestContext {
     }
 
     /**
+     * The capabilities of the deployment beyond the annotations that this target provides,
+     * e.g. {@link CapabilityAwareTest#SECRETS}; tests that need others are skipped.
+     *
+     * @return the capabilities
+     */
+    default java.util.Set<String> supportedCapabilities() {
+        return java.util.Set.of();
+    }
+
+    /**
      * Whether the version a deployed function's triggers invoke runs with Lambda SnapStart, as the
      * platform reports it after the deployment ({@code x-aws-snapstart}).
      *
