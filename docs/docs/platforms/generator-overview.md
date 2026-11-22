@@ -108,7 +108,7 @@ them.
 | `scaleway-terraform` | Terraform variable `cloudhopper_secrets`, property name to the value, passed as a secret environment variable; the value is stored in the Terraform state; see [Scaleway](scaleway.md#secrets) |
 | `springboot-http` | environment variables or system properties of the process, set from the secret store of the platform |
 | `azure-terraform` | Terraform variable `cloudhopper_secrets`, property name to the resource ID of a Key Vault secret; see [Azure](azure.md#secrets) |
-| `gcp-terraform` | not supported yet; set the value like any other property |
+| `gcp-terraform` | Terraform variable `cloudhopper_secrets`, property name to a Secret Manager secret; see [GCP](gcp.md#secrets) |
 
 On Spring Boot, `@ConfigProperty` reads MicroProfile Config, not Spring's
 `application.properties`; set the values as environment variables or system

@@ -29,12 +29,35 @@ resource "google_cloudfunctions2_function" "${handlerInfo.functionId}" {
       FUNCTION_MEMORY_MB       = ${handlerInfo.memory}
       FUNCTION_TIMEOUT_SECONDS = ${handlerInfo.timeout}
     }, { for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value if contains([${configNames}], name) })
+<#if configNames?has_content>
+
+    # the secrets of the properties the function reads, set by Cloud Functions from Secret Manager
+    dynamic "secret_environment_variables" {
+      for_each = { for name, ref in var.cloudhopper_secrets : name => ref if contains([${configNames}], name) }
+      content {
+        key        = upper(replace(secret_environment_variables.key, "/[^A-Za-z0-9]/", "_"))
+        project_id = length(split("/", secret_environment_variables.value)) == 4 ? split("/", secret_environment_variables.value)[1] : var.gcp_project_id
+        secret     = element(split("/", secret_environment_variables.value), length(split("/", secret_environment_variables.value)) - 1)
+        version    = "latest"
+      }
+    }
+</#if>
   }
-<#if requiredNames?has_content>
+<#if configNames?has_content>
+
+  # Cloud Functions checks the access to the secrets when it deploys the function
+  depends_on = [google_secret_manager_secret_iam_member.identity_${handlerInfo.identity}_secrets]
+
   lifecycle {
+<#if requiredNames?has_content>
     precondition {
-      condition     = alltrue([for name in [${requiredNames}] : contains(keys(var.cloudhopper_config), name)])
-      error_message = "Function ${handlerInfo.functionId} reads configuration properties without a default that cloudhopper_config does not set: ${"$"}{join(", ", [for name in [${requiredNames}] : name if !contains(keys(var.cloudhopper_config), name)])}"
+      condition     = alltrue([for name in [${requiredNames}] : contains(keys(var.cloudhopper_config), name) || contains(keys(var.cloudhopper_secrets), name)])
+      error_message = "Function ${handlerInfo.functionId} reads configuration properties without a default that neither cloudhopper_config nor cloudhopper_secrets sets: ${"$"}{join(", ", [for name in [${requiredNames}] : name if !contains(keys(var.cloudhopper_config), name) && !contains(keys(var.cloudhopper_secrets), name)])}"
+    }
+</#if>
+    precondition {
+      condition     = length(setintersection(keys(var.cloudhopper_config), keys(var.cloudhopper_secrets))) == 0
+      error_message = "Properties are set in both cloudhopper_config and cloudhopper_secrets: ${"$"}{join(", ", setintersection(keys(var.cloudhopper_config), keys(var.cloudhopper_secrets)))}"
     }
   }
 </#if>

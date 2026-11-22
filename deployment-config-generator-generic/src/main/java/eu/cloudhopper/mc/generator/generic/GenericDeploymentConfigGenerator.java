@@ -126,6 +126,8 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
     private final Map<String, Boolean> queueCreated = new java.util.TreeMap<>();
     /** The identities of the functions that send to each queue (@Queue), by queue name. */
     private final Map<String, Set<String>> queuePublishers = new java.util.TreeMap<>();
+    /** The configuration properties (@ConfigProperty) the functions of each identity read, by identity. */
+    private final Map<String, Set<String>> identityConfigProperties = new java.util.TreeMap<>();
     private String generatorId;
 
     public GenericDeploymentConfigGenerator(ProcessingEnvironment processingEnv) {
@@ -182,6 +184,9 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
                 runPhase(processingEnv, GenerationPhase.IDENTITY, dataModel, handlerInfo, outputDir,
                         handlerInfo.getIdentity());
             }
+            Set<String> properties = identityConfigProperties.computeIfAbsent(handlerInfo.getIdentity(),
+                    identity -> new java.util.TreeSet<>());
+            handlerInfo.getConfigProperties().forEach(property -> properties.add(property.getName()));
             handlerInfo.getPublishedQueues().forEach(queue -> {
                 publishedQueues.putIfAbsent(queue.getName(), queue);
                 queuePublishers.computeIfAbsent(queue.getName(), name -> new java.util.TreeSet<>())
@@ -223,6 +228,7 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         dataModel.put("queueConsumers", queueConsumers);
         dataModel.put("queueCreated", queueCreated);
         dataModel.put("queuePublishers", queuePublishers);
+        dataModel.put("identityConfigProperties", identityConfigProperties);
 
         try {
             runPhase(processingEnv, GenerationPhase.FINALIZE, dataModel, null, configOutputDir, "api");
