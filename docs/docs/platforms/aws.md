@@ -165,5 +165,5 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | Dependency | Scope | Contains |
 |---|---|---|
 | `eu.cloudhopper.mc:generator-aws-terraform` | `provided`: only the annotation processor uses it | Templates and template registration |
-| `eu.cloudhopper.mc:provider-aws` | compile | Base classes of the generated handlers: `ApiGatewayEventRouter` (the Lambda entry point `<Handler>$Auto::handleRequest`, which routes API Gateway, SQS, S3, schedule and direct calls), `SqsEventHandler` (reports failed messages as batch item failures), `S3EventHandler`, and `SigV4Signer`/`AwsCredentials` for the AWS APIs the runtime calls itself |
+| `eu.cloudhopper.mc:provider-aws` | compile | Base classes of the generated handlers: `ApiGatewayEventRouter` (the Lambda entry point `<Handler>$Auto::handleRequest`, which routes API Gateway, SQS, S3, schedule and direct calls), `SqsEventHandler` (reports failed messages as batch item failures), `S3EventHandler`, `SigV4Signer`/`AwsCredentials` for the AWS APIs the runtime calls itself, and the `ConfigSource` that reads secrets from Secrets Manager |
 | `eu.cloudhopper.mc:provider-aws-publisher` | compile | `@Queue` publishers for SQS, without the AWS SDK |

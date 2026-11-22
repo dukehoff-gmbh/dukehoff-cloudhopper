@@ -45,9 +45,9 @@ Which ones a target needs is listed on its page, under *Runtime modules*.
 
 | Module | Used by | Contains |
 |---|---|---|
-| `provider-aws` | AWS | `ApiGatewayEventRouter`, the Lambda entry point that routes API Gateway, SQS, S3, schedule and direct calls; `SqsEventHandler`, `S3EventHandler`; `SigV4Signer` and `AwsCredentials` for the AWS APIs the runtime calls |
+| `provider-aws` | AWS | `ApiGatewayEventRouter`, the Lambda entry point that routes API Gateway, SQS, S3, schedule and direct calls; `SqsEventHandler`, `S3EventHandler`; `SigV4Signer` and `AwsCredentials` for the AWS APIs the runtime calls; `SecretsManagerClient` and the `ConfigSource` for secrets |
 | `provider-aws-publisher` | AWS, Scaleway | `@Queue` publishers for the SQS API |
-| `provider-azure` | Azure | `AzureBaseFunctionWrapper`, the base class of the generated function classes; `StorageAccount` for SharedKey requests to the function app's storage account |
+| `provider-azure` | Azure | `AzureBaseFunctionWrapper`, the base class of the generated function classes; `StorageAccount` for SharedKey requests to the function app's storage account; `KeyVaultClient` and the `ConfigSource` for secrets |
 | `provider-azure-publisher` | Azure | `@Queue` publishers for Storage queues |
 | `provider-gcp` | GCP | `GcpCloudFunctionRequestHandler`, the base class of the generated `HttpFunction`s; `GcpMetadata` for the project and access tokens |
 | `provider-gcp-publisher` | GCP | `@Queue` publishers for Pub/Sub |
