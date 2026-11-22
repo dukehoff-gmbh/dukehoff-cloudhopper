@@ -330,6 +330,31 @@ a complete implementation such as SmallRye Config instead, add it to the
 project; your own `ConfigSource` and `Converter` implementations registered
 through `META-INF/services` work with either.
 
+### Secrets
+
+Secrets, such as API keys or service account keys, are read like any other
+property; the code does not change:
+
+```java
+@Function(name = "prices")
+public PriceList prices(@ConfigProperty(name = "prices.gcp-credentials") String credentials) {
+    // ...
+}
+```
+
+The deployment decides that a property is a secret: instead of a value, it
+references a secret in the target's secret store. The value is not copied into
+the deployment (Terraform state, function environment); the function reads it at
+runtime and keeps it for the life of the instance, so a rotated secret reaches new
+instances. The function's [identity](#identities-and-permissions) may read exactly
+the secrets of the properties its functions read. A value set as an environment
+variable or system property takes precedence, e.g. for local runs and tests.
+
+Which targets support secrets, and how to reference them, is described per target;
+see [Configuration](../platforms/generator-overview.md#configuration). With
+[SnapStart](../platforms/aws.md#snapstart), read secrets in the function call, not
+in a constructor or static initializer, so they are not part of the snapshot.
+
 ---
 
 ## Identities and permissions
