@@ -55,13 +55,41 @@ public class TestContextAzure implements TestContext {
         this.azureFunctionBaseUrl = azureFunctionBaseUrl;  // e.g., "https://my-shared-function-app.azurewebsites.net/api/"
     }
 
+    /** The TCK's Key Vault, unique per run: vault names are global and stay reserved while soft-deleted. */
+    private final String vaultName = "chtck" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+
+    /**
+     * The TCK's configuration, plus the secret: main.tf stores it in the vault {@link #vaultName}
+     * as "tck-secret", and cloudhopper_secrets references it by resource ID.
+     */
+    private java.util.Map<String, String> terraformEnvironment() {
+        java.util.Map<String, String> env = new java.util.HashMap<>(
+                eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment());
+        env.put("TF_VAR_tck_vault_name", vaultName);
+        env.put("TF_VAR_tck_secret", eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET);
+        String secretId = "/subscriptions/" + System.getenv("ARM_SUBSCRIPTION_ID") + "/resourceGroups/" + vaultName
+                + "-rg/providers/Microsoft.KeyVault/vaults/" + vaultName + "/secrets/tck-secret";
+        env.put("TF_VAR_cloudhopper_secrets", "{\"" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET_PROPERTY
+                + "\" = \"" + secretId + "\"}");
+        return env;
+    }
+
+    @Override
+    public java.util.Set<String> supportedCapabilities() {
+        return java.util.Set.of(eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest.SECRETS);
+    }
+
     @Override
     public void deployTestFunctions() {
         try {
             System.out.println("🌍 CWD (user.dir): " + System.getProperty("user.dir"));
             System.out.println("📁 Terraform dir: " + terraformDir.toAbsolutePath());
-            TerraformDeployer deployer = new TerraformDeployer(terraformDir, eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment());
+            TerraformDeployer deployer = new TerraformDeployer(terraformDir, terraformEnvironment());
             deployer.init();
+            // the secret first: cloudhopper_secrets refers to it, and its role assignment needs it
+            java.util.Map<String, String> secretOnly = new java.util.HashMap<>(terraformEnvironment());
+            secretOnly.put("TF_CLI_ARGS_apply", "-target=azurerm_key_vault_secret.tck");
+            new TerraformDeployer(terraformDir, secretOnly).apply();
             deployer.apply();
         } catch (Exception e) {
             throw new RuntimeException("Failed to deploy functions via Terraform", e);
@@ -71,7 +99,7 @@ public class TestContextAzure implements TestContext {
     @Override
     public void cleanupTestFunctions() {
         try {
-            new TerraformDeployer(terraformDir, eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment()).destroy();
+            new TerraformDeployer(terraformDir, terraformEnvironment()).destroy();
         } catch (Exception e) {
             throw new RuntimeException("Failed to destroy deployed functions", e);
         }

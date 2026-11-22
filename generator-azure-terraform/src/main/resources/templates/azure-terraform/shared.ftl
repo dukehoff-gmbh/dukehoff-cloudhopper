@@ -15,6 +15,23 @@ variable "cloudhopper_config" {
   default     = {}
 }
 
+# Secrets the functions read with @ConfigProperty, by property name: the resource ID of a Key Vault
+# secret without version (azurerm_key_vault_secret.<name>.resource_versionless_id), e.g.
+# { "report.api-key" = "/subscriptions/.../resourceGroups/.../providers/Microsoft.KeyVault/vaults/my-vault/secrets/report-key" }.
+# Only the reference is deployed; the functions read the value at runtime with the function app's
+# managed identity, which gets "Key Vault Secrets User" on exactly these secrets (vaults with
+# Azure RBAC).
+variable "cloudhopper_secrets" {
+  description = "Key Vault secrets (resource ID without version) of the functions' configuration properties (@ConfigProperty), by property name"
+  type        = map(string)
+  default     = {}
+
+  validation {
+    condition     = alltrue([for id in values(var.cloudhopper_secrets) : can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft.KeyVault/vaults/[^/]+/secrets/[^/]+$", id))])
+    error_message = "Each value of cloudhopper_secrets must be the resource ID of a Key Vault secret without version: /subscriptions/<id>/resourceGroups/<group>/providers/Microsoft.KeyVault/vaults/<vault>/secrets/<name>"
+  }
+}
+
 
 resource "azurerm_resource_group" "function_rg" {
   name     = "${r"${var.project_name}-${var.environment}"}-rg"
@@ -86,6 +103,11 @@ resource "azurerm_linux_function_app" "shared_function_app" {
     }
   }
 
+  # the identity the functions read their secrets with
+  identity {
+    type = "SystemAssigned"
+  }
+
   # all functions share the app, so it gets all configuration properties
   app_settings = merge({
     FUNCTIONS_WORKER_RUNTIME    = "java"
@@ -102,9 +124,34 @@ resource "azurerm_linux_function_app" "shared_function_app" {
 
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.function_app_insights.connection_string
     APPLICATIONINSIGHTS_ROLE_NAME         = "my-shared-function-app"
-  }, { for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value })
+  }, { for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value },
+  length(var.cloudhopper_secrets) == 0 ? {} : {
+    # the URIs of the secrets, read by the runtime from Key Vault
+    CLOUDHOPPER_SECRETS = jsonencode({ for name, id in var.cloudhopper_secrets :
+      name => "https://${"$"}{split("/", id)[8]}.vault.azure.net/secrets/${"$"}{split("/", id)[10]}" })
+  })
+
+  lifecycle {
+    precondition {
+      condition     = length(setintersection(keys(var.cloudhopper_config), keys(var.cloudhopper_secrets))) == 0
+      error_message = "Properties are set in both cloudhopper_config and cloudhopper_secrets: ${"$"}{join(", ", setintersection(keys(var.cloudhopper_config), keys(var.cloudhopper_secrets)))}"
+    }
+  }
 
   depends_on = [azurerm_storage_blob.function_code]
+}
+
+# Read access of the function app to each secret it reads
+resource "azurerm_role_assignment" "cloudhopper_secret" {
+  for_each             = var.cloudhopper_secrets
+  scope                = each.value
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_linux_function_app.shared_function_app.identity[0].principal_id
+}
+
+output "function_app_principal_id" {
+  description = "Object ID of the function app's managed identity, e.g. to grant it further access"
+  value       = azurerm_linux_function_app.shared_function_app.identity[0].principal_id
 }
 
 
