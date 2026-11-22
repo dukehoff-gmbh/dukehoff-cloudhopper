@@ -10,6 +10,7 @@ assert new File(deployment, 'main.tf').isFile() : "main.tf was not copied to ${d
 def agents = new File(project, 'AGENTS.md')
 assert agents.isFile() : 'AGENTS.md is missing'
 assert agents.text.contains('mvn clean package -Paws-terraform') : 'AGENTS.md does not list the profile'
+assert agents.text.contains('Zero cloud SDKs') : 'AGENTS.md has no rule against cloud SDKs'
 ['.agents/skills/cloudhopper/SKILL.md', '.claude/skills/cloudhopper/SKILL.md'].each { path ->
     def skill = new File(project, path)
     assert skill.isFile() : "${path} is missing"

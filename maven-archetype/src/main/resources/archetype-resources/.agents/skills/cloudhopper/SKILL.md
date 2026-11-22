@@ -18,7 +18,16 @@ Maven profile selects one. Full documentation: https://cloudhopper.eu/docs/intro
    `src/main/resources/cloudhopper-templates/<target>/`.
 3. After a change, build with the target's profile. Read the warnings: a target that does not
    support an annotation or attribute ignores it.
-4. Prefer `@Queue`, `@ConfigProperty` and identities over cloud SDKs and hand-written IAM.
+4. **Zero cloud SDKs:** never import provider-specific SDK types in function classes
+   (`com.amazonaws.*`, `software.amazon.awssdk.*`, `com.google.cloud.*`, `com.azure.*`,
+   `com.microsoft.azure.*`, …), and do not rely on provider-specific resources, environment
+   variables or event formats. Use `@Queue`, `@ConfigProperty`, `@EventTrigger`/`StorageEvent`
+   and identities instead of SDKs and hand-written IAM.
+5. If no Cloudhopper API covers a need, keep the function class portable: provider-specific
+   code goes behind an interface of your own in a separate class, selected through
+   configuration, with the supported targets documented.
+6. Vendor-specific settings only through `@Function(extensions = @Extension(...))`; other
+   targets ignore them.
 
 ## Functions and triggers
 

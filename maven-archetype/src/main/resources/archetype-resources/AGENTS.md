@@ -23,9 +23,18 @@ $h$h Rules
 - **Build warnings matter.** A warning that a target does not support an annotation or
   attribute means the target ignores it. Change the code or choose another target; do not
   suppress it.
-- **Use the Cloudhopper APIs before cloud SDKs:** `@Queue` with `Publisher<T>` to send
-  messages, `@ConfigProperty` (MicroProfile Config) for configuration and secrets,
-  `@Function(identity)` for permissions. A cloud SDK in a function ties it to one target.
+- **Zero cloud SDKs: never import provider-specific SDK types in function classes**
+  (`com.amazonaws.*`, `software.amazon.awssdk.*`, `com.google.cloud.*`, `com.azure.*`,
+  `com.microsoft.azure.*`, `com.scaleway.*`, …), and do not depend on provider-specific
+  resources, environment variables or event formats. They tie the function to one target and
+  break the other profiles. Use the Cloudhopper APIs instead: `@Queue` with `Publisher<T>` to
+  send messages, `@ConfigProperty` (MicroProfile Config) for configuration and secrets,
+  `@EventTrigger` and `StorageEvent` for events, `@Function(identity)` for permissions.
+- **When there is no Cloudhopper API for something**, keep the function class portable: put the
+  provider-specific code behind an interface of your own in a separate class, choose the
+  implementation through configuration, and say which targets it supports.
+- **Vendor-specific settings** go only through `@Extension` on `@Function`; other targets
+  ignore them.
 - **Values per deployment** go into the Terraform variables `cloudhopper_config` (values)
   and `cloudhopper_secrets` (references to secrets), never into code.
 
