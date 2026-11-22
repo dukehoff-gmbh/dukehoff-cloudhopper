@@ -55,6 +55,14 @@
             <includes>
                 <include>pom.xml</include>
                 <include>README.md</include>
+                <include>AGENTS.md</include>
+            </includes>
+        </fileSet>
+        <!-- the Agent Skill for coding agents; the post-generate script copies it to .claude/skills -->
+        <fileSet filtered="false" packaged="false">
+            <directory>.agents/skills</directory>
+            <includes>
+                <include>**/*</include>
             </includes>
         </fileSet>
         <fileSet filtered="true" packaged="true">
