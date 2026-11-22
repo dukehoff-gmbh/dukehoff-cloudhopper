@@ -10,6 +10,21 @@ announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/rele
 together with the full list of changes. What is being worked on is tracked in the
 [issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
+## 1.4
+
+- `@Queue`: functions send messages to queues with a `Publisher<T>` parameter, on
+  every target: SQS on AWS and Scaleway, Pub/Sub on GCP, Storage queues on
+  Azure, Kafka on Knative and Spring Boot. The runtime modules use small HTTP
+  clients of their own instead of the cloud SDKs; see
+  [Sending messages](guides/writing-functions.md#sending-messages)
+- Configuration with MicroProfile Config: `@ConfigProperty` on a parameter or
+  `ConfigProvider.getConfig()`, with the values per deployment in the Terraform
+  variable `cloudhopper_config`; see
+  [Configuration](guides/writing-functions.md#configuration)
+- AWS: SnapStart with the vendor extension `x-aws-snapstart`; see
+  [SnapStart](platforms/generator-overview.md#snapstart)
+- AWS: a direct invocation of a function passes its input to the function
+
 ## 1.3.1
 
 - `@Function(identity)`: on AWS every function runs as an execution role of its
