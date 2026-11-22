@@ -77,6 +77,17 @@ variable "cloudhopper_config" {
   default     = {}
 }
 
+# Secrets the functions read with @ConfigProperty, by property name, e.g.
+# { "report.api-key" = "..." }. The container gets them as secret environment variables
+# (report.api-key → REPORT_API_KEY). The values are stored in the Terraform state: keep it
+# in a protected backend.
+variable "cloudhopper_secrets" {
+  description = "Values of the functions' secret configuration properties (@ConfigProperty), by property name"
+  type        = map(string)
+  default     = {}
+  sensitive   = true
+}
+
 variable "environment_variables" {
   description = "Environment variables of the application"
   type        = map(string)
@@ -118,9 +129,16 @@ resource "scaleway_container" "app" {
   timeout                      = var.timeout
   privacy                      = var.privacy
   environment_variables        = merge({ for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, local.cloudhopper_publisher_environment, var.environment_variables)
-  secret_environment_variables = merge(local.cloudhopper_publisher_secrets, var.secret_environment_variables)
+  secret_environment_variables = merge(local.cloudhopper_publisher_secrets, { for name, value in var.cloudhopper_secrets : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, var.secret_environment_variables)
   # the cron triggers call the schedules; an in-process schedule would run in every instance
   args = ["--cloudhopper.schedules.in-process=false"]
+
+  lifecycle {
+    precondition {
+      condition     = length(setintersection(keys(var.cloudhopper_config), nonsensitive(keys(var.cloudhopper_secrets)))) == 0
+      error_message = "Properties are set in both cloudhopper_config and cloudhopper_secrets: ${join(", ", setintersection(keys(var.cloudhopper_config), nonsensitive(keys(var.cloudhopper_secrets))))}"
+    }
+  }
 }
 
 output "url" {

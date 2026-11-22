@@ -51,6 +51,25 @@ queue URLs to the container. The SQS limits apply: at most 256 KiB per message
 and 10 messages per batch. Queues outside the project (`existing = true`) are not
 supported yet.
 
+## Secrets
+
+The Terraform variable `cloudhopper_secrets` maps a property name to the value of a
+[secret](../guides/writing-functions.md#secrets):
+
+```hcl
+cloudhopper_secrets = {
+  "report.api-key" = "..."
+}
+```
+
+The container gets each value as a secret environment variable of the property
+(`report.api-key` → `REPORT_API_KEY`). Scaleway Serverless Containers cannot
+reference Scaleway Secret Manager, so the values are passed to Terraform and are
+**stored in the Terraform state**: keep the state in a protected backend, and pass
+the values through `TF_VAR_cloudhopper_secrets` or a `.tfvars` file that is not
+committed. `terraform plan` fails if a property is set in both
+`cloudhopper_config` and `cloudhopper_secrets`.
+
 ## Resources and scaling
 
 `@Function` settings for memory, timeout and instances are not claimed: all
