@@ -12,6 +12,7 @@ eu.cloudhopper.mc.generator.springboot
 eu.cloudhopper.mc.provider.aws
 eu.cloudhopper.mc.provider.aws.auth
 eu.cloudhopper.mc.provider.aws.publisher
+eu.cloudhopper.mc.provider.aws.secrets
 eu.cloudhopper.mc.provider.azure
 eu.cloudhopper.mc.provider.azure.auth
 eu.cloudhopper.mc.provider.azure.publisher
