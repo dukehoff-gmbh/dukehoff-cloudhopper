@@ -10,6 +10,36 @@ announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/rele
 together with the full list of changes. What is being worked on is tracked in the
 [issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
+## 1.5
+
+- Secrets: a property read with `@ConfigProperty` can reference a secret in the
+  target's secret store instead of a value, with the Terraform variable
+  `cloudhopper_secrets`: Secrets Manager on AWS, Key Vault on Azure, Secret
+  Manager on GCP; on Knative a Kubernetes secret, on Scaleway a secret
+  environment variable. A function's identity may read exactly the secrets its
+  functions read; see [Secrets](guides/writing-functions.md#secrets)
+- Values from your own Terraform, such as the ID of a resource created next to
+  the functions, go into the locals `cloudhopper_extra_config` and
+  `cloudhopper_extra_secrets` in an override file; see
+  [Values from your own Terraform](platforms/generator-overview.md#values-from-your-own-terraform)
+- GCP: every identity becomes a service account of its own, with
+  `roles/pubsub.publisher` on exactly the topics its functions send to; see
+  [Identities and permissions](platforms/gcp.md#identities-and-permissions)
+- Coding agents: projects created with the archetype contain an `AGENTS.md` and
+  the Agent Skill `cloudhopper`; existing projects can add the skill, and the
+  documentation is listed in `/llms.txt`; see
+  [Coding agents](modules/maven-archetype.md#coding-agents)
+- Azure: routes match literal path segments regardless of case, so functions
+  with upper-case letters in their name receive their path parameters
+
+### Upgrading from 1.4
+
+- **GCP:** the functions no longer run as the default compute service account.
+  Grant what a function needs beyond its triggers and topics to the service
+  account of its identity. Deploying needs `roles/iam.serviceAccountAdmin`,
+  `roles/iam.serviceAccountUser` and `roles/pubsub.admin`; see
+  [GCP](platforms/gcp.md#identities-and-permissions)
+
 ## 1.4
 
 - `@Queue`: functions send messages to queues with a `Publisher<T>` parameter, on
