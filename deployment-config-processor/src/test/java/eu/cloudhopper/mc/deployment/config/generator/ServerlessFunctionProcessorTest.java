@@ -218,6 +218,87 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void bucketParametersUseTheBlobStoreFactoryWithTheDeclaredAccess() throws Exception {
+        CloudRequestHandler<String, String> handler = compileAndLoad("com.example.BucketService", ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import eu.cloudhopper.mc.annotations.Bucket.Access;\n"
+                + "import eu.cloudhopper.mc.runtime.BlobStore;\n"
+                + "import eu.cloudhopper.mc.runtime.BlobStoreException;\n"
+                + "public class BucketService {\n"
+                + "  @Function(name=\"copy\")\n"
+                + "  public String copy(String key, @Bucket(name=\"reports\") BlobStore in,\n"
+                + "      @Bucket(name=\"archive\", access=Access.READ_WRITE, existing=true) BlobStore out) {\n"
+                + "    out.put(key, in.get(key).orElseThrow(), \"text/plain\");\n"
+                + "    try { in.delete(key); return \"deleted\"; } catch (BlobStoreException e) { return e.getMessage(); }\n"
+                + "  }\n"
+                + "}\n",
+                "com.example.BucketService_copy_Handler");
+
+        java.util.Map<String, byte[]> objects = new java.util.LinkedHashMap<>();
+        java.util.List<String> created = new java.util.ArrayList<>();
+        eu.cloudhopper.mc.runtime.BlobStores.setFactory((name, existing) -> {
+            created.add(name + "|" + existing);
+            return new eu.cloudhopper.mc.runtime.BlobStore() {
+                @Override
+                public java.util.Optional<byte[]> get(String key) {
+                    return java.util.Optional.ofNullable(objects.get(name + "/" + key));
+                }
+
+                @Override
+                public void put(String key, byte[] content, String contentType) {
+                    objects.put(name + "/" + key, content);
+                }
+
+                @Override
+                public void delete(String key) {
+                    objects.remove(name + "/" + key);
+                }
+
+                @Override
+                public java.util.List<String> list(String prefix) {
+                    return java.util.List.of();
+                }
+            };
+        });
+        try {
+            objects.put("reports/a.txt", "A".getBytes());
+            assertEquals("delete on bucket reports needs @Bucket(access = WRITE or READ_WRITE), the parameter declares READ",
+                    handler.handleRequest("a.txt", Map.of(), Map.of(), null));
+            assertEquals("A", new String(objects.get("archive/a.txt")));
+            assertTrue(objects.containsKey("reports/a.txt"));
+            assertEquals(java.util.List.of("reports|false", "archive|true"), created);
+        } finally {
+            eu.cloudhopper.mc.runtime.BlobStores.setFactory(null);
+        }
+    }
+
+    @Test
+    public void bucketParametersNeedTheBlobStoreTypeAndAValidName() {
+        String source = ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "public class WrongBucket {\n"
+                + "  @Function(name=\"wrong\")\n"
+                + "  public void f(@Bucket(name=NAME) TYPE b) { }\n"
+                + "}\n";
+        Compilation type = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.WrongBucket",
+                        source.replace("NAME", "\"reports\"").replace("TYPE", "String")));
+        assertThat(type).hadErrorContaining("@Bucket on parameter 'b' of f needs the type BlobStore");
+
+        Compilation name = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.WrongBucket",
+                        source.replace("NAME", "\"My_Reports\"").replace("TYPE", "eu.cloudhopper.mc.runtime.BlobStore")));
+        assertThat(name).hadErrorContaining("@Bucket(name = \"My_Reports\") on f: use 3 to 63 lowercase letters");
+
+        Compilation existing = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.WrongBucket",
+                        source.replace("NAME", "\"My_Reports\", existing=true").replace("TYPE", "eu.cloudhopper.mc.runtime.BlobStore")));
+        assertThat(existing).succeeded();
+    }
+
+    @Test
     public void queuesNeedAConsumerInTheProjectOrExisting() {
         String source = ""
                 + "package com.example;\n"

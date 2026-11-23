@@ -93,6 +93,13 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
 
     /** The {@code @Queue} parameters of all functions. */
     private final List<QueueUse> queueUses = new ArrayList<>();
+    /** The {@code @Bucket} parameters of all functions. */
+    private final List<BucketUse> bucketUses = new ArrayList<>();
+
+    /** A {@code @Bucket} parameter of a function. */
+    private record BucketUse(ExecutableElement method, eu.cloudhopper.mc.generator.api.BucketInfo bucket) {
+    }
+
     /** The queues functions of the project consume and create ({@code @EventTrigger(QUEUE, create = true)}). */
     private final Set<String> consumedQueues = new HashSet<>();
 
@@ -162,6 +169,11 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     var queue = p.getAnnotation(eu.cloudhopper.mc.annotations.Queue.class);
                     params.add(new ParamInfo(ParamType.QUEUE, queue.name(), tm.toString(), name,
                             String.valueOf(queue.existing())));
+                } else if (p.getAnnotation(eu.cloudhopper.mc.annotations.Bucket.class) != null) {
+                    var bucket = p.getAnnotation(eu.cloudhopper.mc.annotations.Bucket.class);
+                    // access and existing, e.g. "READ_WRITE:false"
+                    params.add(new ParamInfo(ParamType.BUCKET, bucket.name(), tm.toString(), name,
+                            bucket.access().name() + ":" + bucket.existing()));
                 } else if (p.getAnnotation(org.eclipse.microprofile.config.inject.ConfigProperty.class) != null) {
                     var config = p.getAnnotation(org.eclipse.microprofile.config.inject.ConfigProperty.class);
                     params.add(new ParamInfo(ParamType.CONFIG, config.name(), tm.toString(), name,
@@ -225,6 +237,13 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
             if (event != null && event.source() == eu.cloudhopper.mc.annotations.EventSource.QUEUE && event.create()) {
                 consumedQueues.add(event.name());
             }
+            List<eu.cloudhopper.mc.generator.api.BucketInfo> buckets = params.stream()
+                    .filter(pi -> pi.getType() == ParamType.BUCKET)
+                    .map(pi -> new eu.cloudhopper.mc.generator.api.BucketInfo(pi.getName(),
+                            pi.getDefaultValue().split(":")[0], Boolean.parseBoolean(pi.getDefaultValue().split(":")[1])))
+                    .toList();
+            hinfo.setBuckets(buckets);
+            buckets.forEach(b -> bucketUses.add(new BucketUse(m, b)));
             hinfo.setConfigProperties(params.stream()
                     .filter(pi -> pi.getType() == ParamType.CONFIG)
                     .map(pi -> new eu.cloudhopper.mc.generator.api.ConfigPropertyInfo(pi.getName(),
@@ -254,6 +273,8 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
 
         if (round.processingOver()) {
             checkQueues();
+            checkRuntimeModule(eu.cloudhopper.mc.annotations.Bucket.class, "use buckets (@Bucket)",
+                    bucketUses.isEmpty() ? null : bucketUses.get(0).method());
             try {
                 deploymentGenerator.finalizeConfig(generatorId, configOutputDir);
             } catch (ConfigGenerationException e) {
@@ -264,10 +285,6 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
         return true;
     }
 
-    /**
-     * Checks the identity name and that an explicit identity is not also the implicit identity of a
-     * function without one: both would silently run as one identity.
-     */
     /**
      * At the end of processing: every project queue a function sends to is created by a queue
      * trigger of the project, and the target's runtime module for {@code @Queue} is on the classpath.
@@ -282,19 +299,36 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                         + " declare @Queue(name = \"" + use.queue().getName() + "\", existing = true)", use.method());
             }
         }
-        if (queueUses.isEmpty() || generatorFeatureInfo == null) {
+        checkRuntimeModule(eu.cloudhopper.mc.annotations.Queue.class, "send to queues (@Queue)",
+                queueUses.isEmpty() ? null : queueUses.get(0).method());
+    }
+
+    /**
+     * At the end of processing: the target's runtime module for a parameter annotation is on the
+     * classpath if a function uses the annotation.
+     *
+     * @param annotation the parameter annotation
+     * @param what       what the functions do, for the message, e.g. "use buckets (@Bucket)"
+     * @param user       a function that uses the annotation, or {@code null} if none does
+     */
+    private void checkRuntimeModule(Class<?> annotation, String what, ExecutableElement user) {
+        if (user == null || generatorFeatureInfo == null) {
             return;
         }
         generatorFeatureInfo.getFeatures().stream()
-                .filter(f -> eu.cloudhopper.mc.annotations.Queue.class.getName().equals(f.getSupportedAnnotation()))
+                .filter(f -> annotation.getName().equals(f.getSupportedAnnotation()))
                 .filter(f -> f.getRuntimeClass() != null && f.getRuntimeModule() != null)
                 .findFirst()
                 .filter(f -> processingEnv.getElementUtils().getTypeElement(f.getRuntimeClass()) == null)
                 .ifPresent(f -> processingEnv.getMessager().printMessage(ERROR,
-                        "Functions send to queues (@Queue), and generator '" + generatorId + "' needs the runtime module "
-                        + f.getRuntimeModule() + " for that: add it as a dependency", queueUses.get(0).method()));
+                        "Functions " + what + ", and generator '" + generatorId + "' needs the runtime module "
+                        + f.getRuntimeModule() + " for that: add it as a dependency", user));
     }
 
+    /**
+     * Checks the identity name and that an explicit identity is not also the implicit identity of a
+     * function without one: both would silently run as one identity.
+     */
     private boolean validateIdentity(ExecutableElement method, Function fn) {
         String identity = fn.identity();
         if (identity.isEmpty()) {
@@ -375,6 +409,27 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                 messager.printMessage(Diagnostic.Kind.ERROR,
                         "@Queue on parameter '" + p.getVarName() + "' of " + method.getSimpleName()
                         + " needs the type Publisher<T>, e.g. Publisher<Order>", method);
+                return false;
+            }
+        }
+
+        for (ParamInfo p : params) {
+            if (p.getType() != ParamInfo.ParamType.BUCKET) {
+                continue;
+            }
+            if (!p.getTypeName().equals("eu.cloudhopper.mc.runtime.BlobStore")) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "@Bucket on parameter '" + p.getVarName() + "' of " + method.getSimpleName()
+                        + " needs the type BlobStore", method);
+                return false;
+            }
+            boolean existing = p.getDefaultValue().endsWith(":true");
+            if (!existing && (p.getName().length() < 3 || p.getName().length() > 63
+                    || !EVENT_SOURCE_NAME.matcher(p.getName()).matches())) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "@Bucket(name = \"" + p.getName() + "\") on " + method.getSimpleName()
+                        + ": use 3 to 63 lowercase letters, digits and single hyphens, starting with a letter,"
+                        + " so that the name is valid on every target", method);
                 return false;
             }
         }

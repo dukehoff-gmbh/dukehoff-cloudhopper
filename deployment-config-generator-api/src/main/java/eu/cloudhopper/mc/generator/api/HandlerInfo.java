@@ -62,6 +62,7 @@ public class HandlerInfo {
     private final String identity;
     private java.util.List<ConfigPropertyInfo> configProperties = java.util.List.of();
     private java.util.List<QueueInfo> publishedQueues = java.util.List.of();
+    private java.util.List<BucketInfo> buckets = java.util.List.of();
 
     /**
      * Constructs a new {@code HandlerInfo} with the required properties.
@@ -216,6 +217,22 @@ public class HandlerInfo {
      */
     public void setPublishedQueues(java.util.List<QueueInfo> publishedQueues) {
         this.publishedQueues = publishedQueues == null ? java.util.List.of() : java.util.List.copyOf(publishedQueues);
+    }
+
+    /**
+     * The buckets the function reads or writes through {@code @Bucket} parameters.
+     *
+     * @return the buckets, in parameter order
+     */
+    public java.util.List<BucketInfo> getBuckets() {
+        return buckets;
+    }
+
+    /**
+     * @param buckets the buckets the function reads or writes
+     */
+    public void setBuckets(java.util.List<BucketInfo> buckets) {
+        this.buckets = buckets == null ? java.util.List.of() : java.util.List.copyOf(buckets);
     }
 
     /**
