@@ -219,7 +219,8 @@ public class TestContextGcp implements TestContext {
     public Object invokeFunctionDirect(String functionName, Object input) {
         usedFunctions.add(functionName);
         try {
-            String outputKey = functionName + "_direct_url";
+            // the outputs are named after the functionId, the lower-case function name
+            String outputKey = functionName.toLowerCase(java.util.Locale.ROOT) + "_direct_url";
             String functionUrl = TerraformUtil.getOutputString(terraformDir, outputKey);
 
             if (functionUrl == null || functionUrl.isEmpty()) {
