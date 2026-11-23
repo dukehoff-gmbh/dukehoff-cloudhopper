@@ -102,12 +102,10 @@
                     <artifactId>provider-${generator.replace("-terraform", "")}-publisher</artifactId>
                     <version>${cloudhopper.version}</version>
                 </dependency>
-#end
-#if($generator == "aws-terraform")
                 <!-- reads and writes buckets from function code (@Bucket BlobStore) -->
                 <dependency>
                     <groupId>eu.cloudhopper.mc</groupId>
-                    <artifactId>provider-aws-blobstore</artifactId>
+                    <artifactId>provider-${generator.replace("-terraform", "")}-blobstore</artifactId>
                     <version>${cloudhopper.version}</version>
                 </dependency>
 #end

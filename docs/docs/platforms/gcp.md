@@ -48,6 +48,26 @@ is terminated.
 The identity of a sending function gets `roles/pubsub.publisher` on exactly the
 topics it sends to (`publishers.tf`).
 
+## Buckets
+
+A function with a [`@Bucket`](../guides/writing-functions.md#reading-and-writing-buckets)
+parameter needs the dependency `eu.cloudhopper.mc:provider-gcp-blobstore`; the
+archetype adds it. It calls the Cloud Storage JSON API with a token of the
+function's service account from the metadata server, without the Google client
+libraries. The generated Terraform (`buckets.tf`)
+
+- creates the bucket `<name>` in `gcp_region`, unless a storage trigger of the
+  project already creates it, the parameter is `existing`, or the local
+  `cloudhopper_bucket_names` names a bucket of your own;
+- passes the bucket's name as the environment variable
+  `CLOUDHOPPER_BUCKET_<NAME>_NAME` and outputs it as `bucket_<name>`;
+- grants the function's identity `roles/storage.objectViewer` on the bucket for
+  `READ`, and `roles/storage.objectUser` for `WRITE` and `READ_WRITE`. Cloud
+  Storage has no predefined role that writes without reading; the runtime refuses
+  the reads that a `WRITE` parameter did not declare.
+
+As for sending messages, give such a function at least 256 MB.
+
 ## Secrets
 
 The Terraform variable `cloudhopper_secrets` maps a property name to a secret in
@@ -83,7 +103,8 @@ the role Editor. Service account IDs have 6 to 30 characters, so the ID is
 `<project_name> <identity>`.
 
 The generated Terraform grants a service account only what its functions' own
-resources need, such as `roles/pubsub.publisher` on the topics they send to. Triggers
+resources need, such as `roles/pubsub.publisher` on the topics they send to and the
+storage roles on their buckets. Triggers
 (Cloud Scheduler, Eventarc) still run as `cloudscheduler_service_account_email`.
 Grant further permissions in your own `.tf` file, to the member of the identity's
 service account:
@@ -117,3 +138,4 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `eu.cloudhopper.mc:generator-gcp-terraform` | `provided`: only the annotation processor uses it | Templates and template registration |
 | `eu.cloudhopper.mc:provider-gcp` | compile | `GcpCloudFunctionRequestHandler`, the base class of the generated `HttpFunction`s (HTTP calls, Pub/Sub and Cloud Storage events), and `GcpMetadata` for the project and access tokens from the metadata server |
 | `eu.cloudhopper.mc:provider-gcp-publisher` | compile | `@Queue` publishers for Pub/Sub, without the Google client libraries |
+| `eu.cloudhopper.mc:provider-gcp-blobstore` | compile | `@Bucket` stores for Cloud Storage, without the Google client libraries |

@@ -68,6 +68,12 @@
             <artifactId>provider-azure-publisher</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- @Bucket BlobStores on Azure -->
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>provider-azure-blobstore</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>test-tck-core</artifactId>

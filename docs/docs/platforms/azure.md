@@ -43,6 +43,19 @@ setting, without the Azure SDK. A message can be at most 64 KiB after Base64
 encoding, and the Queue service has no batches, so `sendAll` sends one request per
 message. Queues of other storage accounts (`existing = true`) are not supported yet.
 
+## Buckets
+
+A function with a [`@Bucket`](../guides/writing-functions.md#reading-and-writing-buckets)
+parameter needs the dependency `eu.cloudhopper.mc:provider-azure-blobstore`; the
+archetype adds it. A bucket is the blob container of that name in the function
+app's storage account, which the generated Terraform creates (`buckets.tf`) unless
+a storage trigger of the project already does. The runtime calls the Blob service
+REST API, signed with the account key from `AzureWebJobsStorage`, without the
+Azure SDK. The functions share the app's storage account and have no identity of
+their own, so the declared `access` is enforced by the runtime only. Containers of
+other storage accounts (`existing = true`) and `cloudhopper_bucket_names` are not
+supported yet.
+
 ## Secrets
 
 The Terraform variable `cloudhopper_secrets` maps a property name to a secret in
@@ -87,4 +100,5 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `eu.cloudhopper.mc:generator-azure-terraform` | `provided`: only the annotation processor uses it | Templates and template registration |
 | `eu.cloudhopper.mc:provider-azure` | compile | `AzureBaseFunctionWrapper`, the base class of the generated function classes (HTTP, timer and queue triggers), `StorageAccount`, which reads `AzureWebJobsStorage` and signs Storage requests, and the `ConfigSource` that reads secrets from Key Vault |
 | `eu.cloudhopper.mc:provider-azure-publisher` | compile | `@Queue` publishers for Storage queues, without the Azure SDK |
+| `eu.cloudhopper.mc:provider-azure-blobstore` | compile | `@Bucket` stores for blob containers, without the Azure SDK |
 | `com.microsoft.azure.functions:azure-functions-java-library` | compile | The trigger annotations of the generated classes |

@@ -51,6 +51,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     runtimeModule = "eu.cloudhopper.mc:provider-azure-publisher"
             ),
             @GeneratorFeature(
+                    supportedAnnotation = eu.cloudhopper.mc.annotations.Bucket.class,
+                    supportedAttributes = {
+                        eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.NAME,
+                        eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.ACCESS
+                    },
+                    runtimeClass = "eu.cloudhopper.mc.provider.azure.blobstore.AzureBlobStoreFactory",
+                    runtimeModule = "eu.cloudhopper.mc:provider-azure-blobstore"
+            ),
+            @GeneratorFeature(
                     supportedAnnotation = Function.class,
                     supportedAttributes = {    
                         FunctionAttribute.NAME
@@ -148,6 +157,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     description = "Generates the blob container and its Event Grid subscription (Terraform)",
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.FINALIZE,
+                    templateName = "buckets.ftl",
+                    description = "Generates the blob containers of @Bucket parameters (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    outputFileName = "buckets.tf",
                     javaFile = false
             ),
         }

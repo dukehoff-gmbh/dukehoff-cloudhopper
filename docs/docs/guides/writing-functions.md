@@ -320,8 +320,9 @@ public String download(@PathParam("id") String id,
   on every target. On the clouds, the generator also gives the function's
   [identity](#identities-and-permissions) exactly these permissions on this bucket.
   Other failures throw `BlobStoreException`.
-- The generator creates the bucket once per name, named
-  `<cloudhopper_name_prefix><name>`. If a [storage trigger](#storage-buckets) of
+- The generator creates the bucket once per name (on AWS named
+  `<cloudhopper_name_prefix><name>`, on Azure a blob container in the function
+  app's storage account). If a [storage trigger](#storage-buckets) of
   the project has the same name, both use its bucket. A bucket that another system
   owns is declared with `@Bucket(name = "...", existing = true)` and used under
   exactly this name; all `@Bucket` parameters of one name must agree on `existing`.
