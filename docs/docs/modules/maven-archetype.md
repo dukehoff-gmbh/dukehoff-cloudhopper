@@ -117,6 +117,26 @@ annotations instead of writing handlers and Terraform by hand:
 
 Keep, change or delete them like any other file of the project.
 
+#### Existing projects
+
+The skill is also on this site, at
+[`/skills/cloudhopper/SKILL.md`](pathname:///skills/cloudhopper/SKILL.md), and in the
+[`skills/`](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/tree/main/skills) folder of the
+repository. To add it to a project that was not created with the archetype:
+
+```bash
+for dir in .agents/skills/cloudhopper .claude/skills/cloudhopper; do
+  mkdir -p $dir && curl -fsSL https://cloudhopper.eu/skills/cloudhopper/SKILL.md -o $dir/SKILL.md
+done
+```
+
+Tools that install skills from a GitHub repository can use `dukehoff-gmbh/dukehoff-cloudhopper`.
+For `AGENTS.md`, copy the rules from the skill's "Rules" section and add the build commands of
+your profiles.
+
+[`/llms.txt`](pathname:///llms.txt) lists the pages of this documentation for agents that
+read the [llms.txt](https://llmstxt.org) format.
+
 ## Build the project
 
 For each of the generatorIds specified, a profile is created in the pom that can be used to build the project and generate

@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "support-matrix": "node scripts/support-matrix.mjs",
-    "prestart": "node scripts/support-matrix.mjs",
-    "prebuild": "node scripts/support-matrix.mjs",
+    "agent-files": "node scripts/agent-files.mjs",
+    "prestart": "node scripts/support-matrix.mjs && node scripts/agent-files.mjs",
+    "prebuild": "node scripts/support-matrix.mjs && node scripts/agent-files.mjs",
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "build": "docusaurus build",

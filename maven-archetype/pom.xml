@@ -37,6 +37,13 @@
                     <exclude>archetype-resources/pom.xml</exclude>
                 </excludes>
             </resource>
+            <!-- the Agent Skill lives in skills/ at the top of the repository, so that existing
+                 projects can install it from there; generated projects get the same file -->
+            <resource>
+                <directory>${project.basedir}/../skills</directory>
+                <targetPath>archetype-resources/.agents/skills</targetPath>
+                <filtering>false</filtering>
+            </resource>
         </resources>
 
         <pluginManagement>
