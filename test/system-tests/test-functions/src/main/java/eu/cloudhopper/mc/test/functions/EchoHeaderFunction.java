@@ -31,6 +31,8 @@ import eu.cloudhopper.mc.annotations.HttpTrigger;
 
 public class EchoHeaderFunction {
 
+    // shares an identity, so that the TCK deployment on GCP stays within the quota of service
+    // accounts created per minute (the bucket reader needs one of its own)
     @HttpTrigger(
             summary = "Echo request headers",
             description = "Returns the values of two request headers, one converted to an integer.",
@@ -38,7 +40,7 @@ public class EchoHeaderFunction {
             path = "/echo-header",
             method = "GET"
     )
-    @Function(name = "echoHeader")
+    @Function(name = "echoHeader", identity = "tck-shared")
     public String echoHeader(@HeaderParam("X-Cloudhopper-Test") String text,
                              @HeaderParam("X-Cloudhopper-Count") Integer count) {
         return text + ":" + count;
