@@ -9,7 +9,7 @@ import HopSvg from '@site/static/img/hop.svg';
 
 import styles from './index.module.css';
 
-const VERSION = '1.4.0';
+const VERSION = '1.5.0';
 
 const EXAMPLE = `public class HelloFunction {
 

@@ -29,7 +29,7 @@ For a cloud deployment (Step 4 and later), in addition:
 mvn archetype:generate \
   -DarchetypeGroupId=eu.cloudhopper.mc \
   -DarchetypeArtifactId=cloudhopper-maven-archetype-core \
-  -DarchetypeVersion=1.4.0 \
+  -DarchetypeVersion=1.5.0 \
   -DgroupId=com.example \
   -DartifactId=my-function \
   -Dversion=1.0-SNAPSHOT \
