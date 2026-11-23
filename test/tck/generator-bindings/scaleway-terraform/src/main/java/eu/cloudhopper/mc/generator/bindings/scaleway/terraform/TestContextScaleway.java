@@ -97,7 +97,8 @@ public class TestContextScaleway implements TestContext {
 
     @Override
     public java.util.Set<String> supportedCapabilities() {
-        return java.util.Set.of(eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest.SECRETS);
+        return java.util.Set.of(eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest.SECRETS,
+                eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest.PROJECT_TERRAFORM_CONFIG);
     }
 
     @Override

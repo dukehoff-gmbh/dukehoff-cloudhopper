@@ -5,7 +5,7 @@
 <#list identityConfigProperties as identity, properties>
 <#if properties?has_content>
 resource "google_secret_manager_secret_iam_member" "identity_${identity}_secrets" {
-  for_each  = { for name, ref in var.cloudhopper_secrets : name => ref if contains([<#list properties as p>"${p}"<#sep>, </#sep></#list>], name) }
+  for_each  = { for name, ref in local.cloudhopper_secrets : name => ref if contains([<#list properties as p>"${p}"<#sep>, </#sep></#list>], name) }
   project   = length(split("/", each.value)) == 4 ? split("/", each.value)[1] : var.gcp_project_id
   secret_id = element(split("/", each.value), length(split("/", each.value)) - 1)
   role      = "roles/secretmanager.secretAccessor"

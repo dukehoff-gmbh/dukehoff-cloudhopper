@@ -32,6 +32,28 @@ variable "cloudhopper_secrets" {
   }
 }
 
+# Values from the project's own Terraform. The generated files and your own .tf files form one
+# module, and a variable cannot refer to its resources or data sources. To pass such values,
+# redefine these locals in an override file (override.tf or <name>_override.tf next to main.tf):
+#   locals {
+#     cloudhopper_extra_config  = { "auth.client-id" = <resource>.<name>.<attribute> }
+#     cloudhopper_extra_secrets = { "report.api-key" = <reference to a secret> }
+#   }
+# A property may be set only once in cloudhopper_config, cloudhopper_secrets and these locals.
+locals {
+  cloudhopper_extra_config  = {}
+  cloudhopper_extra_secrets = {}
+
+  # what the functions get
+  cloudhopper_config  = merge(var.cloudhopper_config, local.cloudhopper_extra_config)
+  cloudhopper_secrets = merge(var.cloudhopper_secrets, local.cloudhopper_extra_secrets)
+  # properties set more than once, checked by a precondition
+  cloudhopper_duplicate_properties = sort(setunion(
+    setintersection(keys(var.cloudhopper_config), keys(local.cloudhopper_extra_config)),
+    setintersection(keys(var.cloudhopper_secrets), keys(local.cloudhopper_extra_secrets)),
+    setintersection(keys(local.cloudhopper_config), keys(local.cloudhopper_secrets))))
+}
+
 
 resource "azurerm_resource_group" "function_rg" {
   name     = "${r"${var.project_name}-${var.environment}"}-rg"
@@ -124,17 +146,17 @@ resource "azurerm_linux_function_app" "shared_function_app" {
 
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.function_app_insights.connection_string
     APPLICATIONINSIGHTS_ROLE_NAME         = "my-shared-function-app"
-  }, { for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value },
-  length(var.cloudhopper_secrets) == 0 ? {} : {
+  }, { for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value },
+  length(local.cloudhopper_secrets) == 0 ? {} : {
     # the URIs of the secrets, read by the runtime from Key Vault
-    CLOUDHOPPER_SECRETS = jsonencode({ for name, id in var.cloudhopper_secrets :
+    CLOUDHOPPER_SECRETS = jsonencode({ for name, id in local.cloudhopper_secrets :
       name => "https://${"$"}{split("/", id)[8]}.vault.azure.net/secrets/${"$"}{split("/", id)[10]}" })
   })
 
   lifecycle {
     precondition {
-      condition     = length(setintersection(keys(var.cloudhopper_config), keys(var.cloudhopper_secrets))) == 0
-      error_message = "Properties are set in both cloudhopper_config and cloudhopper_secrets: ${"$"}{join(", ", setintersection(keys(var.cloudhopper_config), keys(var.cloudhopper_secrets)))}"
+      condition     = length(local.cloudhopper_duplicate_properties) == 0
+      error_message = "Properties are set more than once in cloudhopper_config, cloudhopper_secrets, cloudhopper_extra_config and cloudhopper_extra_secrets: ${"$"}{join(", ", local.cloudhopper_duplicate_properties)}"
     }
   }
 
@@ -143,7 +165,7 @@ resource "azurerm_linux_function_app" "shared_function_app" {
 
 # Read access of the function app to each secret it reads
 resource "azurerm_role_assignment" "cloudhopper_secret" {
-  for_each             = var.cloudhopper_secrets
+  for_each             = local.cloudhopper_secrets
   scope                = each.value
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_linux_function_app.shared_function_app.identity[0].principal_id

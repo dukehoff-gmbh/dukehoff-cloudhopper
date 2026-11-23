@@ -170,7 +170,8 @@ public abstract class AzureBaseFunctionWrapper<I, O> {
                 String name = routeParts[i].substring(1, routeParts[i].length() - 1);
                 pathParams.put(name, pathParts[i]);
             } else {
-                if (!routeParts[i].equals(pathParts[i])) {
+                // Azure Functions matches routes regardless of case
+                if (!routeParts[i].equalsIgnoreCase(pathParts[i])) {
                     throw new IllegalArgumentException("Path mismatch at segment " + i + ": expected '" + routeParts[i] + "' but got '" + pathParts[i] + "'");
                 }
             }

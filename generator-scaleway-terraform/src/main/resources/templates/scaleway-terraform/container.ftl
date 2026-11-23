@@ -88,6 +88,28 @@ variable "cloudhopper_secrets" {
   sensitive   = true
 }
 
+# Values from the project's own Terraform. The generated files and your own .tf files form one
+# module, and a variable cannot refer to its resources or data sources. To pass such values,
+# redefine these locals in an override file (override.tf or <name>_override.tf next to main.tf):
+#   locals {
+#     cloudhopper_extra_config  = { "auth.client-id" = <resource>.<name>.<attribute> }
+#     cloudhopper_extra_secrets = { "report.api-key" = <reference to a secret> }
+#   }
+# A property may be set only once in cloudhopper_config, cloudhopper_secrets and these locals.
+locals {
+  cloudhopper_extra_config  = {}
+  cloudhopper_extra_secrets = {}
+
+  # what the functions get
+  cloudhopper_config  = merge(var.cloudhopper_config, local.cloudhopper_extra_config)
+  cloudhopper_secrets = merge(var.cloudhopper_secrets, local.cloudhopper_extra_secrets)
+  # properties set more than once, checked by a precondition
+  cloudhopper_duplicate_properties = sort(setunion(
+    setintersection(keys(var.cloudhopper_config), keys(local.cloudhopper_extra_config)),
+    setintersection(nonsensitive(keys(var.cloudhopper_secrets)), keys(local.cloudhopper_extra_secrets)),
+    setintersection(keys(local.cloudhopper_config), nonsensitive(keys(local.cloudhopper_secrets)))))
+}
+
 variable "environment_variables" {
   description = "Environment variables of the application"
   type        = map(string)
@@ -128,15 +150,15 @@ resource "scaleway_container" "app" {
   cpu_limit                    = var.cpu_limit
   timeout                      = var.timeout
   privacy                      = var.privacy
-  environment_variables        = merge({ for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, local.cloudhopper_publisher_environment, var.environment_variables)
-  secret_environment_variables = merge(local.cloudhopper_publisher_secrets, { for name, value in var.cloudhopper_secrets : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, var.secret_environment_variables)
+  environment_variables        = merge({ for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, local.cloudhopper_publisher_environment, var.environment_variables)
+  secret_environment_variables = merge(local.cloudhopper_publisher_secrets, { for name, value in local.cloudhopper_secrets : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, var.secret_environment_variables)
   # the cron triggers call the schedules; an in-process schedule would run in every instance
   args = ["--cloudhopper.schedules.in-process=false"]
 
   lifecycle {
     precondition {
-      condition     = length(setintersection(keys(var.cloudhopper_config), nonsensitive(keys(var.cloudhopper_secrets)))) == 0
-      error_message = "Properties are set in both cloudhopper_config and cloudhopper_secrets: ${join(", ", setintersection(keys(var.cloudhopper_config), nonsensitive(keys(var.cloudhopper_secrets))))}"
+      condition     = length(local.cloudhopper_duplicate_properties) == 0
+      error_message = "Properties are set more than once in cloudhopper_config, cloudhopper_secrets, cloudhopper_extra_config and cloudhopper_extra_secrets: ${join(", ", local.cloudhopper_duplicate_properties)}"
     }
   }
 }

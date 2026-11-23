@@ -93,7 +93,8 @@ cloudhopper_config = {
 ```
 
 On AWS and GCP, `terraform plan` fails if a function reads a property without
-`defaultValue` that the map does not contain, and names the missing properties.
+`defaultValue` that neither the map nor [your own Terraform](#values-from-your-own-terraform)
+sets, and names the missing properties.
 Values are plain environment variables of the function: keep secrets out of
 them.
 
@@ -113,6 +114,42 @@ them.
 On Spring Boot, `@ConfigProperty` reads MicroProfile Config, not Spring's
 `application.properties`; set the values as environment variables or system
 properties.
+
+### Values from your own Terraform
+
+The generated files and your own `.tf` files form one Terraform module, and a
+variable cannot refer to resources or data sources of its own module. Values that
+your Terraform creates or reads, such as the client ID of a user pool created next
+to the functions or a parameter read with a `data` source, go into two locals
+instead. The generated files declare them empty; redefine them in an
+[override file](https://developer.hashicorp.com/terraform/language/files/override),
+a file named `override.tf` or `<name>_override.tf` in
+`src/main/resources/deployment/<target>/`:
+
+```hcl
+# cloudhopper_override.tf
+locals {
+  cloudhopper_extra_config = {
+    "auth.issuer"    = "https://${aws_cognito_user_pool.main.endpoint}"
+    "auth.client-id" = aws_cognito_user_pool_client.main.id
+  }
+  cloudhopper_extra_secrets = {
+    "report.api-key" = aws_secretsmanager_secret.report_key.arn
+  }
+}
+```
+
+- `cloudhopper_extra_config` adds values to `cloudhopper_config`,
+  `cloudhopper_extra_secrets` adds references to `cloudhopper_secrets`, in the same
+  format: `aws_secretsmanager_secret.<name>.arn` on AWS,
+  `azurerm_key_vault_secret.<name>.resource_versionless_id` on Azure,
+  `google_secret_manager_secret.<name>.secret_id` on GCP, the value on Scaleway.
+- A property may be set only once in the two variables and the two locals;
+  `terraform plan` fails and names the properties that are set more than once.
+- Terraform creates the referenced resources before the functions that read them,
+  in the same `terraform apply`.
+- Knative and Spring Boot take their configuration from Helm values and the
+  environment and are not affected.
 
 ## Terraform and provider versions
 
