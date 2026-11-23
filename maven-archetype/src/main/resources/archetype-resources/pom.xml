@@ -103,6 +103,14 @@
                     <version>${cloudhopper.version}</version>
                 </dependency>
 #end
+#if($generator == "aws-terraform")
+                <!-- reads and writes buckets from function code (@Bucket BlobStore) -->
+                <dependency>
+                    <groupId>eu.cloudhopper.mc</groupId>
+                    <artifactId>provider-aws-blobstore</artifactId>
+                    <version>${cloudhopper.version}</version>
+                </dependency>
+#end
 ## knative and scaleway-terraform run the springboot-http application: same dependencies, same executable jar
 #if($generator == "springboot-http" || $generator == "knative" || $generator == "scaleway-terraform")
                 <dependency>

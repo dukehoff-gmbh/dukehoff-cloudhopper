@@ -77,6 +77,16 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     runtimeModule = "eu.cloudhopper.mc:provider-aws-publisher"
             ),
             @GeneratorFeature(
+                    supportedAnnotation = eu.cloudhopper.mc.annotations.Bucket.class,
+                    supportedAttributes = {
+                        eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.NAME,
+                        eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.ACCESS,
+                        eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.EXISTING
+                    },
+                    runtimeClass = "eu.cloudhopper.mc.provider.aws.blobstore.S3BlobStoreFactory",
+                    runtimeModule = "eu.cloudhopper.mc:provider-aws-blobstore"
+            ),
+            @GeneratorFeature(
                     supportedAnnotation = HttpTrigger.class,
                     supportedAttributes = {
                         HttpTrigger.HttpTriggerAttribute.OPERATION_ID,
@@ -133,6 +143,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     phase = GenerationPhase.FINALIZE,
                     templateName = "api.ftl",
                     description = "Generates the OpenAPI definition for AWS API Gateway",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.FINALIZE,
+                    templateName = "buckets.ftl",
+                    description = "Generates the buckets of @Bucket parameters and the permissions of their identities (Terraform)",
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
                     javaFile = false

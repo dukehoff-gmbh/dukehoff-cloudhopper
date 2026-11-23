@@ -148,6 +148,11 @@ locals {
   `terraform plan` fails and names the properties that are set more than once.
 - Terraform creates the referenced resources before the functions that read them,
   in the same `terraform apply`.
+- `cloudhopper_bucket_names` maps the names of `@Bucket` parameters to buckets
+  your Terraform creates, for example
+  `{ "acme-reports" = aws_s3_bucket.reports.bucket }`. The generated Terraform
+  creates no bucket for these names; the functions and their permissions use
+  yours. Currently on `aws-terraform`.
 - Knative and Spring Boot take their configuration from Helm values and the
   environment and are not affected.
 

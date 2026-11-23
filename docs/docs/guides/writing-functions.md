@@ -289,6 +289,58 @@ versioned. An implementation based on an SDK can replace them through the
 
 ---
 
+## Reading and writing buckets
+
+A function reads and writes objects in a bucket through a `BlobStore` parameter
+annotated with `@Bucket`:
+
+```java
+@Function(name = "renderReport")
+@EventTrigger(source = EventSource.QUEUE, name = "reports")
+public void render(ReportRequest request,
+                   @Bucket(name = "acme-reports", access = Bucket.Access.WRITE) BlobStore reports) {
+    reports.put(request.id() + ".csv", csv(request), "text/csv");
+}
+
+@Function(name = "downloadReport")
+@HttpTrigger(path = "/reports/{id}", method = "GET")
+public String download(@PathParam("id") String id,
+                       @Bucket(name = "acme-reports") BlobStore reports) {
+    return reports.get(id + ".csv")
+            .map(content -> new String(content, StandardCharsets.UTF_8))
+            .orElse("");
+}
+```
+
+- `get(key)` returns the content, or an empty `Optional` if there is no such
+  object; `put(key, content, contentType)` creates or replaces an object;
+  `delete(key)` removes it; `list(prefix)` returns the keys that start with the prefix.
+- `access` is `READ` (the default), `WRITE` or `READ_WRITE`. The runtime refuses
+  every operation the parameter did not declare with `BlobAccessDeniedException`,
+  on every target. On the clouds, the generator also gives the function's
+  [identity](#identities-and-permissions) exactly these permissions on this bucket.
+  Other failures throw `BlobStoreException`.
+- The generator creates the bucket once per name, named
+  `<cloudhopper_name_prefix><name>`. If a [storage trigger](#storage-buckets) of
+  the project has the same name, both use its bucket. A bucket that another system
+  owns is declared with `@Bucket(name = "...", existing = true)` and used under
+  exactly this name; all `@Bucket` parameters of one name must agree on `existing`.
+- A bucket that your own Terraform creates goes into the local
+  `cloudhopper_bucket_names`; see
+  [Values from your own Terraform](../platforms/generator-overview.md#values-from-your-own-terraform).
+- Bucket names on AWS and GCP are global across all accounts. Use 3 to 63
+  lowercase letters, digits and hyphens, unless the bucket is `existing`.
+
+The target needs a runtime module for this, which the archetype adds; if it is
+missing, the build names the dependency. Like the publishers, the stores call the
+storage APIs with small HTTP clients of their own instead of the cloud SDKs; an
+implementation based on an SDK can replace them through the
+`eu.cloudhopper.mc.runtime.spi.BlobStoreFactory` service interface. Which targets
+support `@Bucket` is listed in the
+[support matrix](../platforms/generator-overview.md#support-matrix).
+
+---
+
 ## Configuration
 
 Values that differ per deployment, such as resource names, endpoints or limits,

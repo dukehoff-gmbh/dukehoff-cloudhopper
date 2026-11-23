@@ -31,7 +31,9 @@ import eu.cloudhopper.mc.generator.api.HandlerInfo;
 import com.google.auto.service.AutoService;
 import eu.cloudhopper.mc.annotations.HeaderParam;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
@@ -273,8 +275,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
 
         if (round.processingOver()) {
             checkQueues();
-            checkRuntimeModule(eu.cloudhopper.mc.annotations.Bucket.class, "use buckets (@Bucket)",
-                    bucketUses.isEmpty() ? null : bucketUses.get(0).method());
+            checkBuckets();
             try {
                 deploymentGenerator.finalizeConfig(generatorId, configOutputDir);
             } catch (ConfigGenerationException e) {
@@ -283,6 +284,27 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
         }
 
         return true;
+    }
+
+    /**
+     * At the end of processing: all {@code @Bucket} parameters of one name agree on
+     * {@code existing}, since the generator either creates that bucket or uses it as it is, and the
+     * target's runtime module for {@code @Bucket} is on the classpath.
+     */
+    private void checkBuckets() {
+        Map<String, BucketUse> first = new HashMap<>();
+        for (BucketUse use : bucketUses) {
+            BucketUse other = first.putIfAbsent(use.bucket().getName(), use);
+            if (other != null && other.bucket().isExisting() != use.bucket().isExisting()) {
+                processingEnv.getMessager().printMessage(ERROR,
+                        "@Bucket(name = \"" + use.bucket().getName() + "\") on " + use.method().getSimpleName()
+                        + " declares existing = " + use.bucket().isExisting() + ", but on "
+                        + other.method().getSimpleName() + " existing = " + other.bucket().isExisting()
+                        + "; all parameters of one bucket must agree", use.method());
+            }
+        }
+        checkRuntimeModule(eu.cloudhopper.mc.annotations.Bucket.class, "use buckets (@Bucket)",
+                bucketUses.isEmpty() ? null : bucketUses.get(0).method());
     }
 
     /**

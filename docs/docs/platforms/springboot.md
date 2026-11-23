@@ -49,6 +49,22 @@ application, for platforms that deliver them to `POST /events/<function name>`
 themselves. A `PublisherFactory` of another runtime module on the classpath, such
 as `provider-aws-publisher`, takes precedence over in-process delivery.
 
+## Buckets
+
+A [`@Bucket`](../guides/writing-functions.md#reading-and-writing-buckets) store
+keeps each bucket in a directory below `cloudhopper.blobstore.dir` (default
+`buckets`, relative to the working directory), named like the bucket, or like
+`cloudhopper.bucket.<name>.name` if that is set. This suits local runs and tests;
+the declared `access` is checked as on the clouds.
+
+For S3 or S3-compatible storage (for example MinIO), add
+`eu.cloudhopper.mc:provider-aws-blobstore`; its store takes precedence over the
+directories. It signs with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (and
+`AWS_SESSION_TOKEN`), in the region `cloudhopper.blobstore.s3.region` or
+`AWS_REGION`; `cloudhopper.blobstore.s3.endpoint` sets the endpoint of an
+S3-compatible store, which is then addressed by path
+(`<endpoint>/<bucket>/<key>`).
+
 ## Queues from Kafka
 
 On Spring Boot, `@EventTrigger(source = EventSource.QUEUE, name = "<queue>")`

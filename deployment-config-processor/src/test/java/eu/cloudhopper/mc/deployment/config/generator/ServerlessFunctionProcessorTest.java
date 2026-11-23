@@ -299,6 +299,27 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void bucketParametersOfOneNameAgreeOnExisting() {
+        String source = ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import eu.cloudhopper.mc.runtime.BlobStore;\n"
+                + "public class TwoBuckets {\n"
+                + "  @Function(name=\"writer\")\n"
+                + "  public void w(@Bucket(name=\"reports\", access=Bucket.Access.WRITE) BlobStore b) { }\n"
+                + "  @Function(name=\"reader\")\n"
+                + "  public void r(@Bucket(name=\"reports\"EXISTING) BlobStore b) { }\n"
+                + "}\n";
+        Compilation conflict = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.TwoBuckets", source.replace("EXISTING", ", existing=true")));
+        assertThat(conflict).hadErrorContaining("@Bucket(name = \"reports\") on r declares existing = true, but on w existing = false");
+
+        Compilation same = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.TwoBuckets", source.replace("EXISTING", "")));
+        assertThat(same).succeeded();
+    }
+
+    @Test
     public void queuesNeedAConsumerInTheProjectOrExisting() {
         String source = ""
                 + "package com.example;\n"

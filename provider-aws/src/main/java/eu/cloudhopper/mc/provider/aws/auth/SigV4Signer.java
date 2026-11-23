@@ -72,6 +72,35 @@ public final class SigV4Signer {
      */
     public static Map<String, String> sign(String method, URI uri, Map<String, String> headers, byte[] body,
             String service, String region, AwsCredentials credentials, Instant now) {
+        return sign(method, uri, headers, body, service, region, credentials, now, false);
+    }
+
+    /**
+     * Computes the headers that sign an S3 request. S3 signs the path as it is sent, without
+     * encoding it a second time, and needs the header {@code x-amz-content-sha256}, which is added.
+     *
+     * @param method      the HTTP method
+     * @param uri         the request URI, with the object key encoded per segment
+     * @param headers     the headers that are sent and signed
+     * @param body        the request body, empty for none
+     * @param region      the region
+     * @param credentials the credentials
+     * @param now         the time of the request
+     * @return the headers to add, as {@link #sign} returns them, and {@code X-Amz-Content-Sha256}
+     */
+    public static Map<String, String> signS3(String method, URI uri, Map<String, String> headers, byte[] body,
+            String region, AwsCredentials credentials, Instant now) {
+        Map<String, String> withHash = new LinkedHashMap<>(headers);
+        String hash = HEX.formatHex(sha256(body));
+        withHash.put("X-Amz-Content-Sha256", hash);
+        Map<String, String> result = new LinkedHashMap<>();
+        result.put("X-Amz-Content-Sha256", hash);
+        result.putAll(sign(method, uri, withHash, body, "s3", region, credentials, now, true));
+        return result;
+    }
+
+    private static Map<String, String> sign(String method, URI uri, Map<String, String> headers, byte[] body,
+            String service, String region, AwsCredentials credentials, Instant now, boolean s3) {
         String amzDate = AMZ_DATE.format(now);
         String date = amzDate.substring(0, 8);
 
@@ -90,7 +119,7 @@ public final class SigV4Signer {
         canonical.forEach((name, value) -> canonicalHeaders.append(name).append(':').append(value).append('\n'));
 
         String canonicalRequest = method + "\n"
-                + canonicalPath(uri) + "\n"
+                + (s3 ? s3Path(uri) : canonicalPath(uri)) + "\n"
                 + canonicalQuery(uri) + "\n"
                 + canonicalHeaders + "\n"
                 + signedHeaders + "\n"
@@ -136,6 +165,12 @@ public final class SigV4Signer {
             segments.add(encode(segment));
         }
         return String.join("/", segments);
+    }
+
+    /** S3: the raw path as it is sent; "/" for none. */
+    private static String s3Path(URI uri) {
+        String path = uri.getRawPath();
+        return path == null || path.isEmpty() ? "/" : path;
     }
 
     private static String canonicalQuery(URI uri) {

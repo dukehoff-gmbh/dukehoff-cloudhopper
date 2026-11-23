@@ -43,6 +43,10 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
       # @Queue(name = "${q.name}")
       ${q.urlEnvironmentName} = "https://sqs.${"$"}{data.aws_region.cloudhopper.region}.amazonaws.com/${"$"}{data.aws_caller_identity.current.account_id}/${queueName(q)}"
 </#list>
+<#list handlerInfo.buckets as b>
+      # @Bucket(name = "${b.name}"), defined in api_buckets.tf
+      ${b.nameEnvironmentName} = local.cloudhopper_bucket_${b.id}
+</#list>
 <#if configNames?has_content>
       # the secrets of the properties the function reads, read by the runtime from Secrets Manager
       CLOUDHOPPER_SECRETS = jsonencode({ for name, ref in local.cloudhopper_secrets : name => ref if contains([${configNames}], name) })
