@@ -51,6 +51,16 @@ public final class TckConfiguration {
      */
     public static final String SECRET = "a secret from the secret store";
 
+    /** Read by the function {@code projectConfig} with {@code @ConfigProperty(name = "tck.project")}. */
+    public static final String PROJECT_PROPERTY = "tck.project";
+
+    /**
+     * The value the project's own Terraform sets for {@link #PROJECT_PROPERTY}: the system tests of
+     * the Terraform targets create a resource with this value and pass its attribute through the
+     * local {@code cloudhopper_extra_config}; never part of {@link #VALUES}.
+     */
+    public static final String PROJECT_VALUE = "from the project's Terraform";
+
     /** The properties and their values. */
     public static final Map<String, String> VALUES = Map.of(GREETING_PROPERTY, GREETING);
 

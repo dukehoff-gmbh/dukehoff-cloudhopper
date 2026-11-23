@@ -47,6 +47,7 @@ public class CompatibilityTestRunner {
                 new PlainFunctionCompatibilityTest(),
                 new ConfigPropertyCompatibilityTest(),
                 new SecretCompatibilityTest(),
+                new ProjectConfigCompatibilityTest(),
                 new DirectCallToAPIFunctionCompatibilityTest(),
                 new MemoryFunctionCompatibilityTest(),
                 new TimeoutFunctionCompatibilityTest(),
