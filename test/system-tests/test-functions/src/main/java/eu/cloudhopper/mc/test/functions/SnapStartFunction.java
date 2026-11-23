@@ -29,9 +29,12 @@ import eu.cloudhopper.mc.annotations.Extension;
 import eu.cloudhopper.mc.annotations.ExtensionKeys;
 import eu.cloudhopper.mc.annotations.Function;
 import eu.cloudhopper.mc.annotations.HttpTrigger;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
- * Runs with Lambda SnapStart on AWS; other targets ignore the extension.
+ * Runs with Lambda SnapStart on AWS; other targets ignore the extension. It reads the secret
+ * {@code tck.secret}: SnapStart functions get the credentials to read it from the container
+ * credentials endpoint, not from the environment.
  */
 public class SnapStartFunction {
 
@@ -39,7 +42,7 @@ public class SnapStartFunction {
             name = ExtensionKeys.Aws.SnapStart.KEY,
             value = ExtensionKeys.Aws.SnapStart.Values.PUBLISHED_VERSIONS))
     @HttpTrigger(method = "GET", path = "/snapstart", operationId = "snapstart")
-    public String snap() {
-        return "snap";
+    public String snap(@ConfigProperty(name = "tck.secret", defaultValue = "none") String secret) {
+        return "snap:" + secret;
     }
 }
