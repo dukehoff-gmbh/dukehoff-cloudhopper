@@ -32,9 +32,11 @@ public class ProjectConfigFunction {
 
     /**
      * Returns {@code tck.project}, a value the project's own Terraform sets (the local
-     * {@code cloudhopper_extra_config} in an override file); "none" where nothing sets it.
+     * {@code cloudhopper_extra_config} in an override file); "none" where nothing sets it. Shares
+     * an identity, so that the TCK deployment on GCP stays within the quota of service accounts
+     * created per minute.
      */
-    @Function(name = "projectConfig")
+    @Function(name = "projectConfig", identity = "tck-shared")
     public String projectConfig(@ConfigProperty(name = "tck.project", defaultValue = "none") String value) {
         return value;
     }
