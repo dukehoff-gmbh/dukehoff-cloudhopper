@@ -10,6 +10,13 @@ announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/rele
 together with the full list of changes. What is being worked on is tracked in the
 [issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
+## 1.5.1
+
+- AWS: functions with [SnapStart](platforms/aws.md#snapstart) read secrets and send
+  messages with `@Queue`; before, they failed with "No AWS credentials in the
+  environment", because Lambda passes the credentials of SnapStart functions through
+  the container credentials endpoint instead of environment variables
+
 ## 1.5
 
 - Secrets: a property read with `@ConfigProperty` can reference a secret in the
