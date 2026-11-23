@@ -18,7 +18,7 @@ If you want to use Maven to deploy your functions, the archetype can optionally 
     mvn archetype:generate \
       -DarchetypeGroupId=eu.cloudhopper.mc \
       -DarchetypeArtifactId=cloudhopper-maven-archetype-core \
-      -DarchetypeVersion=1.5.0
+      -DarchetypeVersion=1.5.1
 ```
 
 ### Non-interactive (fully scripted)
@@ -27,7 +27,7 @@ If you want to use Maven to deploy your functions, the archetype can optionally 
     mvn archetype:generate \
       -DarchetypeGroupId=eu.cloudhopper.mc \
       -DarchetypeArtifactId=cloudhopper-maven-archetype-core \
-      -DarchetypeVersion=1.5.0 \
+      -DarchetypeVersion=1.5.1 \
       -DgroupId=com.example \
       -DartifactId=my-function \
       -Dversion=1.0-SNAPSHOT \
@@ -206,7 +206,7 @@ the path to your terraform executable in the pom's properties:
 ```xml
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <cloudhopper.version>1.5.0</cloudhopper.version>
+        <cloudhopper.version>1.5.1</cloudhopper.version>
         <!-- add the path to your terraform executable here -->
         <terraform.executable>terraform</terraform.executable>
         <path.extras></path.extras>

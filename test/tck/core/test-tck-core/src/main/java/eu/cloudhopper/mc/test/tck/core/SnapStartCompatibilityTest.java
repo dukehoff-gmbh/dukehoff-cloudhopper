@@ -29,9 +29,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.cloudhopper.mc.annotations.ExtensionKeys;
 import eu.cloudhopper.mc.annotations.Function;
 import eu.cloudhopper.mc.annotations.HttpTrigger;
+import eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest;
 import eu.cloudhopper.mc.test.tck.api.ExtensionAwareTest;
 import eu.cloudhopper.mc.test.tck.api.HttpClientHelper;
 import eu.cloudhopper.mc.test.tck.api.RequiredFeature;
+import eu.cloudhopper.mc.test.tck.api.TckConfiguration;
 import eu.cloudhopper.mc.test.tck.api.TestContext;
 import java.net.URI;
 import java.util.List;
@@ -40,7 +42,8 @@ import org.junit.Assert;
 /**
  * {@code x-aws-snapstart}: right after the deployment, the version the triggers invoke is active
  * and runs with SnapStart, and the function answers the first call through its HTTP trigger,
- * which invokes it through the alias.
+ * which invokes it through the alias. Where the target supports secrets, the function reads one,
+ * with the credentials a SnapStart function gets.
  */
 public class SnapStartCompatibilityTest implements ExtensionAwareTest {
 
@@ -59,7 +62,9 @@ public class SnapStartCompatibilityTest implements ExtensionAwareTest {
             System.out.println("📜 Logs of " + FUNCTION_NAME + ":");
             context.fetchLogs(FUNCTION_NAME).forEach(line -> System.out.println("  " + line));
         }
-        Assert.assertEquals("snap", new ObjectMapper().readValue(response.getBody(), String.class));
+        String expected = "snap:" + (context.supportedCapabilities().contains(CapabilityAwareTest.SECRETS)
+                ? TckConfiguration.SECRET : "none");
+        Assert.assertEquals(expected, new ObjectMapper().readValue(response.getBody(), String.class));
     }
 
     @Override
