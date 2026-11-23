@@ -31,6 +31,28 @@ variable "cloudhopper_secrets" {
   default     = {}
 }
 
+# Values from the project's own Terraform. The generated files and your own .tf files form one
+# module, and a variable cannot refer to its resources or data sources. To pass such values,
+# redefine these locals in an override file (override.tf or <name>_override.tf next to main.tf):
+#   locals {
+#     cloudhopper_extra_config  = { "auth.client-id" = <resource>.<name>.<attribute> }
+#     cloudhopper_extra_secrets = { "report.api-key" = <reference to a secret> }
+#   }
+# A property may be set only once in cloudhopper_config, cloudhopper_secrets and these locals.
+locals {
+  cloudhopper_extra_config  = {}
+  cloudhopper_extra_secrets = {}
+
+  # what the functions get
+  cloudhopper_config  = merge(var.cloudhopper_config, local.cloudhopper_extra_config)
+  cloudhopper_secrets = merge(var.cloudhopper_secrets, local.cloudhopper_extra_secrets)
+  # properties set more than once, checked by a precondition
+  cloudhopper_duplicate_properties = sort(setunion(
+    setintersection(keys(var.cloudhopper_config), keys(local.cloudhopper_extra_config)),
+    setintersection(keys(var.cloudhopper_secrets), keys(local.cloudhopper_extra_secrets)),
+    setintersection(keys(local.cloudhopper_config), keys(local.cloudhopper_secrets))))
+}
+
 # Name of the API Gateway stage. "$default" serves the API at the root of its endpoint
 # (no stage segment in the URLs); any other name becomes the first path segment.
 variable "api_stage_name" {

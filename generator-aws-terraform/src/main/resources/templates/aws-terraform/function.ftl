@@ -38,14 +38,14 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
     variables = merge({
       # lets the runtime report bucket and queue names without the prefix
       CLOUDHOPPER_NAME_PREFIX = var.cloudhopper_name_prefix
-    }, { for name, value in var.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value if contains([${configNames}], name) }, {
+    }, { for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value if contains([${configNames}], name) }, {
 <#list handlerInfo.publishedQueues as q>
       # @Queue(name = "${q.name}")
       ${q.urlEnvironmentName} = "https://sqs.${"$"}{data.aws_region.cloudhopper.region}.amazonaws.com/${"$"}{data.aws_caller_identity.current.account_id}/${queueName(q)}"
 </#list>
 <#if configNames?has_content>
       # the secrets of the properties the function reads, read by the runtime from Secrets Manager
-      CLOUDHOPPER_SECRETS = jsonencode({ for name, ref in var.cloudhopper_secrets : name => ref if contains([${configNames}], name) })
+      CLOUDHOPPER_SECRETS = jsonencode({ for name, ref in local.cloudhopper_secrets : name => ref if contains([${configNames}], name) })
 </#if>
     })
   }
@@ -53,13 +53,13 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
   lifecycle {
 <#if requiredNames?has_content>
     precondition {
-      condition     = alltrue([for name in [${requiredNames}] : contains(keys(var.cloudhopper_config), name) || contains(keys(var.cloudhopper_secrets), name)])
-      error_message = "Function ${handlerInfo.functionId} reads configuration properties without a default that neither cloudhopper_config nor cloudhopper_secrets sets: ${"$"}{join(", ", [for name in [${requiredNames}] : name if !contains(keys(var.cloudhopper_config), name) && !contains(keys(var.cloudhopper_secrets), name)])}"
+      condition     = alltrue([for name in [${requiredNames}] : contains(keys(local.cloudhopper_config), name) || contains(keys(local.cloudhopper_secrets), name)])
+      error_message = "Function ${handlerInfo.functionId} reads configuration properties without a default that neither cloudhopper_config, cloudhopper_secrets nor cloudhopper_extra_config/cloudhopper_extra_secrets sets: ${"$"}{join(", ", [for name in [${requiredNames}] : name if !contains(keys(local.cloudhopper_config), name) && !contains(keys(local.cloudhopper_secrets), name)])}"
     }
 </#if>
     precondition {
-      condition     = length(setintersection(keys(var.cloudhopper_config), keys(var.cloudhopper_secrets))) == 0
-      error_message = "Properties are set in both cloudhopper_config and cloudhopper_secrets: ${"$"}{join(", ", setintersection(keys(var.cloudhopper_config), keys(var.cloudhopper_secrets)))}"
+      condition     = length(local.cloudhopper_duplicate_properties) == 0
+      error_message = "Properties are set more than once in cloudhopper_config, cloudhopper_secrets, cloudhopper_extra_config and cloudhopper_extra_secrets: ${"$"}{join(", ", local.cloudhopper_duplicate_properties)}"
     }
   }
 </#if>
@@ -69,7 +69,7 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
 # Read access to the secrets the function reads (cloudhopper_secrets), granted to its identity.
 # A secret given by name matches its ARN with the random suffix Secrets Manager appends.
 locals {
-  ${handlerInfo.functionId}_secret_arns = [for name, ref in var.cloudhopper_secrets :
+  ${handlerInfo.functionId}_secret_arns = [for name, ref in local.cloudhopper_secrets :
     startswith(ref, "arn:") ? ref : "arn:aws:secretsmanager:${"$"}{data.aws_region.cloudhopper.region}:${"$"}{data.aws_caller_identity.current.account_id}:secret:${"$"}{ref}-??????"
   if contains([${configNames}], name)]
 }
