@@ -108,8 +108,11 @@ values, the code does not change:
 - Secrets: Terraform variable `cloudhopper_secrets`, a reference to the target's secret store
   (AWS Secrets Manager ARN or name, Key Vault secret ID, Secret Manager name; Knative: Helm
   value `secrets`; Scaleway: the value). Never put secrets into `cloudhopper_config` or code.
-- On AWS and GCP, `terraform plan` fails when a property without `defaultValue` is set in
-  neither map.
+- Values and secrets that the project's own Terraform creates or reads (resource attributes,
+  `data` sources) go into the locals `cloudhopper_extra_config` / `cloudhopper_extra_secrets`,
+  redefined in an override file `src/main/resources/deployment/<target>/cloudhopper_override.tf`;
+  a variable cannot refer to them.
+- On AWS and GCP, `terraform plan` fails when a property without `defaultValue` is set nowhere.
 
 Docs: https://cloudhopper.eu/docs/guides/writing-functions#configuration
 
