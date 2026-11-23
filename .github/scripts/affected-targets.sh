@@ -20,6 +20,8 @@ target_of() {
     # scaleway-terraform sends to its queues with the SQS client of provider-aws-publisher
     provider-aws/*|provider-aws-publisher/*)
       echo "aws scaleway" ;;
+    provider-aws-blobstore/*)
+      echo aws ;;
     generator-aws-terraform/*|test/system-tests/generator-aws-terraform/*|test/tck/generator-bindings/aws-terraform/*)
       echo aws ;;
     generator-azure-terraform/*|provider-azure/*|provider-azure-publisher/*|test/system-tests/generator-azure-terraform/*|test/tck/generator-bindings/azure-terraform/*)

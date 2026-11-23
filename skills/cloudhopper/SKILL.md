@@ -1,6 +1,6 @@
 ---
 name: cloudhopper
-description: Write, change, build and deploy serverless Java functions with Cloudhopper. Use when code has or needs @Function, @HttpTrigger, @ScheduledTrigger, @EventTrigger, @Queue, @ConfigProperty or @Function(identity), when building with the Maven profiles -Paws-terraform, -Pazure-terraform, -Pgcp-terraform, -Pspringboot-http, -Pknative or -Pscaleway-terraform, or when a function is deployed to AWS Lambda, Azure Functions, Google Cloud Functions, Knative, Scaleway or Spring Boot.
+description: Write, change, build and deploy serverless Java functions with Cloudhopper. Use when code has or needs @Function, @HttpTrigger, @ScheduledTrigger, @EventTrigger, @Queue, @Bucket, @ConfigProperty or @Function(identity), when building with the Maven profiles -Paws-terraform, -Pazure-terraform, -Pgcp-terraform, -Pspringboot-http, -Pknative or -Pscaleway-terraform, or when a function is deployed to AWS Lambda, Azure Functions, Google Cloud Functions, Knative, Scaleway or Spring Boot.
 ---
 
 # Cloudhopper
@@ -21,7 +21,7 @@ Maven profile selects one. Full documentation: https://cloudhopper.eu/docs/intro
 4. **Zero cloud SDKs:** never import provider-specific SDK types in function classes
    (`com.amazonaws.*`, `software.amazon.awssdk.*`, `com.google.cloud.*`, `com.azure.*`,
    `com.microsoft.azure.*`, …), and do not rely on provider-specific resources, environment
-   variables or event formats. Use `@Queue`, `@ConfigProperty`, `@EventTrigger`/`StorageEvent`
+   variables or event formats. Use `@Queue`, `@Bucket`, `@ConfigProperty`, `@EventTrigger`/`StorageEvent`
    and identities instead of SDKs and hand-written IAM.
 5. If no Cloudhopper API covers a need, keep the function class portable: provider-specific
    code goes behind an interface of your own in a separate class, selected through
@@ -33,7 +33,7 @@ Maven profile selects one. Full documentation: https://cloudhopper.eu/docs/intro
 
 ```java
 import eu.cloudhopper.mc.annotations.*;          // Function, HttpTrigger, PathParam, ...
-import eu.cloudhopper.mc.runtime.*;              // Publisher, EventMetadata, StorageEvent, HandlerContext
+import eu.cloudhopper.mc.runtime.*;              // Publisher, BlobStore, EventMetadata, StorageEvent, HandlerContext
 
 public class PlayerFunctions {
 
@@ -89,6 +89,23 @@ creates; a queue owned by another system is `@Queue(name = "...", existing = tru
 is a build error. The generator grants the sending function's identity exactly this queue.
 
 Docs: https://cloudhopper.eu/docs/guides/writing-functions#sending-messages
+
+## Reading and writing buckets
+
+```java
+@Function(name = "renderReport")
+public void render(ReportRequest request,
+                   @Bucket(name = "acme-reports", access = Bucket.Access.WRITE) BlobStore reports) {
+    reports.put(request.id() + ".csv", csv, "text/csv");  // get(key) → Optional<byte[]>, delete, list(prefix)
+}
+```
+
+`access` is `READ` (default), `WRITE` or `READ_WRITE`; anything else throws
+`BlobAccessDeniedException`, and the identity gets exactly these permissions. The generator creates
+the bucket once per name, or shares the bucket of a storage trigger with the same name; a bucket
+owned by another system is `@Bucket(name = "...", existing = true)`.
+
+Docs: https://cloudhopper.eu/docs/guides/writing-functions#reading-and-writing-buckets
 
 ## Configuration and secrets
 

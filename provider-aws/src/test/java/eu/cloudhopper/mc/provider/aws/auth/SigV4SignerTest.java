@@ -103,4 +103,31 @@ public class SigV4SignerTest {
                 .signingClockOverride(java.time.Clock.fixed(SUITE_TIME, java.time.ZoneOffset.UTC)).build());
         assertEquals(signed.firstMatchingHeader("Authorization").orElseThrow(), headers.get("Authorization"));
     }
+
+    /** An S3 PUT with a key that needs encoding, signed like the AWS SDK's S3 client does. */
+    @Test
+    public void s3RequestMatchesTheAwsSdk() {
+        byte[] bytes = "{\"prices\":[1,2]}".getBytes(StandardCharsets.UTF_8);
+        URI uri = URI.create("https://my-bucket.s3.eu-central-1.amazonaws.com/reports/2026%2011/a%2Bb.json");
+        Instant time = Instant.parse("2026-11-23T10:15:30Z");
+        AwsCredentials credentials = new AwsCredentials("ASIAEXAMPLE", "secretEXAMPLE/key+42", "token/with+chars==");
+        Map<String, String> headers = Map.of("Content-Type", "application/json");
+
+        Map<String, String> ours = SigV4Signer.signS3("PUT", uri, headers, bytes, "eu-central-1", credentials, time);
+
+        SdkHttpFullRequest.Builder request = SdkHttpFullRequest.builder().method(SdkHttpMethod.PUT).uri(uri)
+                .contentStreamProvider(RequestBody.fromBytes(bytes).contentStreamProvider());
+        headers.forEach(request::putHeader);
+        SdkHttpFullRequest signed = software.amazon.awssdk.auth.signer.AwsS3V4Signer.create().sign(request.build(),
+                software.amazon.awssdk.auth.signer.params.AwsS3V4SignerParams.builder()
+                .awsCredentials(AwsSessionCredentials.create(credentials.accessKeyId(), credentials.secretAccessKey(),
+                        credentials.sessionToken()))
+                .signingName("s3").signingRegion(Region.EU_CENTRAL_1).enablePayloadSigning(true)
+                // as the S3 client configures it: S3 encodes the path only once
+                .doubleUrlEncode(false)
+                .signingClockOverride(java.time.Clock.fixed(time, java.time.ZoneOffset.UTC))
+                .build());
+        assertEquals(signed.firstMatchingHeader("x-amz-content-sha256").orElseThrow(), ours.get("X-Amz-Content-Sha256"));
+        assertEquals(signed.firstMatchingHeader("Authorization").orElseThrow(), ours.get("Authorization"));
+    }
 }

@@ -126,6 +126,14 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
     private final Map<String, Boolean> queueCreated = new java.util.TreeMap<>();
     /** The identities of the functions that send to each queue (@Queue), by queue name. */
     private final Map<String, Set<String>> queuePublishers = new java.util.TreeMap<>();
+    /** The buckets functions use (@Bucket), by name, for the FINALIZE phase. */
+    private final Map<String, eu.cloudhopper.mc.generator.api.BucketInfo> buckets = new java.util.TreeMap<>();
+    /** The access of each identity to each bucket (READ, WRITE or READ_WRITE), by bucket name and identity. */
+    private final Map<String, Map<String, String>> bucketAccess = new java.util.TreeMap<>();
+    /** The function whose storage trigger (@EventTrigger STORAGE) has each bucket, by bucket name. */
+    private final Map<String, String> storageBuckets = new java.util.TreeMap<>();
+    /** Whether that storage trigger creates the bucket (@EventTrigger create), by bucket name. */
+    private final Map<String, Boolean> storageBucketCreated = new java.util.TreeMap<>();
     /** The configuration properties (@ConfigProperty) the functions of each identity read, by identity. */
     private final Map<String, Set<String>> identityConfigProperties = new java.util.TreeMap<>();
     private String generatorId;
@@ -192,6 +200,12 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
                 queuePublishers.computeIfAbsent(queue.getName(), name -> new java.util.TreeSet<>())
                         .add(handlerInfo.getIdentity());
             });
+            handlerInfo.getBuckets().forEach(bucket -> {
+                buckets.putIfAbsent(bucket.getName(), bucket);
+                bucketAccess.computeIfAbsent(bucket.getName(), name -> new java.util.TreeMap<>())
+                        .merge(handlerInfo.getIdentity(), bucket.getAccess(),
+                                (a, b) -> a.equals(b) ? a : "READ_WRITE");
+            });
             runPhase(processingEnv, GenerationPhase.FUNCTION, dataModel, handlerInfo, outputDir, handlerInfo.getFunctionId().toLowerCase());
         } catch (ConfigGenerationException e) {
             throw new ConfigGenerationException("Failed to generate function config for generator: " + generatorId, e);
@@ -229,6 +243,10 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         dataModel.put("queueCreated", queueCreated);
         dataModel.put("queuePublishers", queuePublishers);
         dataModel.put("identityConfigProperties", identityConfigProperties);
+        dataModel.put("buckets", new ArrayList<>(buckets.values()));
+        dataModel.put("bucketAccess", bucketAccess);
+        dataModel.put("storageBuckets", storageBuckets);
+        dataModel.put("storageBucketCreated", storageBucketCreated);
 
         try {
             runPhase(processingEnv, GenerationPhase.FINALIZE, dataModel, null, configOutputDir, "api");
@@ -272,6 +290,10 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         if (eventTrigger.source() == eu.cloudhopper.mc.annotations.EventSource.QUEUE) {
             queueConsumers.putIfAbsent(eventTrigger.name(), handlerInfo.getFunctionId());
             queueCreated.putIfAbsent(eventTrigger.name(), eventTrigger.create());
+        }
+        if (eventTrigger.source() == eu.cloudhopper.mc.annotations.EventSource.STORAGE) {
+            storageBuckets.putIfAbsent(eventTrigger.name(), handlerInfo.getFunctionId());
+            storageBucketCreated.putIfAbsent(eventTrigger.name(), eventTrigger.create());
         }
         runPhase(processingEnv, GenerationPhase.EVENT, dataModel, handlerInfo, configOutputDir,
                 handlerInfo.getFunctionId().toLowerCase() + "_event");

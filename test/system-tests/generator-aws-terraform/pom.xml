@@ -39,6 +39,12 @@
             <artifactId>provider-aws-publisher</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- @Bucket BlobStores on AWS -->
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>provider-aws-blobstore</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>test-tck-core</artifactId>

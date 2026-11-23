@@ -53,6 +53,16 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger.ScheduleAttribute;
             runtimeModule = "eu.cloudhopper.mc:provider-springboot"
         ),
         @GeneratorFeature(
+            supportedAnnotation = eu.cloudhopper.mc.annotations.Bucket.class,
+            supportedAttributes = {
+                eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.NAME,
+                eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.ACCESS,
+                eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.EXISTING
+            },
+            runtimeClass = "eu.cloudhopper.mc.provider.springboot.blobstore.SpringBlobStoreFactory",
+            runtimeModule = "eu.cloudhopper.mc:provider-springboot"
+        ),
+        @GeneratorFeature(
             supportedAnnotation = Function.class,
             supportedAttributes = {
                 FunctionAttribute.NAME

@@ -76,6 +76,21 @@ the function's execution role, without the AWS SDK. The generated Terraform pass
 the queue URL as the environment variable `CLOUDHOPPER_QUEUE_<NAME>_URL` and grants
 the function's identity `sqs:SendMessage` on exactly that queue.
 
+## Buckets
+
+A function with a [`@Bucket`](../guides/writing-functions.md#reading-and-writing-buckets)
+parameter needs the dependency `eu.cloudhopper.mc:provider-aws-blobstore`; the
+archetype adds it. It calls the S3 REST API, signed with the credentials of the
+function's execution role, without the AWS SDK. The generated Terraform
+
+- creates the S3 bucket `<cloudhopper_name_prefix><name>`, unless a storage
+  trigger of the project already creates it, the parameter is `existing`, or the
+  local `cloudhopper_bucket_names` names a bucket of your own;
+- passes the bucket's name as the environment variable
+  `CLOUDHOPPER_BUCKET_<NAME>_NAME` and outputs it as `bucket_<name>`;
+- grants the function's identity `s3:ListBucket` and `s3:GetObject` for `READ`,
+  `s3:PutObject` and `s3:DeleteObject` for `WRITE`, on exactly this bucket.
+
 ## Secrets
 
 The Terraform variable `cloudhopper_secrets` maps a property name to a secret in
@@ -167,3 +182,4 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `eu.cloudhopper.mc:generator-aws-terraform` | `provided`: only the annotation processor uses it | Templates and template registration |
 | `eu.cloudhopper.mc:provider-aws` | compile | Base classes of the generated handlers: `ApiGatewayEventRouter` (the Lambda entry point `<Handler>$Auto::handleRequest`, which routes API Gateway, SQS, S3, schedule and direct calls), `SqsEventHandler` (reports failed messages as batch item failures), `S3EventHandler`, `SigV4Signer`/`AwsCredentials` for the AWS APIs the runtime calls itself, and the `ConfigSource` that reads secrets from Secrets Manager |
 | `eu.cloudhopper.mc:provider-aws-publisher` | compile | `@Queue` publishers for SQS, without the AWS SDK |
+| `eu.cloudhopper.mc:provider-aws-blobstore` | compile | `@Bucket` stores for S3 and S3-compatible storage, without the AWS SDK |
