@@ -1,0 +1,53 @@
+# Dukehoff Cloudhopper
+
+> Cloudhopper turns annotated Java methods into serverless functions. An annotation processor
+> generates the handler classes and the deployment configuration (Terraform, a Helm chart or a
+> Spring Boot application) for AWS Lambda, Azure Functions, Google Cloud Functions, Knative,
+> Scaleway Serverless Containers or Spring Boot. A Maven profile selects the target; the code
+> stays the same.
+
+Functions are plain methods with `@Function` and a trigger (`@HttpTrigger`, `@ScheduledTrigger`,
+`@EventTrigger`). Do not write handler classes, cloud SDK calls or Terraform for them, and do not
+edit `target/`: the build generates those files. Configuration comes from `@ConfigProperty`,
+messages are sent through `@Queue` publishers.
+
+- [Dukehoff Cloudhopper](https://cloudhopper.eu/docs/intro): Cloudhopper turns annotated Java methods into serverless functions.
+- [Release notes](https://cloudhopper.eu/docs/release-notes): What changed in each release.
+
+## Getting Started
+
+- [Quickstart](https://cloudhopper.eu/docs/guides/quickstart): This guide creates a project with one function, runs it locally as a Spring Boot application, and then deploys the same code to a cloud.
+- [Writing Functions](https://cloudhopper.eu/docs/guides/writing-functions): With Cloudhopper you write plain Java methods and describe them with a few annotations.
+- [Customizing targets](https://cloudhopper.eu/docs/guides/customizing-targets): Every target is a set of templates that the annotation processor renders at compile time.
+- [Cloudhopper Maven Archetype](https://cloudhopper.eu/docs/modules/maven-archetype): The easiest way to get started is the Maven Archetype.
+
+## Core Concepts
+
+- [Deployment Config API](https://cloudhopper.eu/docs/modules/deployment-config-api): This module defines the public annotation and runtime API used by developers to create cloud functions with Cloudhopper.
+- [Deployment Config Generator API](https://cloudhopper.eu/docs/modules/deployment-config-generator-api): This module provides the public extension API for implementing custom deployment configuration generators in Cloudhopper.
+- [Generic Deployment Config Generator](https://cloudhopper.eu/docs/modules/deployment-config-generator-generic): This module provides a flexible, template-based generator for Cloudhopper that allows integrators to define deployment configurations using Freemarker templates and simple annotations.
+- [Modules](https://cloudhopper.eu/docs/modules/overview): All modules are published on Maven Central under the group `eu.cloudhopper.mc`, with the same version.
+
+## Cloud Providers
+
+- [Targets and What They Support](https://cloudhopper.eu/docs/platforms/generator-overview): Cloudhopper deploys the same annotated functions to six targets.
+- [AWS: Setup](https://cloudhopper.eu/docs/setup/aws-prerequisites): This guide helps you prepare your environment for deploying Cloudhopper functions to AWS Lambda using the `aws-terraform` generator.
+- [AWS Lambda](https://cloudhopper.eu/docs/platforms/aws): The profile `aws-terraform` deploys every function as an AWS Lambda function, with Terraform for the infrastructure.
+- [Azure: Setup](https://cloudhopper.eu/docs/setup/azure-prerequisites): This guide prepares your environment for deploying Cloudhopper functions to Azure Functions with the `azure-terraform` generator.
+- [Azure Functions](https://cloudhopper.eu/docs/platforms/azure): The profile `azure-terraform` deploys all functions into one Azure function app on the consumption plan, with Terraform for the infrastructure.
+- [GCP: Setup](https://cloudhopper.eu/docs/setup/gcp-prerequisites): This guide prepares your environment for deploying Cloudhopper functions to Google Cloud Functions with the `gcp-terraform` generator.
+- [Google Cloud Functions](https://cloudhopper.eu/docs/platforms/gcp): The profile `gcp-terraform` deploys every function as a Cloud Function (2nd gen), with Terraform for the infrastructure.
+- [Spring Boot](https://cloudhopper.eu/docs/platforms/springboot): The profile `springboot-http` turns the functions into one Spring Boot application that runs on any server or container platform.
+- [Knative: Setup](https://cloudhopper.eu/docs/setup/knative-prerequisites): This guide prepares a Kubernetes cluster for Cloudhopper functions built with the `knative` generator.
+- [Knative](https://cloudhopper.eu/docs/platforms/knative): The `knative` generator builds on `springboot-http`.
+- [Scaleway: Setup](https://cloudhopper.eu/docs/setup/scaleway-prerequisites): This guide prepares a Scaleway project for Cloudhopper functions built with the `scaleway-terraform` generator.
+- [Scaleway Serverless Containers](https://cloudhopper.eu/docs/platforms/scaleway): The `scaleway-terraform` generator builds on `springboot-http`.
+
+## Coding agents
+
+- [Agent Skill `cloudhopper`](https://cloudhopper.eu/skills/cloudhopper/SKILL.md): recipes for writing, building and deploying Cloudhopper functions, in the Agent Skills format.
+
+## Optional
+
+- [API reference (Javadoc)](https://cloudhopper.eu/api/index.html): the annotations and runtime types.
+- [Source code](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper): the repository on GitHub.
