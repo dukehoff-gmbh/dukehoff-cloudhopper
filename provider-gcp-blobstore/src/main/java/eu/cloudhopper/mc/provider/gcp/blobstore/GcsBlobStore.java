@@ -140,10 +140,10 @@ class GcsBlobStore implements BlobStore {
                 String message = errorMessage(response.body());
                 lastError = status + " " + message;
                 if (status == 404) {
-                    if (message.startsWith("No such object")) {
-                        return response;
+                    if (message.contains("bucket does not exist")) {
+                        throw new BlobStoreException("Bucket " + bucket + " does not exist");
                     }
-                    throw new BlobStoreException("Bucket " + bucket + " does not exist: " + message);
+                    return response; // no such object
                 }
                 if (status == 403) {
                     throw new BlobAccessDeniedException("Cloud Storage refused " + what + " in bucket " + bucket
@@ -189,13 +189,17 @@ class GcsBlobStore implements BlobStore {
         }
     }
 
-    /** The message of an error response ({@code {"error": {"message": ...}}}), or "". */
+    /**
+     * The message of an error response: JSON ({@code {"error": {"message": ...}}}) from the
+     * metadata endpoints, plain text from media downloads ({@code No such object: ...}).
+     */
     private static String errorMessage(byte[] body) {
+        String text = body == null ? "" : new String(body, StandardCharsets.UTF_8).trim();
         try {
-            JsonObject error = json(body).getAsJsonObject("error");
-            return error != null && error.has("message") ? error.get("message").getAsString() : "";
+            JsonObject error = JsonParser.parseString(text).getAsJsonObject().getAsJsonObject("error");
+            return error != null && error.has("message") ? error.get("message").getAsString() : text;
         } catch (RuntimeException e) {
-            return "";
+            return text;
         }
     }
 

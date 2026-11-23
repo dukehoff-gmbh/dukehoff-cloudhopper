@@ -96,7 +96,8 @@ public class GcsBlobStoreTest {
                 String name = URLDecoder.decode(rawPath.substring(objectPath.length()).replace("+", "%2B"), StandardCharsets.UTF_8);
                 if (!objects.containsKey(name)) {
                     status = 404;
-                    body = error("No such object: data/" + name);
+                    // media downloads answer in plain text, the other requests in JSON
+                    body = "media".equals(query.get("alt")) ? "No such object: data/" + name : error("No such object: data/" + name);
                 } else if ("GET".equals(method) && "media".equals(query.get("alt"))) {
                     content = objects.get(name);
                 } else if ("DELETE".equals(method)) {
