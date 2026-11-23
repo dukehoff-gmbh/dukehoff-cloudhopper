@@ -38,6 +38,12 @@ public interface CapabilityAwareTest extends FeatureAwareTest {
     String SECRETS = "secrets";
 
     /**
+     * Configuration values from the project's own Terraform (the local
+     * {@code cloudhopper_extra_config} in an override file).
+     */
+    String PROJECT_TERRAFORM_CONFIG = "project-terraform-config";
+
+    /**
      * @return the capabilities the test needs, e.g. {@link #SECRETS}
      */
     List<String> requiredCapabilities();
