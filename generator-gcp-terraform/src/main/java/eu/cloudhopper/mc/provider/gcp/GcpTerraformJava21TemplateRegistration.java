@@ -52,6 +52,16 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     runtimeModule = "eu.cloudhopper.mc:provider-gcp-publisher"
             ),
             @GeneratorFeature(
+                    supportedAnnotation = eu.cloudhopper.mc.annotations.Bucket.class,
+                    supportedAttributes = {
+                        eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.NAME,
+                        eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.ACCESS,
+                        eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.EXISTING
+                    },
+                    runtimeClass = "eu.cloudhopper.mc.provider.gcp.blobstore.GcsBlobStoreFactory",
+                    runtimeModule = "eu.cloudhopper.mc:provider-gcp-blobstore"
+            ),
+            @GeneratorFeature(
                     supportedAnnotation = Function.class,
                     supportedAttributes = {
                         FunctionAttribute.NAME,
@@ -179,6 +189,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
                     outputFileName = "secrets.tf",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.FINALIZE,
+                    templateName = "buckets.ftl",
+                    description = "Generates the buckets of @Bucket parameters and the permissions of their identities (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    outputFileName = "buckets.tf",
                     javaFile = false
             ),
             @Template(

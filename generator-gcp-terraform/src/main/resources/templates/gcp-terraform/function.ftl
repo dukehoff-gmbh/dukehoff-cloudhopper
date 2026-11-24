@@ -28,6 +28,10 @@ resource "google_cloudfunctions2_function" "${handlerInfo.functionId}" {
     environment_variables = merge({
       FUNCTION_MEMORY_MB       = ${handlerInfo.memory}
       FUNCTION_TIMEOUT_SECONDS = ${handlerInfo.timeout}
+<#list handlerInfo.buckets as b>
+      # @Bucket(name = "${b.name}"), defined in buckets.tf
+      ${b.nameEnvironmentName} = local.cloudhopper_bucket_${b.id}
+</#list>
     }, { for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value if contains([${configNames}], name) })
 <#if configNames?has_content>
 

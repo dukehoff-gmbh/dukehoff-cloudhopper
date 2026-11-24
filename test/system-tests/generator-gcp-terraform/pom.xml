@@ -50,6 +50,12 @@
             <artifactId>provider-gcp-publisher</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- @Bucket BlobStores on GCP -->
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>provider-gcp-blobstore</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>test-tck-core</artifactId>

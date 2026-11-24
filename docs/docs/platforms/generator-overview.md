@@ -152,7 +152,7 @@ locals {
   your Terraform creates, for example
   `{ "acme-reports" = aws_s3_bucket.reports.bucket }`. The generated Terraform
   creates no bucket for these names; the functions and their permissions use
-  yours. Currently on `aws-terraform`.
+  yours. On `aws-terraform` and `gcp-terraform`.
 - Knative and Spring Boot take their configuration from Helm values and the
   environment and are not affected.
 
