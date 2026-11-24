@@ -91,7 +91,9 @@ fields. The generated Terraform (`tables.tf`)
   declare.
 
 Destroying the deployment deletes the databases it created, with their items.
-The project needs the Firestore API (`firestore.googleapis.com`). Firestore's free
+The project needs the Firestore API (`firestore.googleapis.com`) and, for the
+conditional roles, the Cloud Resource Manager API
+(`cloudresourcemanager.googleapis.com`). Firestore's free
 quota applies to only one database per project, and a project has at most 100
 databases unless Google raises the limit.
 
