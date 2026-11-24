@@ -47,6 +47,11 @@
         </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>provider-aws-keyvalue</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>test-tck-core</artifactId>
             <version>${project.version}</version>
         </dependency>

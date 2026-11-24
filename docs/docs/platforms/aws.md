@@ -91,6 +91,26 @@ function's execution role, without the AWS SDK. The generated Terraform
 - grants the function's identity `s3:ListBucket` and `s3:GetObject` for `READ`,
   `s3:PutObject` and `s3:DeleteObject` for `WRITE`, on exactly this bucket.
 
+## Tables
+
+A function with a [`@Table`](../guides/writing-functions.md#reading-and-writing-tables)
+parameter needs the dependency `eu.cloudhopper.mc:provider-aws-keyvalue`; the
+archetype adds it. It calls the DynamoDB API, signed with the credentials of the
+function's execution role, without the AWS SDK, and reads with
+`ConsistentRead`. The generated `api_tables.tf`
+
+- creates the DynamoDB table `<cloudhopper_name_prefix><name>` (on demand, the
+  string partition key `_pk` and the string sort key `_sk`), unless the parameter
+  is `existing` or the local `cloudhopper_table_names` names a table of your own,
+  which needs the same keys;
+- passes the table's name as the environment variable
+  `CLOUDHOPPER_TABLE_<NAME>_NAME` and outputs it as `table_<name>`;
+- grants the function's identity `dynamodb:GetItem` and `dynamodb:Query` for
+  `READ`, `dynamodb:PutItem`, `dynamodb:UpdateItem`, `dynamodb:DeleteItem` and
+  `dynamodb:BatchWriteItem` for `WRITE`, on exactly this table.
+
+Destroying the deployment deletes the tables it created, with their items.
+
 ## Secrets
 
 The Terraform variable `cloudhopper_secrets` maps a property name to a secret in
@@ -183,3 +203,4 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `eu.cloudhopper.mc:provider-aws` | compile | Base classes of the generated handlers: `ApiGatewayEventRouter` (the Lambda entry point `<Handler>$Auto::handleRequest`, which routes API Gateway, SQS, S3, schedule and direct calls), `SqsEventHandler` (reports failed messages as batch item failures), `S3EventHandler`, `SigV4Signer`/`AwsCredentials` for the AWS APIs the runtime calls itself, and the `ConfigSource` that reads secrets from Secrets Manager |
 | `eu.cloudhopper.mc:provider-aws-publisher` | compile | `@Queue` publishers for SQS, without the AWS SDK |
 | `eu.cloudhopper.mc:provider-aws-blobstore` | compile | `@Bucket` stores for S3 and S3-compatible storage, without the AWS SDK |
+| `eu.cloudhopper.mc:provider-aws-keyvalue` | compile | `@Table` stores for DynamoDB, without the AWS SDK |

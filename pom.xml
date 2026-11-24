@@ -79,6 +79,7 @@
         <module>provider-aws</module>
         <module>provider-aws-publisher</module>
         <module>provider-aws-blobstore</module>
+        <module>provider-aws-keyvalue</module>
         <module>provider-azure</module>
         <module>provider-azure-publisher</module>
         <module>provider-azure-blobstore</module>

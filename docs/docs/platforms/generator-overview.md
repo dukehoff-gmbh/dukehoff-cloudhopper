@@ -153,6 +153,9 @@ locals {
   `{ "acme-reports" = aws_s3_bucket.reports.bucket }`. The generated Terraform
   creates no bucket for these names; the functions and their permissions use
   yours. On `aws-terraform`, `gcp-terraform` and `scaleway-terraform`.
+- `cloudhopper_table_names` does the same for the tables of `@Table`
+  parameters, for example `{ accounts = aws_dynamodb_table.accounts.name }`.
+  On `aws-terraform`.
 - Knative and Spring Boot take their configuration from Helm values and the
   environment and are not affected.
 
