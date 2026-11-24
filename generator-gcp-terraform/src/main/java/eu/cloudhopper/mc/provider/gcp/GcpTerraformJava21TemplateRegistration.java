@@ -62,6 +62,16 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     runtimeModule = "eu.cloudhopper.mc:provider-gcp-blobstore"
             ),
             @GeneratorFeature(
+                    supportedAnnotation = eu.cloudhopper.mc.annotations.Table.class,
+                    supportedAttributes = {
+                        eu.cloudhopper.mc.annotations.Table.TableAttribute.NAME,
+                        eu.cloudhopper.mc.annotations.Table.TableAttribute.ACCESS,
+                        eu.cloudhopper.mc.annotations.Table.TableAttribute.EXISTING
+                    },
+                    runtimeClass = "eu.cloudhopper.mc.provider.gcp.keyvalue.FirestoreKeyValueStoreFactory",
+                    runtimeModule = "eu.cloudhopper.mc:provider-gcp-keyvalue"
+            ),
+            @GeneratorFeature(
                     supportedAnnotation = Function.class,
                     supportedAttributes = {
                         FunctionAttribute.NAME,
@@ -198,6 +208,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
                     outputFileName = "buckets.tf",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.FINALIZE,
+                    templateName = "tables.ftl",
+                    description = "Generates the Firestore databases of @Table parameters and the permissions of their identities (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    outputFileName = "tables.tf",
                     javaFile = false
             ),
             @Template(

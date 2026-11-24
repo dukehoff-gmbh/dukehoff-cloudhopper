@@ -68,6 +68,35 @@ libraries. The generated Terraform (`buckets.tf`)
 
 As for sending messages, give such a function at least 256 MB.
 
+## Tables
+
+A function with a [`@Table`](../guides/writing-functions.md#reading-and-writing-tables)
+parameter needs the dependency `eu.cloudhopper.mc:provider-gcp-keyvalue`; the
+archetype adds it. Each table is a Firestore database in Native mode. The runtime
+calls the Firestore REST API with a token of the function's service account,
+without the Google client libraries; an item is the document
+`partitions/k<partition>/items/k<sort key>`, its attributes are the document's
+fields. The generated Terraform (`tables.tf`)
+
+- creates the database `<project_name>-<name>-<random suffix>` in `gcp_region`,
+  unless the parameter is `existing` (then the database ID is the name) or the
+  local `cloudhopper_table_names` names a database of your own. Firestore keeps
+  the ID of a deleted database for a few minutes, hence the suffix;
+- passes the database ID as the environment variable
+  `CLOUDHOPPER_TABLE_<NAME>_NAME` and outputs it as `table_<name>`;
+- grants the function's identity `roles/datastore.viewer` for `READ`, and
+  `roles/datastore.user` for `WRITE` and `READ_WRITE`, with an IAM condition on
+  exactly this database. Firestore has no predefined role that writes without
+  reading; the runtime refuses the reads that a `WRITE` parameter did not
+  declare.
+
+Destroying the deployment deletes the databases it created, with their items.
+The project needs the Firestore API (`firestore.googleapis.com`) and, for the
+conditional roles, the Cloud Resource Manager API
+(`cloudresourcemanager.googleapis.com`). Firestore's free
+quota applies to only one database per project, and a project has at most 100
+databases unless Google raises the limit.
+
 ## Secrets
 
 The Terraform variable `cloudhopper_secrets` maps a property name to a secret in
@@ -103,8 +132,8 @@ the role Editor. Service account IDs have 6 to 30 characters, so the ID is
 `<project_name> <identity>`.
 
 The generated Terraform grants a service account only what its functions' own
-resources need, such as `roles/pubsub.publisher` on the topics they send to and the
-storage roles on their buckets. Triggers
+resources need, such as `roles/pubsub.publisher` on the topics they send to, the
+storage roles on their buckets and the Firestore roles on their tables. Triggers
 (Cloud Scheduler, Eventarc) still run as `cloudscheduler_service_account_email`.
 Grant further permissions in your own `.tf` file, to the member of the identity's
 service account:
@@ -121,7 +150,9 @@ The output `identity_<identity>_email` gives the account's email address.
 
 Deploying needs permission to create service accounts (`roles/iam.serviceAccountAdmin`),
 to deploy functions that run as them (`roles/iam.serviceAccountUser`), and to grant
-roles on topics (`roles/pubsub.admin`).
+roles on topics (`roles/pubsub.admin`). With `@Table`, it also needs to create
+Firestore databases (`roles/datastore.owner`) and to grant the conditional roles
+on them, which are bindings of the project (`roles/resourcemanager.projectIamAdmin`).
 
 :::note Upgrading from 1.4 or earlier
 The functions used to run as the default compute service account. Permissions they got
@@ -139,3 +170,4 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `eu.cloudhopper.mc:provider-gcp` | compile | `GcpCloudFunctionRequestHandler`, the base class of the generated `HttpFunction`s (HTTP calls, Pub/Sub and Cloud Storage events), and `GcpMetadata` for the project and access tokens from the metadata server |
 | `eu.cloudhopper.mc:provider-gcp-publisher` | compile | `@Queue` publishers for Pub/Sub, without the Google client libraries |
 | `eu.cloudhopper.mc:provider-gcp-blobstore` | compile | `@Bucket` stores for Cloud Storage, without the Google client libraries |
+| `eu.cloudhopper.mc:provider-gcp-keyvalue` | compile | `@Table` stores for Firestore, without the Google client libraries |

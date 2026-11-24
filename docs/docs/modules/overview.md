@@ -52,9 +52,11 @@ Which ones a target needs is listed on its page, under *Runtime modules*.
 | `provider-azure` | Azure | `AzureBaseFunctionWrapper`, the base class of the generated function classes; `StorageAccount` for SharedKey requests to the function app's storage account; `KeyVaultClient` and the `ConfigSource` for secrets |
 | `provider-azure-publisher` | Azure | `@Queue` publishers for Storage queues |
 | `provider-azure-blobstore` | Azure | `@Bucket` stores for blob containers of the function app's storage account |
+| `provider-azure-keyvalue` | Azure | `@Table` stores for Table Storage of the function app's storage account |
 | `provider-gcp` | GCP | `GcpCloudFunctionRequestHandler`, the base class of the generated `HttpFunction`s; `GcpMetadata` for the project and access tokens |
 | `provider-gcp-publisher` | GCP | `@Queue` publishers for Pub/Sub |
 | `provider-gcp-blobstore` | GCP | `@Bucket` stores for Cloud Storage |
+| `provider-gcp-keyvalue` | GCP | `@Table` stores for Firestore |
 | `provider-springboot` | Spring Boot, Knative, Scaleway | `SpringBootRequestHandler`, `SpringBootEventHandler`, the in-process and Kafka publishers and the Kafka delivery |
 | `provider-http` | Spring Boot, Knative, Scaleway | `LocalHandlerContext`, the `HandlerContext` of HTTP services |
 

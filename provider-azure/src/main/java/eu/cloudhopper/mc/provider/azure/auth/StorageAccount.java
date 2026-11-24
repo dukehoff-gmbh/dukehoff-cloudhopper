@@ -108,10 +108,32 @@ public record StorageAccount(String name, String key, String protocol, String en
                 + "\n" // Range
                 + canonicalHeaders
                 + resource;
+        return "SharedKey " + name + ":" + sign(stringToSign);
+    }
+
+    /**
+     * The {@code Authorization} header of a request to the Table service, signed with SharedKey.
+     *
+     * @param method      the HTTP method
+     * @param contentType the content type, or an empty string
+     * @param date        the value of the {@code x-ms-date} header
+     * @param path        the encoded URL path as sent, e.g. {@code /orders(PartitionKey='a',RowKey='b')}
+     * @return the header value {@code SharedKey <account>:<signature>}
+     */
+    public String tableSharedKey(String method, String contentType, String date, String path) {
+        String stringToSign = method + "\n"
+                + "\n" // Content-MD5
+                + contentType + "\n"
+                + date + "\n"
+                + "/" + name + path;
+        return "SharedKey " + name + ":" + sign(stringToSign);
+    }
+
+    private String sign(String stringToSign) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(Base64.getDecoder().decode(key), "HmacSHA256"));
-            return "SharedKey " + name + ":" + Base64.getEncoder().encodeToString(mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8)));
+            return Base64.getEncoder().encodeToString(mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8)));
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException(e);
         }
