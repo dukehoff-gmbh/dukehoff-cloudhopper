@@ -28,10 +28,36 @@ spec:
         {{- end }}
         ports:
         - containerPort: 8080
-        {{- if or .Values.env .Values.secrets }}
+        {{- if or .Values.env .Values.secrets .Values.blobstore.s3Endpoint .Values.blobstore.region .Values.blobstore.credentialsSecret .Values.blobstore.buckets }}
         env:
           {{- with .Values.env }}
           {{- toYaml . | nindent 10 }}
+          {{- end }}
+          {{- with .Values.blobstore.s3Endpoint }}
+          # the object storage of the @Bucket parameters
+          - name: CLOUDHOPPER_BLOBSTORE_S3_ENDPOINT
+            value: {{ . | quote }}
+          {{- end }}
+          {{- with .Values.blobstore.region }}
+          - name: CLOUDHOPPER_BLOBSTORE_S3_REGION
+            value: {{ . | quote }}
+          {{- end }}
+          {{- with .Values.blobstore.credentialsSecret }}
+          - name: CLOUDHOPPER_BLOBSTORE_S3_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ . }}
+                key: access-key-id
+          - name: CLOUDHOPPER_BLOBSTORE_S3_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ . }}
+                key: secret-access-key
+          {{- end }}
+          {{- range $name, $bucket := .Values.blobstore.buckets }}
+          # @Bucket(name = "{{ $name }}")
+          - name: {{ regexReplaceAll "[^A-Za-z0-9]" (printf "cloudhopper.bucket.%s.name" $name) "_" | upper }}
+            value: {{ $bucket | quote }}
           {{- end }}
           {{- range .Values.secrets }}
           # @ConfigProperty "{{ .property }}" from the Kubernetes secret {{ .secret }}

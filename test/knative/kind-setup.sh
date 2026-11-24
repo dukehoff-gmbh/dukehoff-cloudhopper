@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Creates a local kind cluster with Knative Serving (Kourier), Knative Eventing,
-# the Knative Kafka source and sink and a single-node Kafka. Used by the knative TCK.
+# the Knative Kafka source and sink, a single-node Kafka and an S3-compatible object storage
+# (SeaweedFS). Used by the knative TCK.
 #
 #   services: http://<service>.<namespace>.localhost:31080 (*.localhost resolves to the loopback address)
 #   Kafka:    kafka.kafka.svc:9092 in the cluster, localhost:31092 from the host
+#   S3:       http://s3.blobstore.svc:8333 in the cluster, key cloudhopper-tck / cloudhopper-tck-secret
 set -euo pipefail
 
 CLUSTER=${CLUSTER:-cloudhopper}
 KNATIVE=${KNATIVE_VERSION:-knative-v1.24.0}
 KAFKA_IMAGE=${KAFKA_IMAGE:-apache/kafka:3.8.0}
+SEAWEEDFS_IMAGE=${SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.50}
 GH=https://github.com
 wait_ns() { kubectl wait deployment --all -n "$1" --for=condition=Available --timeout=300s; }
 
@@ -94,4 +97,48 @@ spec:
   ports: [{name: external, port: 29092, nodePort: 31092}]
 K
 wait_ns kafka
+
+# S3-compatible object storage for @Bucket; a fixed key, only reachable in the cluster
+kubectl create namespace blobstore --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -n blobstore -f - <<S3
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: s3-identities}
+data:
+  s3.json: |
+    {"identities": [{"name": "tck",
+      "credentials": [{"accessKey": "cloudhopper-tck", "secretKey": "cloudhopper-tck-secret"}],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]}]}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: s3}
+spec:
+  selector: {matchLabels: {app: s3}}
+  template:
+    metadata: {labels: {app: s3}}
+    spec:
+      # the service s3 would set S3_PORT, which SeaweedFS reads as its flag s3.port
+      enableServiceLinks: false
+      containers:
+      - name: seaweedfs
+        image: $SEAWEEDFS_IMAGE
+        args: ["server", "-dir=/data", "-s3", "-s3.config=/etc/seaweedfs/s3.json"]
+        ports: [{containerPort: 8333}]
+        readinessProbe: {tcpSocket: {port: 8333}, periodSeconds: 2}
+        volumeMounts:
+        - {name: identities, mountPath: /etc/seaweedfs}
+        - {name: data, mountPath: /data}
+      volumes:
+      - {name: identities, configMap: {name: s3-identities}}
+      - {name: data, emptyDir: {}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: s3}
+spec:
+  selector: {app: s3}
+  ports: [{name: s3, port: 8333}]
+S3
+wait_ns blobstore
 echo "cluster $CLUSTER ready"

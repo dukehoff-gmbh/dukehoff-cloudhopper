@@ -198,4 +198,14 @@ public class S3BlobStoreTest {
         assertEquals(URI.create("https://s3.eu-central-1.amazonaws.com/my.data/"), S3BlobStoreFactory.root("my.data", "eu-central-1", null));
         assertEquals(URI.create("https://s3.fr-par.scw.cloud/data/"), S3BlobStoreFactory.root("data", "fr-par", "https://s3.fr-par.scw.cloud"));
     }
+
+    @Test
+    public void configuredCredentialsTakePrecedenceOverTheEnvironment() {
+        AwsCredentials configured = S3BlobStoreFactory.credentials("SCWKEY", "secret").get();
+        assertEquals("SCWKEY", configured.accessKeyId());
+        assertEquals("secret", configured.secretAccessKey());
+        assertEquals(null, configured.sessionToken());
+        assertThrows(BlobStoreException.class, () -> S3BlobStoreFactory.credentials("SCWKEY", " "));
+        assertThrows(BlobStoreException.class, () -> S3BlobStoreFactory.credentials(null, "secret"));
+    }
 }

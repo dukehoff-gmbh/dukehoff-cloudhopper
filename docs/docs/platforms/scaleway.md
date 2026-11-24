@@ -20,6 +20,7 @@ Container. The account setup and the deployment are described in the
 | `queueTrigger.ftl` | `<function>_event_queueTrigger.tf` | For a queue: the queue `<cloudhopper_name_prefix><queue>`, the dead-letter queue `<cloudhopper_name_prefix><queue>-dlq` and a trigger that delivers to `POST /events/<function name>` |
 | `sqs.ftl` | `sqs.tf` | Activates Scaleway Queues in the project and creates the credentials of the queues and triggers; written once for all event functions |
 | `publisher.ftl` | `publisher.tf` | For `@Queue` publishers: credentials that may only publish, and the queue URLs and credentials as environment of the container |
+| `buckets.ftl` | `buckets.tf` | For `@Bucket` parameters: an Object Storage bucket per name, the variable `cloudhopper_blobstore_credentials`, and the endpoint, bucket names and key as environment of the container |
 
 The container pulls the image given in the variable `image`. Build it from the
 generated Dockerfile for `linux/amd64` and push it to a registry first; the
@@ -50,6 +51,35 @@ creates credentials that may only publish and passes them, the region and the
 queue URLs to the container. The SQS limits apply: at most 256 KiB per message
 and 10 messages per batch. Queues outside the project (`existing = true`) are not
 supported yet.
+
+## Buckets
+
+A [`@Bucket`](../guides/writing-functions.md#reading-and-writing-buckets) store
+reads and writes Scaleway Object Storage through its S3 API, with the S3 client of
+`eu.cloudhopper.mc:provider-aws-blobstore`; the archetype adds it without the AWS
+Lambda libraries. The generated `buckets.tf` creates a bucket
+`<cloudhopper_name_prefix><name>` in the region of the container, unless the name
+is `existing` or mapped in `cloudhopper_bucket_names`, and passes the endpoint
+`https://s3.<region>.scw.cloud` and the bucket names to the container.
+
+The container signs its requests with an IAM API key, which the generated
+Terraform does not create. Pass it in the variable
+`cloudhopper_blobstore_credentials`; `terraform plan` fails without it when a
+function has a `@Bucket` parameter:
+
+```hcl
+cloudhopper_blobstore_credentials = {
+  access_key = "SCW..."
+  secret_key = "..."
+}
+```
+
+The key belongs to an IAM application with the permission set
+`ObjectStorageReadOnly` or `ObjectStorageFullAccess` in the project. These
+permissions cover every bucket of the project, and all functions run in one
+container with one key: the runtime checks the declared `access` of each
+parameter, Scaleway only the key's permissions. Like `cloudhopper_secrets`, the
+key is stored in the Terraform state.
 
 ## Secrets
 
@@ -88,3 +118,4 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `eu.cloudhopper.mc:provider-http` | compile | `HandlerContext` for HTTP services |
 | `org.springframework.boot:spring-boot-starter-webmvc` | compile | Spring MVC |
 | `eu.cloudhopper.mc:provider-aws-publisher` | compile, without `aws-lambda-java-core` and `aws-lambda-java-events` | `@Queue` publishers for the SQS API of Scaleway Queues |
+| `eu.cloudhopper.mc:provider-aws-blobstore` | compile, without `aws-lambda-java-core` and `aws-lambda-java-events` | `@Bucket` stores for the S3 API of Scaleway Object Storage |

@@ -61,6 +61,8 @@ import org.apache.kafka.common.serialization.StringSerializer;
  *   <li>{@code CLOUDHOPPER_TCK_INGRESS_PORT} (31080): the host port of the Knative ingress</li>
  *   <li>{@code CLOUDHOPPER_TCK_KAFKA} (localhost:31092): Kafka as the TCK reaches it</li>
  *   <li>{@code CLOUDHOPPER_TCK_CLUSTER_KAFKA} (kafka.kafka.svc:9092): Kafka as the cluster reaches it</li>
+ *   <li>{@code CLOUDHOPPER_TCK_S3} (http://s3.blobstore.svc:8333): the S3-compatible storage as the
+ *       cluster reaches it, a SeaweedFS in the namespace {@code blobstore}</li>
  * </ul>
  */
 public class TestContextKnative implements TestContext {
@@ -79,11 +81,16 @@ public class TestContextKnative implements TestContext {
     private final String ingressPort = env("CLOUDHOPPER_TCK_INGRESS_PORT", "31080");
     private final String kafka = env("CLOUDHOPPER_TCK_KAFKA", "localhost:31092");
     private final String clusterKafka = env("CLOUDHOPPER_TCK_CLUSTER_KAFKA", "kafka.kafka.svc:9092");
+    private final String s3 = env("CLOUDHOPPER_TCK_S3", "http://s3.blobstore.svc:8333");
 
     private String baseUrl;
 
     /** The Kubernetes secret with the TCK secret, in the release's namespace. */
     private static final String SECRET_NAME = "cloudhopper-tck-secret";
+    /** The Kubernetes secret with the key of the object storage, which kind-setup.sh configures. */
+    private static final String BLOBSTORE_SECRET_NAME = "cloudhopper-tck-blobstore";
+    /** The bucket of the test functions (BlobStoreFunctions); the chart creates no buckets. */
+    private static final String BUCKET = "cloudhopper-tck-blobs";
 
     @Override
     public java.util.Set<String> supportedCapabilities() {
@@ -106,6 +113,13 @@ public class TestContextKnative implements TestContext {
             run(moduleDir, "kubectl", "delete", "secret", SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
             run(moduleDir, "kubectl", "create", "secret", "generic", SECRET_NAME, "--namespace", namespace,
                     "--from-literal=value=" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET);
+            // the bucket the BlobStore tests use, and the key the chart passes to the application
+            run(moduleDir, "kubectl", "exec", "--namespace", "blobstore", "deployment/s3", "--",
+                    "sh", "-c", "echo 's3.bucket.list' | weed shell | grep -q '^  " + BUCKET + "\\b'"
+                    + " || echo 's3.bucket.create -name " + BUCKET + "' | weed shell");
+            run(moduleDir, "kubectl", "delete", "secret", BLOBSTORE_SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
+            run(moduleDir, "kubectl", "create", "secret", "generic", BLOBSTORE_SECRET_NAME, "--namespace", namespace,
+                    "--from-literal=access-key-id=cloudhopper-tck", "--from-literal=secret-access-key=cloudhopper-tck-secret");
             System.out.println("⎈ Installing the chart as release " + RELEASE + " in namespace " + namespace);
             List<String> helm = new ArrayList<>(List.of("helm", "upgrade", "--install", RELEASE,
                     deploymentDir.resolve("chart").toString(), "--namespace", namespace));
@@ -122,6 +136,9 @@ public class TestContextKnative implements TestContext {
                     "--set", "image.repository=" + repository,
                     "--set", "image.tag=" + tag,
                     "--set", "kafka.bootstrapServers={" + clusterKafka + "}",
+                    "--set-string", "blobstore.s3Endpoint=" + s3,
+                    "--set-string", "blobstore.region=us-east-1",
+                    "--set-string", "blobstore.credentialsSecret=" + BLOBSTORE_SECRET_NAME,
                     // one instance stays up, so that its log holds every line the tests look for
                     "--set", "scaling.minScale=1",
                     // a single-node Kafka
@@ -146,6 +163,7 @@ public class TestContextKnative implements TestContext {
         try {
             run(moduleDir, "helm", "uninstall", RELEASE, "--namespace", namespace, "--ignore-not-found", "--wait");
             run(moduleDir, "kubectl", "delete", "secret", SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
+            run(moduleDir, "kubectl", "delete", "secret", BLOBSTORE_SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
         } catch (IOException e) {
             throw new RuntimeException("Failed to uninstall the release " + RELEASE, e);
         }

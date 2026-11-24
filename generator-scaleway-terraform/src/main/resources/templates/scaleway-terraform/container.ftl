@@ -150,8 +150,8 @@ resource "scaleway_container" "app" {
   cpu_limit                    = var.cpu_limit
   timeout                      = var.timeout
   privacy                      = var.privacy
-  environment_variables        = merge({ for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, local.cloudhopper_publisher_environment, var.environment_variables)
-  secret_environment_variables = merge(local.cloudhopper_publisher_secrets, { for name, value in local.cloudhopper_secrets : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, var.secret_environment_variables)
+  environment_variables        = merge({ for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, local.cloudhopper_publisher_environment, local.cloudhopper_blobstore_environment, var.environment_variables)
+  secret_environment_variables = merge(local.cloudhopper_publisher_secrets, local.cloudhopper_blobstore_secrets, { for name, value in local.cloudhopper_secrets : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, var.secret_environment_variables)
   # the cron triggers call the schedules; an in-process schedule would run in every instance
   args = ["--cloudhopper.schedules.in-process=false"]
 
@@ -159,6 +159,10 @@ resource "scaleway_container" "app" {
     precondition {
       condition     = length(local.cloudhopper_duplicate_properties) == 0
       error_message = "Properties are set more than once in cloudhopper_config, cloudhopper_secrets, cloudhopper_extra_config and cloudhopper_extra_secrets: ${join(", ", local.cloudhopper_duplicate_properties)}"
+    }
+    precondition {
+      condition     = !local.cloudhopper_blobstore_credentials_missing
+      error_message = "The functions use buckets (@Bucket): set cloudhopper_blobstore_credentials to a key of the object storage"
     }
   }
 }

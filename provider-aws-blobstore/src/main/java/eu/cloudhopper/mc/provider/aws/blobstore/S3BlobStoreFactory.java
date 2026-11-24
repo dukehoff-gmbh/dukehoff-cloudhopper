@@ -33,6 +33,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.function.Supplier;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -48,10 +49,12 @@ import org.eclipse.microprofile.config.ConfigProvider;
  *       the region, with the bucket in the host name</li>
  *   <li>{@code cloudhopper.blobstore.s3.region}: the signing region; without it
  *       {@code AWS_REGION}</li>
+ *   <li>{@code cloudhopper.blobstore.s3.access-key-id} and
+ *       {@code cloudhopper.blobstore.s3.secret-access-key}: the credentials of the object storage,
+ *       e.g. a key of an S3-compatible storage; without them {@code AWS_ACCESS_KEY_ID},
+ *       {@code AWS_SECRET_ACCESS_KEY} and {@code AWS_SESSION_TOKEN}, which Lambda sets for the
+ *       function's execution role</li>
  * </ul>
- *
- * <p>The credentials come from {@code AWS_ACCESS_KEY_ID}, {@code AWS_SECRET_ACCESS_KEY} and
- * {@code AWS_SESSION_TOKEN}, which Lambda sets for the function's execution role.</p>
  */
 public class S3BlobStoreFactory implements BlobStoreFactory {
 
@@ -59,6 +62,10 @@ public class S3BlobStoreFactory implements BlobStoreFactory {
     public static final String ENDPOINT = "cloudhopper.blobstore.s3.endpoint";
     /** The configuration property of the signing region. */
     public static final String REGION = "cloudhopper.blobstore.s3.region";
+    /** The configuration property of the access key id of the object storage. */
+    public static final String ACCESS_KEY_ID = "cloudhopper.blobstore.s3.access-key-id";
+    /** The configuration property of the secret access key of the object storage. */
+    public static final String SECRET_ACCESS_KEY = "cloudhopper.blobstore.s3.secret-access-key";
 
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
@@ -71,8 +78,24 @@ public class S3BlobStoreFactory implements BlobStoreFactory {
             throw new BlobStoreException("Cannot tell the region of bucket " + bucket + ": set AWS_REGION or " + REGION);
         }
         String endpoint = config.getOptionalValue(ENDPOINT, String.class).orElse(null);
-        return new S3BlobStore(HTTP, root(bucket, region, endpoint), bucket, region, AwsCredentials::fromEnvironment,
+        return new S3BlobStore(HTTP, root(bucket, region, endpoint), bucket, region,
+                credentials(config.getOptionalValue(ACCESS_KEY_ID, String.class).orElse(null),
+                        config.getOptionalValue(SECRET_ACCESS_KEY, String.class).orElse(null)),
                 Clock.systemUTC(), Duration.ofMillis(100));
+    }
+
+    /** The configured credentials, or else those of the environment, resolved for every request. */
+    static Supplier<AwsCredentials> credentials(String id, String secret) {
+        boolean hasId = id != null && !id.isBlank();
+        boolean hasSecret = secret != null && !secret.isBlank();
+        if (!hasId && !hasSecret) {
+            return AwsCredentials::fromEnvironment;
+        }
+        if (!hasId || !hasSecret) {
+            throw new BlobStoreException("Set both " + ACCESS_KEY_ID + " and " + SECRET_ACCESS_KEY);
+        }
+        AwsCredentials configured = new AwsCredentials(id, secret, null);
+        return () -> configured;
     }
 
     /** The bucket's URL: by path at an S3-compatible endpoint or for names with dots, else in the host name. */

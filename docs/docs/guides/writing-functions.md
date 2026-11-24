@@ -317,19 +317,22 @@ public String download(@PathParam("id") String id,
   `delete(key)` removes it; `list(prefix)` returns the keys that start with the prefix.
 - `access` is `READ` (the default), `WRITE` or `READ_WRITE`. The runtime refuses
   every operation the parameter did not declare with `BlobAccessDeniedException`,
-  on every target. On the clouds, the generator also gives the function's
-  [identity](#identities-and-permissions) exactly these permissions on this bucket.
+  on every target. On AWS and GCP, the generator also gives the function's
+  [identity](#identities-and-permissions) exactly these permissions on this bucket;
+  on Azure, Scaleway and Knative the key of the storage applies to all functions.
   Other failures throw `BlobStoreException`.
-- The generator creates the bucket once per name (on AWS named
+- The generator creates the bucket once per name (on AWS and Scaleway named
   `<cloudhopper_name_prefix><name>`, on Azure a blob container in the function
-  app's storage account). If a [storage trigger](#storage-buckets) of
+  app's storage account). On Knative the buckets must exist; see
+  [Knative](../platforms/knative.md#buckets). If a [storage trigger](#storage-buckets) of
   the project has the same name, both use its bucket. A bucket that another system
   owns is declared with `@Bucket(name = "...", existing = true)` and used under
   exactly this name; all `@Bucket` parameters of one name must agree on `existing`.
 - A bucket that your own Terraform creates goes into the local
   `cloudhopper_bucket_names`; see
   [Values from your own Terraform](../platforms/generator-overview.md#values-from-your-own-terraform).
-- Bucket names on AWS and GCP are global across all accounts. Use 3 to 63
+- Bucket names on AWS and GCP are global across all accounts, on Scaleway
+  within a region. Use 3 to 63
   lowercase letters, digits and hyphens, unless the bucket is `existing`.
 
 The target needs a runtime module for this, which the archetype adds; if it is

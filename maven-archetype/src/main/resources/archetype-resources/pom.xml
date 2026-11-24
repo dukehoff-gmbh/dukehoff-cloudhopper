@@ -154,6 +154,25 @@
                     </exclusions>
                 </dependency>
 #end
+#if($generator == "knative" || $generator == "scaleway-terraform")
+                <!-- reads and writes buckets from function code (@Bucket BlobStore) through the S3 API -->
+                <dependency>
+                    <groupId>eu.cloudhopper.mc</groupId>
+                    <artifactId>provider-aws-blobstore</artifactId>
+                    <version>${cloudhopper.version}</version>
+                    <exclusions>
+                        <!-- only Lambda functions need these -->
+                        <exclusion>
+                            <groupId>com.amazonaws</groupId>
+                            <artifactId>aws-lambda-java-core</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>com.amazonaws</groupId>
+                            <artifactId>aws-lambda-java-events</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+#end
 #if($generator == "azure-terraform")
                 <dependency>
                     <groupId>com.microsoft.azure.functions</groupId>

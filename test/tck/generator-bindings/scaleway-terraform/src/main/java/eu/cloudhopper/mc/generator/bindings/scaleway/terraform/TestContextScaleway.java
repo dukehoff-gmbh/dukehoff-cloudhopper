@@ -71,7 +71,10 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
  * <ul>
  *   <li>{@code CLOUDHOPPER_TCK_SCW_CONTAINER} (cloudhopper-tck): name of the container and its namespace</li>
  *   <li>{@code CLOUDHOPPER_TCK_SCW_REGISTRY} (dukehoff-cloudhopper-tck): registry namespace, unique across Scaleway</li>
- *   <li>{@code CLOUDHOPPER_TCK_NAME_PREFIX} (tck-): prefix of the queue names</li>
+ *   <li>{@code CLOUDHOPPER_TCK_NAME_PREFIX} (tck-): prefix of the queue and bucket names</li>
+ *   <li>{@code CLOUDHOPPER_TCK_SCW_BLOBSTORE_ACCESS_KEY} and {@code CLOUDHOPPER_TCK_SCW_BLOBSTORE_SECRET_KEY}
+ *       (required): the key the container uses for the object storage, passed to the Terraform
+ *       variable {@code cloudhopper_blobstore_credentials}; never printed</li>
  * </ul>
  */
 public class TestContextScaleway implements TestContext {
@@ -340,7 +343,18 @@ public class TestContextScaleway implements TestContext {
         List<String> command = new ArrayList<>(List.of("terraform"));
         command.addAll(List.of(args));
         command.add("-no-color");
-        return run(deploymentDir, Map.of(), null, command.toArray(String[]::new));
+        return run(deploymentDir, blobstoreCredentials(), null, command.toArray(String[]::new));
+    }
+
+    /** The key of the object storage as the Terraform variable cloudhopper_blobstore_credentials, in the environment. */
+    private static Map<String, String> blobstoreCredentials() {
+        String accessKey = System.getenv("CLOUDHOPPER_TCK_SCW_BLOBSTORE_ACCESS_KEY");
+        String secretKey = System.getenv("CLOUDHOPPER_TCK_SCW_BLOBSTORE_SECRET_KEY");
+        if (accessKey == null || accessKey.isBlank() || secretKey == null || secretKey.isBlank()) {
+            return Map.of();
+        }
+        return Map.of("TF_VAR_cloudhopper_blobstore_credentials",
+                "{\"access_key\":\"" + accessKey.trim() + "\",\"secret_key\":\"" + secretKey.trim() + "\"}");
     }
 
     /** The Scaleway secret key from SCW_SECRET_KEY or the scw configuration; never printed. */
