@@ -45,7 +45,8 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
  * The {@code scaleway-terraform} generator: the {@code springboot-http} application plus
  * Terraform that runs it as one Scaleway Serverless Container. A cron trigger per scheduled
  * function calls {@code POST /schedules/<function>}; a Scaleway Queue (SQS), a dead-letter queue
- * and a queue trigger per queue function deliver to {@code POST /events/<function>}.
+ * and a queue trigger per queue function deliver to {@code POST /events/<function>}. The buckets
+ * of {@code @Bucket} parameters are Scaleway Object Storage buckets.
  * Build and push the image, then {@code terraform apply -var image=<image>} in
  * {@code target/deployment/scaleway-terraform}.
  */
@@ -60,6 +61,17 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
             // the SQS client of provider-aws-publisher; Scaleway Queues speak the SQS API
             runtimeClass = "eu.cloudhopper.mc.provider.aws.publisher.SqsPublisherFactory",
             runtimeModule = "eu.cloudhopper.mc:provider-aws-publisher"
+        ),
+        @GeneratorFeature(
+            supportedAnnotation = eu.cloudhopper.mc.annotations.Bucket.class,
+            supportedAttributes = {
+                eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.NAME,
+                eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.ACCESS,
+                eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.EXISTING
+            },
+            // the S3 client of provider-aws-blobstore; Scaleway Object Storage speaks the S3 API
+            runtimeClass = "eu.cloudhopper.mc.provider.aws.blobstore.S3BlobStoreFactory",
+            runtimeModule = "eu.cloudhopper.mc:provider-aws-blobstore"
         ),
         @GeneratorFeature(
             supportedAnnotation = Function.class,
@@ -137,6 +149,14 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
             outputFileExtension = "tf",
             outputSubDirectory = "",
             outputFileName = "publisher.tf"
+        ),
+        @Template(
+            phase = GenerationPhase.FINALIZE,
+            templateName = "buckets.ftl",
+            description = "Generates the buckets of @Bucket parameters and the container settings of the object storage",
+            outputFileExtension = "tf",
+            outputSubDirectory = "",
+            outputFileName = "buckets.tf"
         )
     }
 )

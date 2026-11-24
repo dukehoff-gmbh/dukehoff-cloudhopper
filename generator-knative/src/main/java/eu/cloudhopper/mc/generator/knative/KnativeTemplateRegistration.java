@@ -52,6 +52,17 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
     generatorId = "knative",
     supportedFeatures = {
         @GeneratorFeature(
+            supportedAnnotation = eu.cloudhopper.mc.annotations.Bucket.class,
+            supportedAttributes = {
+                eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.NAME,
+                eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.ACCESS,
+                eu.cloudhopper.mc.annotations.Bucket.BucketAttribute.EXISTING
+            },
+            // the S3 client of provider-aws-blobstore, for S3 and S3-compatible storage such as MinIO
+            runtimeClass = "eu.cloudhopper.mc.provider.aws.blobstore.S3BlobStoreFactory",
+            runtimeModule = "eu.cloudhopper.mc:provider-aws-blobstore"
+        ),
+        @GeneratorFeature(
             supportedAnnotation = eu.cloudhopper.mc.annotations.Queue.class,
             supportedAttributes = {
                 eu.cloudhopper.mc.annotations.Queue.QueueAttribute.NAME,

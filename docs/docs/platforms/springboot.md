@@ -59,8 +59,9 @@ the declared `access` is checked as on the clouds.
 
 For S3 or S3-compatible storage (for example MinIO), add
 `eu.cloudhopper.mc:provider-aws-blobstore`; its store takes precedence over the
-directories. It signs with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (and
-`AWS_SESSION_TOKEN`), in the region `cloudhopper.blobstore.s3.region` or
+directories. It signs with `cloudhopper.blobstore.s3.access-key-id` and
+`cloudhopper.blobstore.s3.secret-access-key`, or else with `AWS_ACCESS_KEY_ID` and
+`AWS_SECRET_ACCESS_KEY` (and `AWS_SESSION_TOKEN`), in the region `cloudhopper.blobstore.s3.region` or
 `AWS_REGION`; `cloudhopper.blobstore.s3.endpoint` sets the endpoint of an
 S3-compatible store, which is then addressed by path
 (`<endpoint>/<bucket>/<key>`).

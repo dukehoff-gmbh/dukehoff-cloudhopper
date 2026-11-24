@@ -16,7 +16,7 @@ cluster setup and the installation are described in the
 | Template | Output | Purpose |
 |---|---|---|
 | `chart.ftl` | `chart/Chart.yaml` | Chart metadata; the chart and app version follow the project version |
-| `values.ftl` | `chart/values.yaml` | Image, Kafka bootstrap servers, delivery, scaling, timeout, resources, environment |
+| `values.ftl` | `chart/values.yaml` | Image, Kafka bootstrap servers, delivery, object storage, scaling, timeout, resources, environment |
 | `service.ftl` | `chart/templates/service.yaml` | Knative `Service`; starts the application with `cloudhopper.schedules.in-process=false` |
 | `pingSource.ftl` | `chart/templates/<function>_schedule_pingSource.yaml` | `PingSource` with `cron` and `timezone` that calls `POST /schedules/<function name>` |
 | `kafkaSource.ftl` | `chart/templates/<function>_event_kafkaSource.yaml` | For a queue: `KafkaSource` on the topic `<queue>` that delivers to `POST /events/<function name>`, and a `KafkaSink` for the dead-letter topic `<queue>.DLT` |
@@ -55,6 +55,29 @@ application with `cloudhopper.publisher=kafka` and these servers, so the
 application only sends and leaves consuming to the `KafkaSource`s.
 `existing = true` sends to a topic of that name in the same Kafka cluster.
 
+## Buckets
+
+A [`@Bucket`](../guides/writing-functions.md#reading-and-writing-buckets) store
+reads and writes an object storage through the S3 API, with the S3 client of
+`eu.cloudhopper.mc:provider-aws-blobstore`; the archetype adds it without the AWS
+Lambda libraries. Any S3-compatible storage works, for example SeaweedFS, Ceph or
+the object storage of a cloud, as does S3 itself. The chart creates no buckets:
+they must exist, under the name of the `@Bucket` parameter unless
+`blobstore.buckets` maps it to another one.
+
+```yaml
+blobstore:
+  s3Endpoint: http://s3.storage.svc:8333   # empty: S3 of the region
+  region: us-east-1
+  credentialsSecret: object-storage         # keys access-key-id and secret-access-key
+  buckets:
+    acme-reports: prod-acme-reports
+```
+
+The key comes from the Kubernetes secret `credentialsSecret` in the release's
+namespace. The runtime checks the declared `access` of each parameter; what the
+key may do is up to the storage.
+
 ## Secrets
 
 [Secrets](../guides/writing-functions.md#secrets) come from Kubernetes secrets in
@@ -92,3 +115,4 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `eu.cloudhopper.mc:provider-http` | compile | `HandlerContext` for HTTP services |
 | `org.springframework.boot:spring-boot-starter-webmvc` | compile | Spring MVC |
 | `org.springframework.boot:spring-boot-starter-kafka` | compile | `@Queue` publishers send to the Kafka topics |
+| `eu.cloudhopper.mc:provider-aws-blobstore` | compile, without `aws-lambda-java-core` and `aws-lambda-java-events` | `@Bucket` stores for S3 and S3-compatible storage |

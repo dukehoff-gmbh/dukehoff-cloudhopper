@@ -33,6 +33,18 @@ scaling:
 # request timeout of the service in seconds
 timeoutSeconds: 300
 
+# Object storage of the @Bucket parameters, through the S3 API: an S3-compatible storage such as
+# MinIO or a cloud's object storage, or S3 itself. The chart creates no buckets; they must exist.
+blobstore:
+  # e.g. http://minio.minio.svc:9000; empty: S3 of the region
+  s3Endpoint: ""
+  # the signing region, e.g. us-east-1 for MinIO; required when a function has a @Bucket parameter
+  region: ""
+  # Kubernetes secret in the release's namespace with the keys access-key-id and secret-access-key
+  credentialsSecret: ""
+  # deployed bucket names by @Bucket name where they differ, e.g. {reports: prod-reports}
+  buckets: {}
+
 # container resources, e.g. {limits: {memory: 512Mi}}
 resources: {}
 

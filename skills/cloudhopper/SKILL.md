@@ -101,9 +101,11 @@ public void render(ReportRequest request,
 ```
 
 `access` is `READ` (default), `WRITE` or `READ_WRITE`; anything else throws
-`BlobAccessDeniedException`, and the identity gets exactly these permissions. The generator creates
-the bucket once per name, or shares the bucket of a storage trigger with the same name; a bucket
-owned by another system is `@Bucket(name = "...", existing = true)`.
+`BlobAccessDeniedException`, and on AWS and GCP the identity gets exactly these permissions. The
+generator creates the bucket once per name, or shares the bucket of a storage trigger with the same
+name; a bucket owned by another system is `@Bucket(name = "...", existing = true)`. Scaleway needs
+an object storage key in `cloudhopper_blobstore_credentials`; on Knative the buckets must exist and
+the Helm values `blobstore.*` name the S3 endpoint and key.
 
 Docs: https://cloudhopper.eu/docs/guides/writing-functions#reading-and-writing-buckets
 
