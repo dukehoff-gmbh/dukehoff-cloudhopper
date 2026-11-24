@@ -48,6 +48,7 @@ Which ones a target needs is listed on its page, under *Runtime modules*.
 | `provider-aws` | AWS | `ApiGatewayEventRouter`, the Lambda entry point that routes API Gateway, SQS, S3, schedule and direct calls; `SqsEventHandler`, `S3EventHandler`; `SigV4Signer` and `AwsCredentials` for the AWS APIs the runtime calls; `SecretsManagerClient` and the `ConfigSource` for secrets |
 | `provider-aws-publisher` | AWS, Scaleway | `@Queue` publishers for the SQS API |
 | `provider-aws-blobstore` | AWS | `@Bucket` stores for S3 and S3-compatible storage |
+| `provider-aws-keyvalue` | AWS | `@Table` stores for DynamoDB |
 | `provider-azure` | Azure | `AzureBaseFunctionWrapper`, the base class of the generated function classes; `StorageAccount` for SharedKey requests to the function app's storage account; `KeyVaultClient` and the `ConfigSource` for secrets |
 | `provider-azure-publisher` | Azure | `@Queue` publishers for Storage queues |
 | `provider-azure-blobstore` | Azure | `@Bucket` stores for blob containers of the function app's storage account |

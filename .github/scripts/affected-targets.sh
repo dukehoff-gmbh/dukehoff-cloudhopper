@@ -25,6 +25,8 @@ target_of() {
       echo "aws scaleway" ;;
     provider-aws-blobstore/*)
       echo "aws knative scaleway" ;;
+    provider-aws-keyvalue/*)
+      echo aws ;;
     generator-aws-terraform/*|test/system-tests/generator-aws-terraform/*|test/tck/generator-bindings/aws-terraform/*)
       echo aws ;;
     generator-azure-terraform/*|provider-azure/*|provider-azure-publisher/*|provider-azure-blobstore/*|test/system-tests/generator-azure-terraform/*|test/tck/generator-bindings/azure-terraform/*)

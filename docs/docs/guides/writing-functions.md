@@ -345,6 +345,64 @@ support `@Bucket` is listed in the
 
 ---
 
+## Reading and writing tables
+
+A function reads and writes items of a key-value table through a `KeyValueStore`
+parameter annotated with `@Table`:
+
+```java
+@Function(name = "registerAccount")
+@HttpTrigger(path = "/accounts/{id}", method = "PUT")
+public String register(@PathParam("id") String id, Account account,
+                       @Table(name = "accounts", access = Table.Access.READ_WRITE) KeyValueStore accounts) {
+    Key key = new Key("account:" + id, "profile");
+    boolean created = accounts.putIfAbsent(new Item(key, Map.of("name", account.name(), "logins", 0L)));
+    return created ? "created" : "exists";
+}
+
+@Function(name = "listOrders")
+@HttpTrigger(path = "/accounts/{id}/orders", method = "GET")
+public List<Map<String, Object>> orders(@PathParam("id") String id,
+                                        @Table(name = "accounts") KeyValueStore accounts) {
+    return accounts.query("account:" + id, "order:").stream().map(Item::attributes).toList();
+}
+```
+
+- An item has a key of a **partition** and a **sort key**, and attributes.
+  `query(partition, sortKeyPrefix)` reads the items of one partition whose sort
+  keys start with a prefix, in the order of their sort keys;
+  `query(partition, prefix, limit, pageToken)` reads them page by page. There are
+  no queries across partitions and no secondary indexes: to list items of
+  several partitions, keep an index partition of your own.
+- `get`, `put`, `delete`; `putIfAbsent` creates an item only if there is none
+  with its key; `update(key, set, expected)` changes attributes of an existing
+  item only if its attributes have the expected values (optimistic concurrency;
+  `null` in `set` removes an attribute, `null` in `expected` means absent).
+  `batchPut` and `batchDelete` split the items into the batches the target
+  allows; they are not atomic.
+- Keys are 1 to 512 characters without `/`, `\`, `#`, `?` and control
+  characters; compose them with `:`, such as `account:42`. Attribute names start
+  with a letter, followed by up to 63 letters, digits and underscores.
+- Attribute values are `String`, `Long`, `Double`, `Boolean`, `List` and `Map`.
+  Whole numbers are read back as `Long`, others as `Double`, on every target.
+  An item may have at most 400 KB.
+- Reads are strongly consistent on every target. There is no expiry (TTL).
+- `access` is `READ` (the default: `get`, `query`), `WRITE` (the writing
+  operations) or `READ_WRITE`; the runtime refuses the others with
+  `KeyValueAccessDeniedException`. On targets with
+  [identities](#identities-and-permissions), the generator also grants exactly
+  these permissions on this table. Other failures throw `KeyValueStoreException`.
+- The generator creates the table once per name. Table names are 3 to 63
+  lowercase letters and digits, starting with a letter, unless the table is
+  `existing`: one owned by another system, used under exactly this name. A table
+  that your own Terraform creates goes into the local `cloudhopper_table_names`.
+
+The target needs a runtime module for this, which the archetype adds. Which
+targets support `@Table` is listed in the
+[support matrix](../platforms/generator-overview.md#support-matrix).
+
+---
+
 ## Configuration
 
 Values that differ per deployment, such as resource names, endpoints or limits,

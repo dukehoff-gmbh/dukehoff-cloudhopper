@@ -66,6 +66,15 @@ directories. It signs with `cloudhopper.blobstore.s3.access-key-id` and
 S3-compatible store, which is then addressed by path
 (`<endpoint>/<bucket>/<key>`).
 
+## Tables
+
+A [`@Table`](../guides/writing-functions.md#reading-and-writing-tables) store
+keeps the items in memory, one table per name (or per
+`cloudhopper.table.<name>.name`). This suits local runs and tests: the items are
+lost when the application stops, and every instance has its own. The declared
+`access` is checked as on the clouds. A `KeyValueStoreFactory` of another
+runtime module on the classpath takes precedence.
+
 ## Queues from Kafka
 
 On Spring Boot, `@EventTrigger(source = EventSource.QUEUE, name = "<queue>")`

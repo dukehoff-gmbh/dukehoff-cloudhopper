@@ -47,6 +47,10 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
       # @Bucket(name = "${b.name}"), defined in api_buckets.tf
       ${b.nameEnvironmentName} = local.cloudhopper_bucket_${b.id}
 </#list>
+<#list handlerInfo.tables as t>
+      # @Table(name = "${t.name}"), defined in api_tables.tf
+      ${t.nameEnvironmentName} = local.cloudhopper_table_${t.id}
+</#list>
 <#if configNames?has_content>
       # the secrets of the properties the function reads, read by the runtime from Secrets Manager
       CLOUDHOPPER_SECRETS = jsonencode({ for name, ref in local.cloudhopper_secrets : name => ref if contains([${configNames}], name) })

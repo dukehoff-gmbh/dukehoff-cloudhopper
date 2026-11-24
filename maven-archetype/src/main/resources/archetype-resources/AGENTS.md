@@ -28,9 +28,10 @@ $h$h Rules
   `com.microsoft.azure.*`, `com.scaleway.*`, …), and do not depend on provider-specific
   resources, environment variables or event formats. They tie the function to one target and
   break the other profiles. Use the Cloudhopper APIs instead: `@Queue` with `Publisher<T>` to
-  send messages, `@Bucket` with `BlobStore` to read and write objects, `@ConfigProperty`
-  (MicroProfile Config) for configuration and secrets, `@EventTrigger` and `StorageEvent` for
-  events, `@Function(identity)` for permissions.
+  send messages, `@Bucket` with `BlobStore` to read and write objects, `@Table` with
+  `KeyValueStore` to read and write items, `@ConfigProperty` (MicroProfile Config) for
+  configuration and secrets, `@EventTrigger` and `StorageEvent` for events,
+  `@Function(identity)` for permissions.
 - **When there is no Cloudhopper API for something**, keep the function class portable: put the
   provider-specific code behind an interface of your own in a separate class, choose the
   implementation through configuration, and say which targets it supports.

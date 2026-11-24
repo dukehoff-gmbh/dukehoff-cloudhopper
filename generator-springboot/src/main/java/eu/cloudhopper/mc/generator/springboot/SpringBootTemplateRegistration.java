@@ -63,6 +63,16 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger.ScheduleAttribute;
             runtimeModule = "eu.cloudhopper.mc:provider-springboot"
         ),
         @GeneratorFeature(
+            supportedAnnotation = eu.cloudhopper.mc.annotations.Table.class,
+            supportedAttributes = {
+                eu.cloudhopper.mc.annotations.Table.TableAttribute.NAME,
+                eu.cloudhopper.mc.annotations.Table.TableAttribute.ACCESS,
+                eu.cloudhopper.mc.annotations.Table.TableAttribute.EXISTING
+            },
+            runtimeClass = "eu.cloudhopper.mc.provider.springboot.keyvalue.SpringKeyValueStoreFactory",
+            runtimeModule = "eu.cloudhopper.mc:provider-springboot"
+        ),
+        @GeneratorFeature(
             supportedAnnotation = Function.class,
             supportedAttributes = {
                 FunctionAttribute.NAME

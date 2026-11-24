@@ -87,6 +87,16 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     runtimeModule = "eu.cloudhopper.mc:provider-aws-blobstore"
             ),
             @GeneratorFeature(
+                    supportedAnnotation = eu.cloudhopper.mc.annotations.Table.class,
+                    supportedAttributes = {
+                        eu.cloudhopper.mc.annotations.Table.TableAttribute.NAME,
+                        eu.cloudhopper.mc.annotations.Table.TableAttribute.ACCESS,
+                        eu.cloudhopper.mc.annotations.Table.TableAttribute.EXISTING
+                    },
+                    runtimeClass = "eu.cloudhopper.mc.provider.aws.keyvalue.DynamoKeyValueStoreFactory",
+                    runtimeModule = "eu.cloudhopper.mc:provider-aws-keyvalue"
+            ),
+            @GeneratorFeature(
                     supportedAnnotation = HttpTrigger.class,
                     supportedAttributes = {
                         HttpTrigger.HttpTriggerAttribute.OPERATION_ID,
@@ -151,6 +161,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     phase = GenerationPhase.FINALIZE,
                     templateName = "buckets.ftl",
                     description = "Generates the buckets of @Bucket parameters and the permissions of their identities (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.FINALIZE,
+                    templateName = "tables.ftl",
+                    description = "Generates the DynamoDB tables of @Table parameters and the permissions of their identities (Terraform)",
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
                     javaFile = false
