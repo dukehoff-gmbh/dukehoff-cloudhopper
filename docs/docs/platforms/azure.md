@@ -56,6 +56,22 @@ their own, so the declared `access` is enforced by the runtime only. Containers 
 other storage accounts (`existing = true`) and `cloudhopper_bucket_names` are not
 supported yet.
 
+## Tables
+
+A function with a [`@Table`](../guides/writing-functions.md#reading-and-writing-tables)
+parameter needs the dependency `eu.cloudhopper.mc:provider-azure-keyvalue`; the
+archetype adds it. A table is the table of that name in Table Storage of the
+function app's storage account, which the generated Terraform creates
+(`tables.tf`). The runtime calls the Table service REST API, signed with the
+account key from `AzureWebJobsStorage`, without the Azure SDK. The partition key
+is the entity's `PartitionKey`, the sort key its `RowKey`; strings, booleans,
+`Long` and `Double` are properties of the attribute's name, lists and maps are
+stored as JSON in the property `_<name>`. As for buckets, the declared `access` is
+enforced by the runtime only. Tables of other storage accounts
+(`existing = true`) are not supported yet.
+
+Destroying the deployment deletes the tables, with their items.
+
 ## Secrets
 
 The Terraform variable `cloudhopper_secrets` maps a property name to a secret in
@@ -101,4 +117,5 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `eu.cloudhopper.mc:provider-azure` | compile | `AzureBaseFunctionWrapper`, the base class of the generated function classes (HTTP, timer and queue triggers), `StorageAccount`, which reads `AzureWebJobsStorage` and signs Storage requests, and the `ConfigSource` that reads secrets from Key Vault |
 | `eu.cloudhopper.mc:provider-azure-publisher` | compile | `@Queue` publishers for Storage queues, without the Azure SDK |
 | `eu.cloudhopper.mc:provider-azure-blobstore` | compile | `@Bucket` stores for blob containers, without the Azure SDK |
+| `eu.cloudhopper.mc:provider-azure-keyvalue` | compile | `@Table` stores for Table Storage, without the Azure SDK |
 | `com.microsoft.azure.functions:azure-functions-java-library` | compile | The trigger annotations of the generated classes |

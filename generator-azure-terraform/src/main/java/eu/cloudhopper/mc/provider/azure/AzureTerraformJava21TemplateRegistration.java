@@ -60,6 +60,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     runtimeModule = "eu.cloudhopper.mc:provider-azure-blobstore"
             ),
             @GeneratorFeature(
+                    supportedAnnotation = eu.cloudhopper.mc.annotations.Table.class,
+                    supportedAttributes = {
+                        eu.cloudhopper.mc.annotations.Table.TableAttribute.NAME,
+                        eu.cloudhopper.mc.annotations.Table.TableAttribute.ACCESS
+                    },
+                    runtimeClass = "eu.cloudhopper.mc.provider.azure.keyvalue.AzureTableKeyValueStoreFactory",
+                    runtimeModule = "eu.cloudhopper.mc:provider-azure-keyvalue"
+            ),
+            @GeneratorFeature(
                     supportedAnnotation = Function.class,
                     supportedAttributes = {    
                         FunctionAttribute.NAME
@@ -166,6 +175,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
                     outputFileName = "buckets.tf",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.FINALIZE,
+                    templateName = "tables.ftl",
+                    description = "Generates the tables of @Table parameters (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    outputFileName = "tables.tf",
                     javaFile = false
             ),
         }
