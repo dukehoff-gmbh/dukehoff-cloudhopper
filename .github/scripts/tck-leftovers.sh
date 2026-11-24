@@ -5,9 +5,10 @@
 # What counts as a TCK resource:
 #   AWS (shared account): resources tagged cloudhopper-purpose=tck (default_tags of the TCK's main.tf)
 #   Azure: the TCK's resource group
-#   GCP: functions, gateways, scheduler jobs, Eventarc triggers, topics and buckets in the TCK project
+#   GCP: functions, gateways, scheduler jobs, Eventarc triggers, topics, buckets and Firestore
+#        databases other than (default) in the TCK project
 #        (buckets that Cloud Functions manage itself, gcf-*, are not counted)
-#   Scaleway: container and registry namespaces in the TCK project
+#   Scaleway: container and registry namespaces and Serverless SQL Databases in the TCK project
 #
 # Each cloud is checked only when its credentials are present.
 set -uo pipefail
@@ -63,6 +64,9 @@ if [ -n "${GCP_KEY_FILE:-}" ]; then
   for name in $(list scheduler jobs list --location "$region"); do report "GCP scheduler job: $name"; done
   for name in $(list eventarc triggers list --location "$region"); do report "GCP Eventarc trigger: $name"; done
   for name in $(list pubsub topics list); do report "GCP topic: $name"; done
+  for name in $(list firestore databases list); do
+    case "$name" in */"(default)") ;; *) report "GCP Firestore database: $name" ;; esac
+  done
   for name in $(list storage buckets list); do
     case "$name" in gcf-*) ;; *) report "GCP bucket: $name" ;; esac
   done
@@ -74,10 +78,11 @@ if [ -n "${SCW_SECRET_KEY:-}" ]; then
     local body
     body=$(listing "Scaleway $1" curl -sSf -H "X-Auth-Token: $SCW_SECRET_KEY" \
       "https://api.scaleway.com/$1?project_id=$SCW_DEFAULT_PROJECT_ID&page_size=100") || return
-    echo "$body" | jq -r '.namespaces[]?.name' 2>/dev/null
+    echo "$body" | jq -r "${2:-.namespaces}[]?.name" 2>/dev/null
   }
   for name in $(scw_list containers/v1beta1/regions/fr-par/namespaces); do report "Scaleway container namespace: $name"; done
   for name in $(scw_list registry/v1/regions/fr-par/namespaces); do report "Scaleway registry namespace: $name"; done
+  for name in $(scw_list serverless-sqldb/v1alpha1/regions/fr-par/databases .databases); do report "Scaleway Serverless SQL Database: $name"; done
 fi
 
 findings=$(wc -l < "$findings_file" | tr -d ' ')

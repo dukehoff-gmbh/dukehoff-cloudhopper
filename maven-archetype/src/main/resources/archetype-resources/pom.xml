@@ -122,6 +122,14 @@
                     <artifactId>provider-springboot</artifactId>
                     <version>${cloudhopper.version}</version>
                 </dependency>
+#if($generator == "knative" || $generator == "scaleway-terraform")
+                <!-- reads and writes tables in PostgreSQL from function code (@Table KeyValueStore) -->
+                <dependency>
+                    <groupId>eu.cloudhopper.mc</groupId>
+                    <artifactId>provider-jdbc-keyvalue</artifactId>
+                    <version>${cloudhopper.version}</version>
+                </dependency>
+#end
                 <dependency>
                     <groupId>eu.cloudhopper.mc</groupId>
                     <artifactId>provider-http</artifactId>

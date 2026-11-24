@@ -155,7 +155,10 @@ locals {
   yours. On `aws-terraform`, `gcp-terraform` and `scaleway-terraform`.
 - `cloudhopper_table_names` does the same for the tables of `@Table`
   parameters, for example `{ accounts = aws_dynamodb_table.accounts.name }`.
-  On `aws-terraform` and `gcp-terraform`.
+  On `aws-terraform`, `gcp-terraform` and `scaleway-terraform` (there the names
+  of tables in the database).
+- `cloudhopper_keyvalue_database_endpoint` names a Serverless SQL Database of
+  your own for the tables on `scaleway-terraform`.
 - Knative and Spring Boot take their configuration from Helm values and the
   environment and are not affected.
 

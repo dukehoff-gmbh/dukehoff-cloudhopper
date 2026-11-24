@@ -18,6 +18,8 @@ for what it contains.
   | `ContainersFullAccess` | the container namespace, the container and its triggers |
   | `ContainerRegistryFullAccess` | pushing the image to the Scaleway registry |
   | `MessagingAndQueuingFullAccess` | `@EventTrigger(source = QUEUE)`: Scaleway Queues |
+  | `ObjectStorageFullAccess` | `@Bucket`: the buckets |
+  | `ServerlessSQLDatabaseFullAccess` | `@Table`: the Serverless SQL Database |
 
   The [Scaleway CLI](https://www.scaleway.com/en/docs/scaleway-cli/quickstart/)
   (`scw init`) also lists the projects of the organization; for that the key

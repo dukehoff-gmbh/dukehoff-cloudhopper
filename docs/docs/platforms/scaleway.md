@@ -21,6 +21,7 @@ Container. The account setup and the deployment are described in the
 | `sqs.ftl` | `sqs.tf` | Activates Scaleway Queues in the project and creates the credentials of the queues and triggers; written once for all event functions |
 | `publisher.ftl` | `publisher.tf` | For `@Queue` publishers: credentials that may only publish, and the queue URLs and credentials as environment of the container |
 | `buckets.ftl` | `buckets.tf` | For `@Bucket` parameters: an Object Storage bucket per name, the variable `cloudhopper_blobstore_credentials`, and the endpoint, bucket names and key as environment of the container |
+| `tables.ftl` | `tables.tf` | For `@Table` parameters: a Serverless SQL Database, the variable `cloudhopper_keyvalue_credentials`, and the JDBC URL, table names and database user as environment of the container |
 
 The container pulls the image given in the variable `image`. Build it from the
 generated Dockerfile for `linux/amd64` and push it to a registry first; the
@@ -81,6 +82,37 @@ container with one key: the runtime checks the declared `access` of each
 parameter, Scaleway only the key's permissions. Like `cloudhopper_secrets`, the
 key is stored in the Terraform state.
 
+## Tables
+
+A [`@Table`](../guides/writing-functions.md#reading-and-writing-tables) store
+keeps its items in a table of a Scaleway Serverless SQL Database (PostgreSQL),
+through JDBC with `eu.cloudhopper.mc:provider-jdbc-keyvalue`, which the archetype
+adds. The generated `tables.tf` creates one database
+`<cloudhopper_name_prefix><container_name>-tables` in the region of the container
+for all tables, unless the local `cloudhopper_keyvalue_database_endpoint` names
+the endpoint of a database of your own. The database scales to zero when idle.
+The application creates each table it uses on first access, named like the
+`@Table` parameter unless it is mapped in `cloudhopper_table_names`; an
+`existing` table must already be there. Destroying the deployment deletes the
+database and its items.
+
+The container connects as an IAM application, which the generated Terraform does
+not create. Pass its ID and the secret key of one of its API keys in the variable
+`cloudhopper_keyvalue_credentials`; `terraform plan` fails without it when a
+function has a `@Table` parameter:
+
+```hcl
+cloudhopper_keyvalue_credentials = {
+  principal_id = "<IAM application ID>"
+  secret_key   = "..."
+}
+```
+
+The application needs the permission set `ServerlessSQLDatabaseReadWrite` in the
+project, which also allows it to create the tables. As with buckets, all
+functions share this user: the runtime checks the declared `access` of each
+parameter. The secret key is stored in the Terraform state.
+
 ## Secrets
 
 The Terraform variable `cloudhopper_secrets` maps a property name to the value of a
@@ -119,3 +151,4 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `org.springframework.boot:spring-boot-starter-webmvc` | compile | Spring MVC |
 | `eu.cloudhopper.mc:provider-aws-publisher` | compile, without `aws-lambda-java-core` and `aws-lambda-java-events` | `@Queue` publishers for the SQS API of Scaleway Queues |
 | `eu.cloudhopper.mc:provider-aws-blobstore` | compile, without `aws-lambda-java-core` and `aws-lambda-java-events` | `@Bucket` stores for the S3 API of Scaleway Object Storage |
+| `eu.cloudhopper.mc:provider-jdbc-keyvalue` | compile | `@Table` stores for PostgreSQL, with the PostgreSQL JDBC driver and HikariCP |

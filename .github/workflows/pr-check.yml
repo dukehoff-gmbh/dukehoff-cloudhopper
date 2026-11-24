@@ -236,6 +236,9 @@ jobs:
       # the key the container uses for the object storage of @Bucket
       CLOUDHOPPER_TCK_SCW_BLOBSTORE_ACCESS_KEY: ${{ secrets.SCW_TCK_BLOBSTORE_ACCESS_KEY }}
       CLOUDHOPPER_TCK_SCW_BLOBSTORE_SECRET_KEY: ${{ secrets.SCW_TCK_BLOBSTORE_SECRET_KEY }}
+      # the IAM application the container connects to the Serverless SQL Database of @Table as
+      CLOUDHOPPER_TCK_SCW_KEYVALUE_PRINCIPAL_ID: ${{ secrets.SCW_TCK_KEYVALUE_PRINCIPAL_ID }}
+      CLOUDHOPPER_TCK_SCW_KEYVALUE_SECRET_KEY: ${{ secrets.SCW_TCK_KEYVALUE_SECRET_KEY }}
 
     steps:
     - name: Check out code

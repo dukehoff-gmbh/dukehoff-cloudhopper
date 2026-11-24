@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 # Creates a local kind cluster with Knative Serving (Kourier), Knative Eventing,
-# the Knative Kafka source and sink, a single-node Kafka and an S3-compatible object storage
-# (SeaweedFS). Used by the knative TCK.
+# the Knative Kafka source and sink, a single-node Kafka, an S3-compatible object storage
+# (SeaweedFS) and a PostgreSQL database. Used by the knative TCK.
 #
 #   services: http://<service>.<namespace>.localhost:31080 (*.localhost resolves to the loopback address)
 #   Kafka:    kafka.kafka.svc:9092 in the cluster, localhost:31092 from the host
 #   S3:       http://s3.blobstore.svc:8333 in the cluster, key cloudhopper-tck / cloudhopper-tck-secret
+#   Postgres: jdbc:postgresql://postgres.keyvalue.svc:5432/cloudhopper in the cluster, user cloudhopper-tck / cloudhopper-tck-secret
 set -euo pipefail
 
 CLUSTER=${CLUSTER:-cloudhopper}
 KNATIVE=${KNATIVE_VERSION:-knative-v1.24.0}
 KAFKA_IMAGE=${KAFKA_IMAGE:-apache/kafka:3.8.0}
 SEAWEEDFS_IMAGE=${SEAWEEDFS_IMAGE:-chrislusf/seaweedfs:4.50}
+POSTGRES_IMAGE=${POSTGRES_IMAGE:-postgres:17-alpine}
 GH=https://github.com
 wait_ns() { kubectl wait deployment --all -n "$1" --for=condition=Available --timeout=300s; }
 
@@ -141,4 +143,38 @@ spec:
   ports: [{name: s3, port: 8333}]
 S3
 wait_ns blobstore
+# PostgreSQL for @Table; a fixed password, only reachable in the cluster
+kubectl create namespace keyvalue --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -n keyvalue -f - <<PG
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: postgres}
+spec:
+  selector: {matchLabels: {app: postgres}}
+  template:
+    metadata: {labels: {app: postgres}}
+    spec:
+      enableServiceLinks: false
+      containers:
+      - name: postgres
+        image: $POSTGRES_IMAGE
+        env:
+        - {name: POSTGRES_USER, value: cloudhopper-tck}
+        - {name: POSTGRES_PASSWORD, value: cloudhopper-tck-secret}
+        - {name: POSTGRES_DB, value: cloudhopper}
+        ports: [{containerPort: 5432}]
+        readinessProbe: {exec: {command: [pg_isready, -U, cloudhopper-tck, -d, cloudhopper]}, periodSeconds: 2}
+        volumeMounts:
+        - {name: data, mountPath: /var/lib/postgresql/data}
+      volumes:
+      - {name: data, emptyDir: {}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: postgres}
+spec:
+  selector: {app: postgres}
+  ports: [{name: postgres, port: 5432}]
+PG
+wait_ns keyvalue
 echo "cluster $CLUSTER ready"

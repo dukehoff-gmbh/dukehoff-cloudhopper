@@ -75,6 +75,10 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
  *   <li>{@code CLOUDHOPPER_TCK_SCW_BLOBSTORE_ACCESS_KEY} and {@code CLOUDHOPPER_TCK_SCW_BLOBSTORE_SECRET_KEY}
  *       (required): the key the container uses for the object storage, passed to the Terraform
  *       variable {@code cloudhopper_blobstore_credentials}; never printed</li>
+ *   <li>{@code CLOUDHOPPER_TCK_SCW_KEYVALUE_PRINCIPAL_ID} and {@code CLOUDHOPPER_TCK_SCW_KEYVALUE_SECRET_KEY}
+ *       (required): the IAM application and its secret key the container connects to the Serverless
+ *       SQL Database with, passed to the Terraform variable {@code cloudhopper_keyvalue_credentials};
+ *       never printed</li>
  * </ul>
  */
 public class TestContextScaleway implements TestContext {
@@ -343,7 +347,9 @@ public class TestContextScaleway implements TestContext {
         List<String> command = new ArrayList<>(List.of("terraform"));
         command.addAll(List.of(args));
         command.add("-no-color");
-        return run(deploymentDir, blobstoreCredentials(), null, command.toArray(String[]::new));
+        Map<String, String> environment = new java.util.HashMap<>(blobstoreCredentials());
+        environment.putAll(keyValueCredentials());
+        return run(deploymentDir, environment, null, command.toArray(String[]::new));
     }
 
     /** The key of the object storage as the Terraform variable cloudhopper_blobstore_credentials, in the environment. */
@@ -355,6 +361,17 @@ public class TestContextScaleway implements TestContext {
         }
         return Map.of("TF_VAR_cloudhopper_blobstore_credentials",
                 "{\"access_key\":\"" + accessKey.trim() + "\",\"secret_key\":\"" + secretKey.trim() + "\"}");
+    }
+
+    /** The database user as the Terraform variable cloudhopper_keyvalue_credentials, in the environment. */
+    private static Map<String, String> keyValueCredentials() {
+        String principal = System.getenv("CLOUDHOPPER_TCK_SCW_KEYVALUE_PRINCIPAL_ID");
+        String secretKey = System.getenv("CLOUDHOPPER_TCK_SCW_KEYVALUE_SECRET_KEY");
+        if (principal == null || principal.isBlank() || secretKey == null || secretKey.isBlank()) {
+            return Map.of();
+        }
+        return Map.of("TF_VAR_cloudhopper_keyvalue_credentials",
+                "{\"principal_id\":\"" + principal.trim() + "\",\"secret_key\":\"" + secretKey.trim() + "\"}");
     }
 
     /** The Scaleway secret key from SCW_SECRET_KEY or the scw configuration; never printed. */

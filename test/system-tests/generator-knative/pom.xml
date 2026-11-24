@@ -88,6 +88,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- @Table KeyValueStore in PostgreSQL -->
+        <dependency>
+            <groupId>eu.cloudhopper.mc</groupId>
+            <artifactId>provider-jdbc-keyvalue</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>eu.cloudhopper.mc</groupId>
             <artifactId>test-tck-core</artifactId>

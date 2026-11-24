@@ -27,6 +27,9 @@ target_of() {
       echo "aws knative scaleway" ;;
     provider-aws-keyvalue/*)
       echo aws ;;
+    # knative and scaleway-terraform keep tables in PostgreSQL
+    provider-jdbc-keyvalue/*)
+      echo "knative scaleway" ;;
     generator-aws-terraform/*|test/system-tests/generator-aws-terraform/*|test/tck/generator-bindings/aws-terraform/*)
       echo aws ;;
     generator-azure-terraform/*|provider-azure/*|provider-azure-publisher/*|provider-azure-blobstore/*|provider-azure-keyvalue/*|test/system-tests/generator-azure-terraform/*|test/tck/generator-bindings/azure-terraform/*)

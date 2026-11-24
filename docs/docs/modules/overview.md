@@ -57,6 +57,7 @@ Which ones a target needs is listed on its page, under *Runtime modules*.
 | `provider-gcp-publisher` | GCP | `@Queue` publishers for Pub/Sub |
 | `provider-gcp-blobstore` | GCP | `@Bucket` stores for Cloud Storage |
 | `provider-gcp-keyvalue` | GCP | `@Table` stores for Firestore |
+| `provider-jdbc-keyvalue` | Knative, Scaleway | `@Table` stores for PostgreSQL through JDBC |
 | `provider-springboot` | Spring Boot, Knative, Scaleway | `SpringBootRequestHandler`, `SpringBootEventHandler`, the in-process and Kafka publishers and the Kafka delivery |
 | `provider-http` | Spring Boot, Knative, Scaleway | `LocalHandlerContext`, the `HandlerContext` of HTTP services |
 

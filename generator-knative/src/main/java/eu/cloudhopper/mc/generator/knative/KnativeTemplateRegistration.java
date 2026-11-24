@@ -63,6 +63,17 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
             runtimeModule = "eu.cloudhopper.mc:provider-aws-blobstore"
         ),
         @GeneratorFeature(
+            supportedAnnotation = eu.cloudhopper.mc.annotations.Table.class,
+            supportedAttributes = {
+                eu.cloudhopper.mc.annotations.Table.TableAttribute.NAME,
+                eu.cloudhopper.mc.annotations.Table.TableAttribute.ACCESS,
+                eu.cloudhopper.mc.annotations.Table.TableAttribute.EXISTING
+            },
+            // tables of a PostgreSQL database the chart passes to the application
+            runtimeClass = "eu.cloudhopper.mc.provider.jdbc.keyvalue.JdbcKeyValueStoreFactory",
+            runtimeModule = "eu.cloudhopper.mc:provider-jdbc-keyvalue"
+        ),
+        @GeneratorFeature(
             supportedAnnotation = eu.cloudhopper.mc.annotations.Queue.class,
             supportedAttributes = {
                 eu.cloudhopper.mc.annotations.Queue.QueueAttribute.NAME,
