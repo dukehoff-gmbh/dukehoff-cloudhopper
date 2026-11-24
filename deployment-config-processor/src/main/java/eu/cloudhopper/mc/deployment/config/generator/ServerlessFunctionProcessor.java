@@ -87,6 +87,8 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
      * (3-63 lowercase letters, digits and single hyphens); Pub/Sub topics must start with a letter.
      */
     private static final Pattern EVENT_SOURCE_NAME = Pattern.compile("[a-z][a-z0-9]*(-[a-z0-9]+)*");
+    /** Table names valid on every target: Azure Table Storage allows only letters and digits. */
+    private static final Pattern TABLE_NAME = Pattern.compile("[a-z][a-z0-9]{2,62}");
     private static final Pattern IDENTITY_NAME = Pattern.compile("[a-z][a-z0-9]*(-[a-z0-9]+)*");
 
     /** A {@code @Queue} parameter of a function. */
@@ -100,6 +102,13 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
 
     /** A {@code @Bucket} parameter of a function. */
     private record BucketUse(ExecutableElement method, eu.cloudhopper.mc.generator.api.BucketInfo bucket) {
+    }
+
+    /** The {@code @Table} parameters of all functions. */
+    private final List<TableUse> tableUses = new ArrayList<>();
+
+    /** A {@code @Table} parameter of a function. */
+    private record TableUse(ExecutableElement method, eu.cloudhopper.mc.generator.api.TableInfo table) {
     }
 
     /** The queues functions of the project consume and create ({@code @EventTrigger(QUEUE, create = true)}). */
@@ -176,6 +185,11 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     // access and existing, e.g. "READ_WRITE:false"
                     params.add(new ParamInfo(ParamType.BUCKET, bucket.name(), tm.toString(), name,
                             bucket.access().name() + ":" + bucket.existing()));
+                } else if (p.getAnnotation(eu.cloudhopper.mc.annotations.Table.class) != null) {
+                    var table = p.getAnnotation(eu.cloudhopper.mc.annotations.Table.class);
+                    // access and existing, e.g. "READ_WRITE:false"
+                    params.add(new ParamInfo(ParamType.TABLE, table.name(), tm.toString(), name,
+                            table.access().name() + ":" + table.existing()));
                 } else if (p.getAnnotation(org.eclipse.microprofile.config.inject.ConfigProperty.class) != null) {
                     var config = p.getAnnotation(org.eclipse.microprofile.config.inject.ConfigProperty.class);
                     params.add(new ParamInfo(ParamType.CONFIG, config.name(), tm.toString(), name,
@@ -246,6 +260,13 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     .toList();
             hinfo.setBuckets(buckets);
             buckets.forEach(b -> bucketUses.add(new BucketUse(m, b)));
+            List<eu.cloudhopper.mc.generator.api.TableInfo> tables = params.stream()
+                    .filter(pi -> pi.getType() == ParamType.TABLE)
+                    .map(pi -> new eu.cloudhopper.mc.generator.api.TableInfo(pi.getName(),
+                            pi.getDefaultValue().split(":")[0], Boolean.parseBoolean(pi.getDefaultValue().split(":")[1])))
+                    .toList();
+            hinfo.setTables(tables);
+            tables.forEach(t -> tableUses.add(new TableUse(m, t)));
             hinfo.setConfigProperties(params.stream()
                     .filter(pi -> pi.getType() == ParamType.CONFIG)
                     .map(pi -> new eu.cloudhopper.mc.generator.api.ConfigPropertyInfo(pi.getName(),
@@ -276,6 +297,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
         if (round.processingOver()) {
             checkQueues();
             checkBuckets();
+            checkTables();
             try {
                 deploymentGenerator.finalizeConfig(generatorId, configOutputDir);
             } catch (ConfigGenerationException e) {
@@ -305,6 +327,26 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
         }
         checkRuntimeModule(eu.cloudhopper.mc.annotations.Bucket.class, "use buckets (@Bucket)",
                 bucketUses.isEmpty() ? null : bucketUses.get(0).method());
+    }
+
+    /**
+     * At the end of processing: all {@code @Table} parameters of one name agree on
+     * {@code existing}, and the target's runtime module for {@code @Table} is on the classpath.
+     */
+    private void checkTables() {
+        Map<String, TableUse> first = new HashMap<>();
+        for (TableUse use : tableUses) {
+            TableUse other = first.putIfAbsent(use.table().getName(), use);
+            if (other != null && other.table().isExisting() != use.table().isExisting()) {
+                processingEnv.getMessager().printMessage(ERROR,
+                        "@Table(name = \"" + use.table().getName() + "\") on " + use.method().getSimpleName()
+                        + " declares existing = " + use.table().isExisting() + ", but on "
+                        + other.method().getSimpleName() + " existing = " + other.table().isExisting()
+                        + "; all parameters of one table must agree", use.method());
+            }
+        }
+        checkRuntimeModule(eu.cloudhopper.mc.annotations.Table.class, "use tables (@Table)",
+                tableUses.isEmpty() ? null : tableUses.get(0).method());
     }
 
     /**
@@ -451,6 +493,26 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                 messager.printMessage(Diagnostic.Kind.ERROR,
                         "@Bucket(name = \"" + p.getName() + "\") on " + method.getSimpleName()
                         + ": use 3 to 63 lowercase letters, digits and single hyphens, starting with a letter,"
+                        + " so that the name is valid on every target", method);
+                return false;
+            }
+        }
+
+        for (ParamInfo p : params) {
+            if (p.getType() != ParamInfo.ParamType.TABLE) {
+                continue;
+            }
+            if (!p.getTypeName().equals("eu.cloudhopper.mc.runtime.KeyValueStore")) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "@Table on parameter '" + p.getVarName() + "' of " + method.getSimpleName()
+                        + " needs the type KeyValueStore", method);
+                return false;
+            }
+            boolean existing = p.getDefaultValue().endsWith(":true");
+            if (!existing && !TABLE_NAME.matcher(p.getName()).matches()) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "@Table(name = \"" + p.getName() + "\") on " + method.getSimpleName()
+                        + ": use 3 to 63 lowercase letters and digits, starting with a letter,"
                         + " so that the name is valid on every target", method);
                 return false;
             }

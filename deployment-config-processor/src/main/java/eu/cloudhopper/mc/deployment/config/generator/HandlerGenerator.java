@@ -48,14 +48,14 @@ public class HandlerGenerator {
     public static class ParamInfo {
 
         public enum ParamType {
-            BODY, PATH, QUERY, HEADER, CONTEXT, EVENT_METADATA, CONFIG, QUEUE, BUCKET
+            BODY, PATH, QUERY, HEADER, CONTEXT, EVENT_METADATA, CONFIG, QUEUE, BUCKET, TABLE
         }
 
         private final ParamType type;
         private final String name;      // e.g. path/query/header key
         private final String typeName;  // fully-qualified Java type
         private final String varName;   // local variable name in generated code
-        private final String defaultValue; // CONFIG: @ConfigProperty(defaultValue); QUEUE: @Queue(existing); BUCKET: access:existing
+        private final String defaultValue; // CONFIG: @ConfigProperty(defaultValue); QUEUE: @Queue(existing); BUCKET, TABLE: access:existing
 
         public ParamInfo(ParamType type, String name, String typeName, String varName) {
             this(type, name, typeName, varName, null);
@@ -429,6 +429,16 @@ public class HandlerGenerator {
                             ClassName.get("eu.cloudhopper.mc.runtime", "BlobStores"), p.getName(),
                             ClassName.get("eu.cloudhopper.mc.annotations", "Bucket", "Access"), bucket[0],
                             Boolean.parseBoolean(bucket[1]));
+                    break;
+                }
+
+                case TABLE: {
+                    String[] table = p.getDefaultValue().split(":");
+                    methodBuilder.addStatement("$T $L = $T.table($S, $T.$L, $L)",
+                            toTypeName(typeName), p.getVarName(),
+                            ClassName.get("eu.cloudhopper.mc.runtime", "KeyValueStores"), p.getName(),
+                            ClassName.get("eu.cloudhopper.mc.annotations", "Table", "Access"), table[0],
+                            Boolean.parseBoolean(table[1]));
                     break;
                 }
 

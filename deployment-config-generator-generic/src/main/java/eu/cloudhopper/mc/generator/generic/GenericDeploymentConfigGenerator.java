@@ -130,6 +130,10 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
     private final Map<String, eu.cloudhopper.mc.generator.api.BucketInfo> buckets = new java.util.TreeMap<>();
     /** The access of each identity to each bucket (READ, WRITE or READ_WRITE), by bucket name and identity. */
     private final Map<String, Map<String, String>> bucketAccess = new java.util.TreeMap<>();
+    /** The tables functions use (@Table), by name, for the FINALIZE phase. */
+    private final Map<String, eu.cloudhopper.mc.generator.api.TableInfo> tables = new java.util.TreeMap<>();
+    /** The access of each identity to each table (READ, WRITE or READ_WRITE), by table name and identity. */
+    private final Map<String, Map<String, String>> tableAccess = new java.util.TreeMap<>();
     /** The function whose storage trigger (@EventTrigger STORAGE) has each bucket, by bucket name. */
     private final Map<String, String> storageBuckets = new java.util.TreeMap<>();
     /** Whether that storage trigger creates the bucket (@EventTrigger create), by bucket name. */
@@ -206,6 +210,12 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
                         .merge(handlerInfo.getIdentity(), bucket.getAccess(),
                                 (a, b) -> a.equals(b) ? a : "READ_WRITE");
             });
+            handlerInfo.getTables().forEach(table -> {
+                tables.putIfAbsent(table.getName(), table);
+                tableAccess.computeIfAbsent(table.getName(), name -> new java.util.TreeMap<>())
+                        .merge(handlerInfo.getIdentity(), table.getAccess(),
+                                (a, b) -> a.equals(b) ? a : "READ_WRITE");
+            });
             runPhase(processingEnv, GenerationPhase.FUNCTION, dataModel, handlerInfo, outputDir, handlerInfo.getFunctionId().toLowerCase());
         } catch (ConfigGenerationException e) {
             throw new ConfigGenerationException("Failed to generate function config for generator: " + generatorId, e);
@@ -247,6 +257,8 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         dataModel.put("bucketAccess", bucketAccess);
         dataModel.put("storageBuckets", storageBuckets);
         dataModel.put("storageBucketCreated", storageBucketCreated);
+        dataModel.put("tables", new ArrayList<>(tables.values()));
+        dataModel.put("tableAccess", tableAccess);
 
         try {
             runPhase(processingEnv, GenerationPhase.FINALIZE, dataModel, null, configOutputDir, "api");

@@ -320,6 +320,134 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void tableParametersUseTheKeyValueStoreFactoryWithTheDeclaredAccess() throws Exception {
+        CloudRequestHandler<String, String> handler = compileAndLoad("com.example.TableService", ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import eu.cloudhopper.mc.annotations.Table.Access;\n"
+                + "import eu.cloudhopper.mc.runtime.KeyValueStore;\n"
+                + "import eu.cloudhopper.mc.runtime.KeyValueStore.*;\n"
+                + "import eu.cloudhopper.mc.runtime.KeyValueStoreException;\n"
+                + "public class TableService {\n"
+                + "  @Function(name=\"copy\")\n"
+                + "  public String copy(String id, @Table(name=\"accounts\") KeyValueStore in,\n"
+                + "      @Table(name=\"archive\", access=Access.READ_WRITE, existing=true) KeyValueStore out) {\n"
+                + "    Key key = new Key(\"account:\" + id, \"profile\");\n"
+                + "    out.put(in.get(key).orElseThrow());\n"
+                + "    try { in.delete(key); return \"deleted\"; } catch (KeyValueStoreException e) { return e.getMessage(); }\n"
+                + "  }\n"
+                + "}\n",
+                "com.example.TableService_copy_Handler");
+
+        java.util.Map<String, java.util.Map<String, Object>> items = new java.util.LinkedHashMap<>();
+        java.util.List<String> created = new java.util.ArrayList<>();
+        eu.cloudhopper.mc.runtime.KeyValueStores.setFactory((name, existing) -> {
+            created.add(name + "|" + existing);
+            return new eu.cloudhopper.mc.runtime.KeyValueStore() {
+                private String id(Key key) {
+                    return name + "/" + key.partition() + "/" + key.sort();
+                }
+
+                @Override
+                public java.util.Optional<Item> get(Key key) {
+                    return java.util.Optional.ofNullable(items.get(id(key))).map(a -> new Item(key, a));
+                }
+
+                @Override
+                public void put(Item item) {
+                    items.put(id(item.key()), item.attributes());
+                }
+
+                @Override
+                public boolean putIfAbsent(Item item) {
+                    return items.putIfAbsent(id(item.key()), item.attributes()) == null;
+                }
+
+                @Override
+                public boolean update(Key key, java.util.Map<String, Object> set, java.util.Map<String, Object> expected) {
+                    return false;
+                }
+
+                @Override
+                public void delete(Key key) {
+                    items.remove(id(key));
+                }
+
+                @Override
+                public Page query(String partition, String sortKeyPrefix, int limit, String pageToken) {
+                    return new Page(java.util.List.of(), null);
+                }
+
+                @Override
+                public void batchPut(java.util.Collection<Item> batch) {
+                }
+
+                @Override
+                public void batchDelete(java.util.Collection<Key> keys) {
+                }
+            };
+        });
+        try {
+            items.put("accounts/account:1/profile", Map.of("name", "Ada"));
+            assertEquals("delete on table accounts needs @Table(access = WRITE or READ_WRITE), the parameter declares READ",
+                    handler.handleRequest("1", Map.of(), Map.of(), null));
+            assertEquals(Map.of("name", "Ada"), items.get("archive/account:1/profile"));
+            assertTrue(items.containsKey("accounts/account:1/profile"));
+            assertEquals(java.util.List.of("accounts|false", "archive|true"), created);
+        } finally {
+            eu.cloudhopper.mc.runtime.KeyValueStores.setFactory(null);
+        }
+    }
+
+    @Test
+    public void tableParametersNeedTheKeyValueStoreTypeAndAValidName() {
+        String source = ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "public class WrongTable {\n"
+                + "  @Function(name=\"wrong\")\n"
+                + "  public void f(@Table(name=NAME) TYPE t) { }\n"
+                + "}\n";
+        Compilation type = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.WrongTable",
+                        source.replace("NAME", "\"accounts\"").replace("TYPE", "String")));
+        assertThat(type).hadErrorContaining("@Table on parameter 't' of f needs the type KeyValueStore");
+
+        for (String invalid : java.util.List.of("user-accounts", "Accounts", "ab", "1accounts")) {
+            Compilation name = javac().withProcessors(new ServerlessFunctionProcessor())
+                    .compile(JavaFileObjects.forSourceString("com.example.WrongTable",
+                            source.replace("NAME", "\"" + invalid + "\"").replace("TYPE", "eu.cloudhopper.mc.runtime.KeyValueStore")));
+            assertThat(name).hadErrorContaining("@Table(name = \"" + invalid + "\") on f: use 3 to 63 lowercase letters and digits");
+        }
+
+        Compilation existing = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.WrongTable",
+                        source.replace("NAME", "\"user-accounts\", existing=true").replace("TYPE", "eu.cloudhopper.mc.runtime.KeyValueStore")));
+        assertThat(existing).succeeded();
+    }
+
+    @Test
+    public void tableParametersOfOneNameAgreeOnExisting() {
+        String source = ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "import eu.cloudhopper.mc.runtime.KeyValueStore;\n"
+                + "public class TwoTables {\n"
+                + "  @Function(name=\"writer\")\n"
+                + "  public void w(@Table(name=\"accounts\", access=Table.Access.WRITE) KeyValueStore t) { }\n"
+                + "  @Function(name=\"reader\")\n"
+                + "  public void r(@Table(name=\"accounts\"EXISTING) KeyValueStore t) { }\n"
+                + "}\n";
+        Compilation conflict = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.TwoTables", source.replace("EXISTING", ", existing=true")));
+        assertThat(conflict).hadErrorContaining("@Table(name = \"accounts\") on r declares existing = true, but on w existing = false");
+
+        Compilation same = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.TwoTables", source.replace("EXISTING", "")));
+        assertThat(same).succeeded();
+    }
+
+    @Test
     public void queuesNeedAConsumerInTheProjectOrExisting() {
         String source = ""
                 + "package com.example;\n"

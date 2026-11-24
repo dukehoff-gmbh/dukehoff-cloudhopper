@@ -63,6 +63,7 @@ public class HandlerInfo {
     private java.util.List<ConfigPropertyInfo> configProperties = java.util.List.of();
     private java.util.List<QueueInfo> publishedQueues = java.util.List.of();
     private java.util.List<BucketInfo> buckets = java.util.List.of();
+    private java.util.List<TableInfo> tables = java.util.List.of();
 
     /**
      * Constructs a new {@code HandlerInfo} with the required properties.
@@ -233,6 +234,22 @@ public class HandlerInfo {
      */
     public void setBuckets(java.util.List<BucketInfo> buckets) {
         this.buckets = buckets == null ? java.util.List.of() : java.util.List.copyOf(buckets);
+    }
+
+    /**
+     * The tables the function reads or writes through {@code @Table} parameters.
+     *
+     * @return the tables, in parameter order
+     */
+    public java.util.List<TableInfo> getTables() {
+        return tables;
+    }
+
+    /**
+     * @param tables the tables the function reads or writes
+     */
+    public void setTables(java.util.List<TableInfo> tables) {
+        this.tables = tables == null ? java.util.List.of() : java.util.List.copyOf(tables);
     }
 
     /**
