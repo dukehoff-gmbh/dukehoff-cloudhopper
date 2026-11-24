@@ -1,6 +1,6 @@
 ---
 name: cloudhopper
-description: Write, change, build and deploy serverless Java functions with Cloudhopper. Use when code has or needs @Function, @HttpTrigger, @ScheduledTrigger, @EventTrigger, @Queue, @Bucket, @ConfigProperty or @Function(identity), when building with the Maven profiles -Paws-terraform, -Pazure-terraform, -Pgcp-terraform, -Pspringboot-http, -Pknative or -Pscaleway-terraform, or when a function is deployed to AWS Lambda, Azure Functions, Google Cloud Functions, Knative, Scaleway or Spring Boot.
+description: Write, change, build and deploy serverless Java functions with Cloudhopper. Use when code has or needs @Function, @HttpTrigger, @ScheduledTrigger, @EventTrigger, @Queue, @Bucket, @Table, @ConfigProperty or @Function(identity), when building with the Maven profiles -Paws-terraform, -Pazure-terraform, -Pgcp-terraform, -Pspringboot-http, -Pknative or -Pscaleway-terraform, or when a function is deployed to AWS Lambda, Azure Functions, Google Cloud Functions, Knative, Scaleway or Spring Boot.
 ---
 
 # Cloudhopper
@@ -21,7 +21,7 @@ Maven profile selects one. Full documentation: https://cloudhopper.eu/docs/intro
 4. **Zero cloud SDKs:** never import provider-specific SDK types in function classes
    (`com.amazonaws.*`, `software.amazon.awssdk.*`, `com.google.cloud.*`, `com.azure.*`,
    `com.microsoft.azure.*`, …), and do not rely on provider-specific resources, environment
-   variables or event formats. Use `@Queue`, `@Bucket`, `@ConfigProperty`, `@EventTrigger`/`StorageEvent`
+   variables or event formats. Use `@Queue`, `@Bucket`, `@Table`, `@ConfigProperty`, `@EventTrigger`/`StorageEvent`
    and identities instead of SDKs and hand-written IAM.
 5. If no Cloudhopper API covers a need, keep the function class portable: provider-specific
    code goes behind an interface of your own in a separate class, selected through
@@ -108,6 +108,24 @@ an object storage key in `cloudhopper_blobstore_credentials`; on Knative the buc
 the Helm values `blobstore.*` name the S3 endpoint and key.
 
 Docs: https://cloudhopper.eu/docs/guides/writing-functions#reading-and-writing-buckets
+
+## Reading and writing tables
+
+```java
+@Function(name = "registerAccount")
+public String register(Account account,
+                       @Table(name = "accounts", access = Table.Access.READ_WRITE) KeyValueStore accounts) {
+    Key key = new Key("account:" + account.id(), "profile");          // partition key, sort key
+    return accounts.putIfAbsent(new Item(key, Map.of("name", account.name()))) ? "created" : "exists";
+}   // get, put, update(key, set, expected), delete, query(partition, sortKeyPrefix), batchPut/batchDelete
+```
+
+Items of one partition are queried by sort key prefix; there are no scans across partitions and no
+secondary indexes, so keep an index partition for lists. Keys have no `/ \ # ?` (use `:`), table
+names only lowercase letters and digits; values are String, Long, Double, Boolean, List, Map. Reads
+are strongly consistent; `access` works as for buckets (`KeyValueAccessDeniedException`).
+
+Docs: https://cloudhopper.eu/docs/guides/writing-functions#reading-and-writing-tables
 
 ## Configuration and secrets
 
