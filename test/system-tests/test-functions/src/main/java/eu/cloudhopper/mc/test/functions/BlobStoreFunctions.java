@@ -54,7 +54,8 @@ public class BlobStoreFunctions {
         return run(request, bucket);
     }
 
-    @Function(name = "blobreader", memory = 256, identity = "tck-blob-reader")
+    // the identity of the readers of buckets and tables (KeyValueFunctions)
+    @Function(name = "blobreader", memory = 256, identity = "tck-reader")
     public String read(BlobRequest request, @Bucket(name = BUCKET) BlobStore bucket) {
         if ("putUnchecked".equals(request.getOp())) {
             BlobStoreFactory factory = ServiceLoader.load(BlobStoreFactory.class, BlobStoreFunctions.class.getClassLoader())

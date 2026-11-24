@@ -23,7 +23,7 @@ const TARGETS = [
 ];
 
 // Annotations the feature system covers, in the order they appear in the guide
-const ANNOTATIONS = ['Function', 'HttpTrigger', 'ScheduledTrigger', 'EventTrigger', 'Queue', 'Bucket'];
+const ANNOTATIONS = ['Function', 'HttpTrigger', 'ScheduledTrigger', 'EventTrigger', 'Queue', 'Bucket', 'Table'];
 // Attributes outside the feature system: vendor extensions are meant for one target only
 const EXEMPT = new Set(['Function.extensions']);
 
