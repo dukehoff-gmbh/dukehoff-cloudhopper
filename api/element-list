@@ -18,11 +18,13 @@ eu.cloudhopper.mc.provider.aws.secrets
 eu.cloudhopper.mc.provider.azure
 eu.cloudhopper.mc.provider.azure.auth
 eu.cloudhopper.mc.provider.azure.blobstore
+eu.cloudhopper.mc.provider.azure.keyvalue
 eu.cloudhopper.mc.provider.azure.publisher
 eu.cloudhopper.mc.provider.azure.secrets
 eu.cloudhopper.mc.provider.gcp
 eu.cloudhopper.mc.provider.gcp.auth
 eu.cloudhopper.mc.provider.gcp.blobstore
+eu.cloudhopper.mc.provider.gcp.keyvalue
 eu.cloudhopper.mc.provider.gcp.publisher
 eu.cloudhopper.mc.provider.http
 eu.cloudhopper.mc.provider.springboot
