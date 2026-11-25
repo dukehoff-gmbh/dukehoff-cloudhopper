@@ -27,6 +27,11 @@ package eu.cloudhopper.mc.deployment.config.generator;
 import eu.cloudhopper.mc.annotations.Extension;
 import eu.cloudhopper.mc.annotations.Extensions;
 import eu.cloudhopper.mc.annotations.Function;
+import eu.cloudhopper.mc.annotations.HeaderParam;
+import eu.cloudhopper.mc.annotations.HttpTrigger;
+import eu.cloudhopper.mc.annotations.PathParam;
+import eu.cloudhopper.mc.annotations.QueryParam;
+import eu.cloudhopper.mc.annotations.RequestBody;
 import eu.cloudhopper.mc.generator.api.GeneratorFeatureInfo;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -54,6 +59,14 @@ public class AnnotationFeatureValidator {
     private static final Set<String> EXEMPT_ANNOTATIONS = Set.of(
             Extension.class.getName(), Extensions.class.getName());
     private static final String EXTENSIONS_ATTRIBUTE = "extensions";
+    /**
+     * The parameter annotations of HTTP functions. They are part of {@code @HttpTrigger}: the
+     * generated handlers pass them through on every target that supports {@code @HttpTrigger}, so
+     * the generators do not declare them separately.
+     */
+    private static final Set<String> HTTP_PARAMETER_ANNOTATIONS = Set.of(
+            PathParam.class.getName(), QueryParam.class.getName(),
+            HeaderParam.class.getName(), RequestBody.class.getName());
 
     private final Messager messager;
     private final boolean strictMode;
@@ -100,6 +113,10 @@ public class AnnotationFeatureValidator {
                 continue;
             }
             String simpleName = annotation.substring(ANNOTATIONS_PACKAGE.length());
+            if (HTTP_PARAMETER_ANNOTATIONS.contains(annotation)
+                    && supportedFeatures.containsKey(HttpTrigger.class.getName())) {
+                continue;
+            }
             Set<String> supportedAttributes = supportedFeatures.get(annotation);
 
             if (supportedAttributes == null) {
