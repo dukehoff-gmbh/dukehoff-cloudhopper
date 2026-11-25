@@ -63,6 +63,9 @@ import org.apache.kafka.common.serialization.StringSerializer;
  *   <li>{@code CLOUDHOPPER_TCK_CLUSTER_KAFKA} (kafka.kafka.svc:9092): Kafka as the cluster reaches it</li>
  *   <li>{@code CLOUDHOPPER_TCK_S3} (http://s3.blobstore.svc:8333): the S3-compatible storage as the
  *       cluster reaches it, a SeaweedFS in the namespace {@code blobstore}</li>
+ *   <li>{@code CLOUDHOPPER_TCK_JDBC_URL} (jdbc:postgresql://postgres.keyvalue.svc:5432/cloudhopper):
+ *       the database of the tables as the cluster reaches it, a PostgreSQL in the namespace
+ *       {@code keyvalue}</li>
  * </ul>
  */
 public class TestContextKnative implements TestContext {
@@ -82,6 +85,7 @@ public class TestContextKnative implements TestContext {
     private final String kafka = env("CLOUDHOPPER_TCK_KAFKA", "localhost:31092");
     private final String clusterKafka = env("CLOUDHOPPER_TCK_CLUSTER_KAFKA", "kafka.kafka.svc:9092");
     private final String s3 = env("CLOUDHOPPER_TCK_S3", "http://s3.blobstore.svc:8333");
+    private final String jdbcUrl = env("CLOUDHOPPER_TCK_JDBC_URL", "jdbc:postgresql://postgres.keyvalue.svc:5432/cloudhopper");
 
     private String baseUrl;
 
@@ -91,6 +95,8 @@ public class TestContextKnative implements TestContext {
     private static final String BLOBSTORE_SECRET_NAME = "cloudhopper-tck-blobstore";
     /** The bucket of the test functions (BlobStoreFunctions); the chart creates no buckets. */
     private static final String BUCKET = "cloudhopper-tck-blobs";
+    /** The Kubernetes secret with the database user, which kind-setup.sh configures. */
+    private static final String KEYVALUE_SECRET_NAME = "cloudhopper-tck-keyvalue";
 
     @Override
     public java.util.Set<String> supportedCapabilities() {
@@ -120,6 +126,10 @@ public class TestContextKnative implements TestContext {
             run(moduleDir, "kubectl", "delete", "secret", BLOBSTORE_SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
             run(moduleDir, "kubectl", "create", "secret", "generic", BLOBSTORE_SECRET_NAME, "--namespace", namespace,
                     "--from-literal=access-key-id=cloudhopper-tck", "--from-literal=secret-access-key=cloudhopper-tck-secret");
+            // the database user the chart passes to the application; the application creates its tables
+            run(moduleDir, "kubectl", "delete", "secret", KEYVALUE_SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
+            run(moduleDir, "kubectl", "create", "secret", "generic", KEYVALUE_SECRET_NAME, "--namespace", namespace,
+                    "--from-literal=username=cloudhopper-tck", "--from-literal=password=cloudhopper-tck-secret");
             System.out.println("⎈ Installing the chart as release " + RELEASE + " in namespace " + namespace);
             List<String> helm = new ArrayList<>(List.of("helm", "upgrade", "--install", RELEASE,
                     deploymentDir.resolve("chart").toString(), "--namespace", namespace));
@@ -139,6 +149,8 @@ public class TestContextKnative implements TestContext {
                     "--set-string", "blobstore.s3Endpoint=" + s3,
                     "--set-string", "blobstore.region=us-east-1",
                     "--set-string", "blobstore.credentialsSecret=" + BLOBSTORE_SECRET_NAME,
+                    "--set-string", "keyvalue.jdbcUrl=" + jdbcUrl,
+                    "--set-string", "keyvalue.credentialsSecret=" + KEYVALUE_SECRET_NAME,
                     // one instance stays up, so that its log holds every line the tests look for
                     "--set", "scaling.minScale=1",
                     // a single-node Kafka
@@ -164,6 +176,7 @@ public class TestContextKnative implements TestContext {
             run(moduleDir, "helm", "uninstall", RELEASE, "--namespace", namespace, "--ignore-not-found", "--wait");
             run(moduleDir, "kubectl", "delete", "secret", SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
             run(moduleDir, "kubectl", "delete", "secret", BLOBSTORE_SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
+            run(moduleDir, "kubectl", "delete", "secret", KEYVALUE_SECRET_NAME, "--namespace", namespace, "--ignore-not-found");
         } catch (IOException e) {
             throw new RuntimeException("Failed to uninstall the release " + RELEASE, e);
         }

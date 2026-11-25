@@ -45,6 +45,16 @@ blobstore:
   # deployed bucket names by @Bucket name where they differ, e.g. {reports: prod-reports}
   buckets: {}
 
+# PostgreSQL database of the @Table parameters, through JDBC. The application creates the tables
+# it uses (unless @Table(existing = true)), so the user needs the right to create tables.
+keyvalue:
+  # e.g. jdbc:postgresql://postgres.db.svc:5432/app; required when a function has a @Table parameter
+  jdbcUrl: ""
+  # Kubernetes secret in the release's namespace with the keys username and password
+  credentialsSecret: ""
+  # deployed table names by @Table name where they differ, e.g. {accounts: prod_accounts}
+  tables: {}
+
 # container resources, e.g. {limits: {memory: 512Mi}}
 resources: {}
 

@@ -28,7 +28,7 @@ spec:
         {{- end }}
         ports:
         - containerPort: 8080
-        {{- if or .Values.env .Values.secrets .Values.blobstore.s3Endpoint .Values.blobstore.region .Values.blobstore.credentialsSecret .Values.blobstore.buckets }}
+        {{- if or .Values.env .Values.secrets .Values.blobstore.s3Endpoint .Values.blobstore.region .Values.blobstore.credentialsSecret .Values.blobstore.buckets .Values.keyvalue.jdbcUrl .Values.keyvalue.credentialsSecret .Values.keyvalue.tables }}
         env:
           {{- with .Values.env }}
           {{- toYaml . | nindent 10 }}
@@ -58,6 +58,28 @@ spec:
           # @Bucket(name = "{{ $name }}")
           - name: {{ regexReplaceAll "[^A-Za-z0-9]" (printf "cloudhopper.bucket.%s.name" $name) "_" | upper }}
             value: {{ $bucket | quote }}
+          {{- end }}
+          {{- with .Values.keyvalue.jdbcUrl }}
+          # the database of the @Table parameters
+          - name: CLOUDHOPPER_KEYVALUE_JDBC_URL
+            value: {{ . | quote }}
+          {{- end }}
+          {{- with .Values.keyvalue.credentialsSecret }}
+          - name: CLOUDHOPPER_KEYVALUE_JDBC_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: {{ . }}
+                key: username
+          - name: CLOUDHOPPER_KEYVALUE_JDBC_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ . }}
+                key: password
+          {{- end }}
+          {{- range $name, $table := .Values.keyvalue.tables }}
+          # @Table(name = "{{ $name }}")
+          - name: {{ regexReplaceAll "[^A-Za-z0-9]" (printf "cloudhopper.table.%s.name" $name) "_" | upper }}
+            value: {{ $table | quote }}
           {{- end }}
           {{- range .Values.secrets }}
           # @ConfigProperty "{{ .property }}" from the Kubernetes secret {{ .secret }}

@@ -88,6 +88,7 @@
         <module>provider-gcp-publisher</module>
         <module>provider-gcp-blobstore</module>
         <module>provider-gcp-keyvalue</module>
+        <module>provider-jdbc-keyvalue</module>
         <module>provider-http</module>
         <module>provider-springboot</module>
         <module>test/tck/api</module>

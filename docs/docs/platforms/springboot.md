@@ -73,7 +73,10 @@ keeps the items in memory, one table per name (or per
 `cloudhopper.table.<name>.name`). This suits local runs and tests: the items are
 lost when the application stops, and every instance has its own. The declared
 `access` is checked as on the clouds. A `KeyValueStoreFactory` of another
-runtime module on the classpath takes precedence.
+runtime module on the classpath takes precedence: with
+`eu.cloudhopper.mc:provider-jdbc-keyvalue` and the property
+`cloudhopper.keyvalue.jdbc.url` (plus `.username` and `.password`) the tables are
+kept in PostgreSQL, as on [Knative](knative.md#tables).
 
 ## Queues from Kafka
 

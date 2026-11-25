@@ -78,6 +78,30 @@ The key comes from the Kubernetes secret `credentialsSecret` in the release's
 namespace. The runtime checks the declared `access` of each parameter; what the
 key may do is up to the storage.
 
+## Tables
+
+A [`@Table`](../guides/writing-functions.md#reading-and-writing-tables) store
+keeps its items in a table of a PostgreSQL database, through JDBC with
+`eu.cloudhopper.mc:provider-jdbc-keyvalue`, which the archetype adds. The chart
+creates no database: it must exist, and the application creates each table it
+uses on first access (an `existing` table must already be there), named like the
+`@Table` parameter unless `keyvalue.tables` maps it to another one.
+
+```yaml
+keyvalue:
+  jdbcUrl: jdbc:postgresql://postgres.db.svc:5432/app
+  credentialsSecret: app-db                 # keys username and password
+  tables:
+    accounts: prod_accounts
+```
+
+The user comes from the Kubernetes secret `credentialsSecret` in the release's
+namespace and needs the right to create tables in the database's schema. The
+runtime checks the declared `access` of each parameter. A table has the columns
+`partition_key` and `sort_key` (`text`, collation `"C"`, primary key) and
+`attributes` (`jsonb`); each instance keeps up to four connections
+(`cloudhopper.keyvalue.jdbc.pool-size`) and closes idle ones after a minute.
+
 ## Secrets
 
 [Secrets](../guides/writing-functions.md#secrets) come from Kubernetes secrets in
@@ -116,3 +140,4 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `org.springframework.boot:spring-boot-starter-webmvc` | compile | Spring MVC |
 | `org.springframework.boot:spring-boot-starter-kafka` | compile | `@Queue` publishers send to the Kafka topics |
 | `eu.cloudhopper.mc:provider-aws-blobstore` | compile, without `aws-lambda-java-core` and `aws-lambda-java-events` | `@Bucket` stores for S3 and S3-compatible storage |
+| `eu.cloudhopper.mc:provider-jdbc-keyvalue` | compile | `@Table` stores for PostgreSQL, with the PostgreSQL JDBC driver and HikariCP |
