@@ -54,6 +54,16 @@ public class AnnotationFeatureValidatorTest {
     @SupportedOptions(AnnotationFeatureValidator.STRICT_OPTION)
     static class ValidatingProcessor extends AbstractProcessor {
 
+        private final GeneratorFeatureInfo target;
+
+        ValidatingProcessor() {
+            this(httpOnlyTarget());
+        }
+
+        ValidatingProcessor(GeneratorFeatureInfo target) {
+            this.target = target;
+        }
+
         @Override
         public SourceVersion getSupportedSourceVersion() {
             return SourceVersion.latestSupported();
@@ -61,7 +71,7 @@ public class AnnotationFeatureValidatorTest {
 
         @Override
         public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment round) {
-            AnnotationFeatureValidator validator = new AnnotationFeatureValidator(processingEnv, httpOnlyTarget());
+            AnnotationFeatureValidator validator = new AnnotationFeatureValidator(processingEnv, target);
             for (TypeElement annotation : annotations) {
                 for (Element element : round.getElementsAnnotatedWith(annotation)) {
                     validator.validate(element);
@@ -88,6 +98,19 @@ public class AnnotationFeatureValidatorTest {
         return info;
     }
 
+    private static GeneratorFeatureInfo scheduleOnlyTarget() {
+        GeneratorFeatureInfo.FeatureEntry function = new GeneratorFeatureInfo.FeatureEntry();
+        function.setSupportedAnnotation("eu.cloudhopper.mc.annotations.Function");
+        function.setSupportedAttributes(List.of("name"));
+        GeneratorFeatureInfo.FeatureEntry schedule = new GeneratorFeatureInfo.FeatureEntry();
+        schedule.setSupportedAnnotation("eu.cloudhopper.mc.annotations.ScheduledTrigger");
+        schedule.setSupportedAttributes(List.of("cron"));
+        GeneratorFeatureInfo info = new GeneratorFeatureInfo();
+        info.setGeneratorId("schedule-only");
+        info.setFeatures(List.of(function, schedule));
+        return info;
+    }
+
     private static Compilation compile(String body, String... options) {
         JavaFileObject source = JavaFileObjects.forSourceString("com.example.Service", ""
                 + "package com.example;\n"
@@ -106,6 +129,38 @@ public class AnnotationFeatureValidatorTest {
                 + "  public String hello() { return \"hi\"; }\n");
 
         assertThat(compilation).succeededWithoutWarnings();
+    }
+
+    @Test
+    public void httpParametersPassWithoutWarnings() {
+        Compilation compilation = compile(""
+                + "  @Function(name = \"detail\")\n"
+                + "  @HttpTrigger(method = \"PUT\", path = \"/api/items/{id}\")\n"
+                + "  public String detail(@HeaderParam(\"Authorization\") String authorization,\n"
+                + "                       @PathParam(\"id\") String id,\n"
+                + "                       @QueryParam(\"q\") String q,\n"
+                + "                       @RequestBody String body) { return id; }\n",
+                "-A" + AnnotationFeatureValidator.STRICT_OPTION + "=true");
+
+        assertThat(compilation).succeededWithoutWarnings();
+    }
+
+    @Test
+    public void httpParametersAreReportedWithoutHttpSupport() {
+        Compilation compilation = javac()
+                .withProcessors(new ValidatingProcessor(scheduleOnlyTarget()))
+                .compile(JavaFileObjects.forSourceString("com.example.Service", ""
+                        + "package com.example;\n"
+                        + "import eu.cloudhopper.mc.annotations.*;\n"
+                        + "public class Service {\n"
+                        + "  @Function(name = \"detail\")\n"
+                        + "  @HttpTrigger(method = \"GET\", path = \"/api/items/{id}\")\n"
+                        + "  public String detail(@PathParam(\"id\") String id) { return id; }\n"
+                        + "}\n"));
+
+        assertThat(compilation).succeeded();
+        assertThat(compilation).hadWarningContaining("@HttpTrigger is not supported by generator 'schedule-only'");
+        assertThat(compilation).hadWarningContaining("@PathParam is not supported by generator 'schedule-only'");
     }
 
     @Test
