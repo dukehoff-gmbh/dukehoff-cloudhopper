@@ -10,6 +10,13 @@ announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/rele
 together with the full list of changes. What is being worked on is tracked in the
 [issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
+## 1.6.1
+
+- HTTP functions with `@PathParam`, `@QueryParam`, `@HeaderParam` or `@RequestBody`
+  parameters no longer get the warning that the annotation is not supported by
+  the generator (an error with `-Acloudhopper.strictFeatureCheck=true`); the
+  parameters were always passed through. The warning was wrong since 1.4.0
+
 ## 1.6
 
 - Buckets: a function reads and writes objects through a `BlobStore` parameter
