@@ -10,6 +10,29 @@ announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/rele
 together with the full list of changes. What is being worked on is tracked in the
 [issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
+## 1.6
+
+- Buckets: a function reads and writes objects through a `BlobStore` parameter
+  annotated with `@Bucket`, declaring `READ`, `WRITE` or `READ_WRITE` access: S3 on
+  AWS, Cloud Storage on GCP, Blob Storage on Azure, Object Storage on Scaleway,
+  S3-compatible storage on Knative, and directories (or S3) on Spring Boot. The
+  generator creates the buckets unless they are `existing`, and on AWS and GCP
+  gives each identity exactly the declared permissions; see
+  [Reading and writing buckets](guides/writing-functions.md#reading-and-writing-buckets)
+- Tables: a function reads and writes items of a key-value table (partition and
+  sort key, typed attributes, prefix queries, conditional updates) through a
+  `KeyValueStore` parameter annotated with `@Table`: DynamoDB on AWS, Firestore
+  on GCP, Table Storage on Azure, PostgreSQL on Knative (through JDBC) and on
+  Scaleway (a Serverless SQL Database), in memory or PostgreSQL on Spring Boot.
+  Reads are strongly consistent on every target; see
+  [Reading and writing tables](guides/writing-functions.md#reading-and-writing-tables)
+  and the Tables section of each [platform](platforms/generator-overview.md)
+- Tables on GCP need the Firestore API and the Cloud Resource Manager API; on
+  Scaleway the container connects as an IAM application with the permission set
+  `ServerlessSQLDatabaseReadWrite`, passed in the variable
+  `cloudhopper_keyvalue_credentials`; see
+  [Scaleway](platforms/scaleway.md#tables)
+
 ## 1.5.1
 
 - AWS: functions with [SnapStart](platforms/aws.md#snapstart) read secrets and send
