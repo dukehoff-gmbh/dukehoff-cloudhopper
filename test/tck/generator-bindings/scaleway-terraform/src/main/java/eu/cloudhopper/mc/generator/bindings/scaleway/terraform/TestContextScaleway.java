@@ -130,7 +130,20 @@ public class TestContextScaleway implements TestContext {
             System.out.println(terraform(variables(image, "apply", "-auto-approve", "-input=false")));
             outputs = null;
             baseUrl = output("url").replaceAll("/+$", "");
-            waitUntilUp();
+            try {
+                waitUntilUp();
+            } catch (IllegalStateException notUp) {
+                // the container's status and error message, before the deployment is destroyed
+                try {
+                    terraform(variables(image, "apply", "-refresh-only", "-auto-approve", "-input=false"));
+                    terraform("state", "show", "scaleway_container.app").lines()
+                            .filter(line -> line.contains("status") || line.contains("error_message"))
+                            .forEach(line -> System.out.println("🩺 " + line.trim()));
+                } catch (IOException | RuntimeException diagnosis) {
+                    System.out.println("ℹ️ No container status: " + diagnosis.getMessage());
+                }
+                throw notUp;
+            }
             System.out.println("✅ Container is up at " + baseUrl);
         } catch (IOException e) {
             throw new RuntimeException("Failed to deploy the Scaleway container", e);
