@@ -1,3 +1,5 @@
+<#-- the API only for projects with HTTP functions -->
+<#if lambdaMetaMap?has_content>
 <#-- Step 1: Group keys by path -->
 <#assign pathMap = {} />
 <#list lambdaMetaMap?keys as key>
@@ -75,3 +77,4 @@ resource "google_api_gateway_gateway" "main" {
 
   depends_on   = [google_api_gateway_api_config.config]
 }
+</#if>
