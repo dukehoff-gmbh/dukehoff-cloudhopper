@@ -10,6 +10,20 @@ announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/rele
 together with the full list of changes. What is being worked on is tracked in the
 [issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
+## 1.7
+
+- HTTP functions set their status and headers: return `HttpResponse<T>`
+  (e.g. 201 with `Location`, 204, `Cache-Control`, or a `text/csv` body sent as
+  it is), or throw `HttpStatusException` for statuses 400 to 599, answered with
+  `{"error": "<message>"}`; see [Responses](guides/writing-functions.md#responses)
+- All targets answer errors the same way: any other exception answers 500 with
+  `{"error": "Internal Server Error"}` and is logged; before, AWS and Azure sent
+  the exception's message to the client
+- A request body that is not valid JSON for the function's input type answers
+  400 instead of 500
+- Azure: an empty body of a `POST`, `PUT` or `PATCH` request is passed as no
+  input instead of failing
+
 ## 1.6.1
 
 - HTTP functions with `@PathParam`, `@QueryParam`, `@HeaderParam` or `@RequestBody`
