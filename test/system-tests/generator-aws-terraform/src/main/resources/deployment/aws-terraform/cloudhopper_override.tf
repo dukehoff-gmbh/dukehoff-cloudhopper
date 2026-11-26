@@ -3,5 +3,7 @@
 locals {
   cloudhopper_extra_config = {
     "tck.project" = terraform_data.tck_project.output
+    # tck_issuer.tf: published for the JWT authorizer, so cloudhopper.auth.jwks is not set
+    "cloudhopper.auth.issuer" = terraform_data.tck_issuer.output
   }
 }

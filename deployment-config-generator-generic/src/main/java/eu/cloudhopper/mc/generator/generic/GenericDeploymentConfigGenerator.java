@@ -363,6 +363,9 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         dataModel.put("operationId", apiOp.operationId());
         dataModel.put("path", apiOp.path());
         dataModel.put("httpMethod", apiOp.method().toUpperCase());
+        // scopes imply authentication
+        dataModel.put("authenticated", apiOp.authenticated() || apiOp.scopes().length > 0);
+        dataModel.put("scopes", List.of(apiOp.scopes()));
         dataModel.put("handlerClassName", handlerInfo.getHandlerClassName());
         dataModel.put("inputType", handlerInfo.getInputType());
         dataModel.put("outputType", handlerInfo.getOutputType());

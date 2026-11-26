@@ -13,7 +13,14 @@ resource "aws_apigatewayv2_route" "${handlerInfo.functionId}_route" {
   api_id    = aws_apigatewayv2_api.main.id
   route_key = "${httpMethod} ${path}"
   target    = "integrations/${"$"}{aws_apigatewayv2_integration.${handlerInfo.functionId}_integration.id}"
-  # authorizer_id      = aws_apigatewayv2_authorizer.cognito_jwt.id
+<#if authenticated!false>
+  # checked by API Gateway when the authorizer "jwt" exists, always by the function
+  authorization_type = local.cloudhopper_jwt_authorizer ? "JWT" : "NONE"
+  authorizer_id      = local.cloudhopper_jwt_authorizer ? aws_apigatewayv2_authorizer.jwt[0].id : null
+<#if scopes?has_content>
+  authorization_scopes = local.cloudhopper_jwt_authorizer ? [<#list scopes as s>"${s}"<#sep>, </#sep></#list>] : null
+</#if>
+</#if>
 <#if path == "/ping" || path == "/sping">
   lifecycle {
     precondition {

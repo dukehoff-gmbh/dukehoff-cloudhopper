@@ -84,12 +84,17 @@ public class TestContextAws implements TestContext {
     private final String namePrefix = System.getenv().getOrDefault("TF_VAR_cloudhopper_name_prefix", "");
 
     /**
-     * The TCK's configuration, plus the secret: main.tf stores it in Secrets Manager as
+     * The TCK's configuration without the issuer and its key set, plus the key set for
+     * tck_issuer.tf and the secret: main.tf stores it in Secrets Manager as
      * {@code <prefix>cloudhopper-tck-secret}, and cloudhopper_secrets references it by name.
      */
     private java.util.Map<String, String> terraformEnvironment() {
+        // tck_issuer.tf publishes the key set and passes the issuer through cloudhopper_extra_config
         java.util.Map<String, String> env = new java.util.HashMap<>(
-                eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment());
+                eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment(java.util.Set.of(
+                        eu.cloudhopper.mc.test.tck.api.TckConfiguration.ISSUER_PROPERTY,
+                        eu.cloudhopper.mc.test.tck.api.TckConfiguration.JWKS_PROPERTY)));
+        env.put("TF_VAR_tck_jwks", eu.cloudhopper.mc.test.tck.api.TckIssuer.jwks());
         env.put("TF_VAR_tck_secret", eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET);
         env.put("TF_VAR_cloudhopper_secrets", "{\"" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET_PROPERTY
                 + "\" = \"" + namePrefix + "cloudhopper-tck-secret\"}");
@@ -255,6 +260,18 @@ public class TestContextAws implements TestContext {
             Logger.getLogger(TestContextAws.class.getName()).log(Level.SEVERE, null, ex);
         }
         return url;
+    }
+
+    @Override
+    public String getAuthIssuer() {
+        try {
+            return TerraformUtil.getOutputString(terraformDir, "tck_issuer");
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot read the TCK issuer", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Cannot read the TCK issuer", e);
+        }
     }
 
     @Override
