@@ -322,7 +322,7 @@ variable `cloudhopper_config`):
 | `cloudhopper.auth.issuer` | required: the issuer, exactly as in the tokens' `iss` claim, e.g. `https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_AbC123` |
 | `cloudhopper.auth.audience` | required: the expected `aud` claim; for access tokens of Amazon Cognito, which have none, the app client ID in `client_id` |
 | `cloudhopper.auth.jwks-uri` | the address of the provider's key set; by default the `jwks_uri` of `<issuer>/.well-known/openid-configuration` |
-| `cloudhopper.auth.jwks` | the key set itself as JSON, for providers the functions cannot reach; then nothing is fetched |
+| `cloudhopper.auth.jwks` | the key set itself as JSON, or Base64-encoded JSON, for providers the functions cannot reach; then nothing is fetched |
 
 ```hcl
 cloudhopper_config = {

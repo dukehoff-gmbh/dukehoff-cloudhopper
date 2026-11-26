@@ -45,8 +45,8 @@ import org.eclipse.microprofile.config.ConfigProvider;
  *       tokens of Amazon Cognito: the {@code client_id} of the app client)</li>
  *   <li>{@code cloudhopper.auth.jwks-uri}: the address of the provider's key set; without it, the
  *       {@code jwks_uri} of {@code <issuer>/.well-known/openid-configuration}</li>
- *   <li>{@code cloudhopper.auth.jwks}: the key set itself as JSON, for providers the functions
- *       cannot reach; then nothing is fetched</li>
+ *   <li>{@code cloudhopper.auth.jwks}: the key set itself as JSON (or Base64-encoded JSON), for
+ *       providers the functions cannot reach; then nothing is fetched</li>
  * </ul>
  *
  * <p>No token: {@code 401} with {@code WWW-Authenticate: Bearer}; an invalid or expired token:

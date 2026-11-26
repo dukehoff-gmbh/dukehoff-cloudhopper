@@ -359,9 +359,21 @@ final class JwtVerifier {
         return new BigInteger(1, Base64.getUrlDecoder().decode(base64url));
     }
 
-    /** Keys given in the configuration. */
+    /**
+     * Keys given in the configuration: the key set as JSON, or Base64-encoded, for platforms that
+     * do not pass quotes and braces in environment variables reliably.
+     */
     static KeySource fixed(String jwks) {
-        List<Jwk> keys = List.copyOf(parseKeySet(jwks));
+        String json = jwks.trim();
+        if (!json.startsWith("{")) {
+            try {
+                json = new String(Base64.getMimeDecoder().decode(json.replace('-', '+').replace('_', '/')),
+                        StandardCharsets.UTF_8);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("The key set is neither JSON nor Base64", e);
+            }
+        }
+        List<Jwk> keys = List.copyOf(parseKeySet(json));
         return refresh -> keys;
     }
 

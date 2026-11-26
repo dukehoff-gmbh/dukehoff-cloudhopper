@@ -293,6 +293,13 @@ class JwtVerifierTest {
     }
 
     @Test
+    void keySetMayBeBase64Encoded() throws Exception {
+        String encoded = Base64.getEncoder().encodeToString(jwks.getBytes(StandardCharsets.UTF_8));
+        new JwtVerifier(ISSUER, AUDIENCE, JwtVerifier.fixed(encoded), CLOCK).verify(rs256(claims("")));
+        assertThrows(IllegalArgumentException.class, () -> JwtVerifier.fixed("not base64 !"));
+    }
+
+    @Test
     void keysWithoutIdFitTokensWithId() throws Exception {
         String set = "{\"keys\":[" + rsaJwk("r1", (RSAPublicKey) rsa.getPublic()).replace("\"kid\":\"r1\",", "") + "]}";
         new JwtVerifier(ISSUER, AUDIENCE, JwtVerifier.fixed(set), CLOCK).verify(rs256(claims("")));

@@ -315,6 +315,7 @@ public class TestContextScaleway implements TestContext {
     private void waitUntilUp() {
         Instant deadline = Instant.now().plus(STARTUP_TIMEOUT);
         int last = -1;
+        String lastError = null;
         while (Instant.now().isBefore(deadline)) {
             try {
                 HttpResponse<Void> response = http.send(HttpRequest.newBuilder(URI.create(baseUrl + "/"))
@@ -325,13 +326,15 @@ public class TestContextScaleway implements TestContext {
                 }
             } catch (IOException e) {
                 // not reachable yet
+                lastError = e.toString();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
             sleep(Duration.ofSeconds(5));
         }
-        throw new IllegalStateException(baseUrl + " did not come up within " + STARTUP_TIMEOUT + " (last status " + last + ")");
+        throw new IllegalStateException(baseUrl + " did not come up within " + STARTUP_TIMEOUT + " (last status " + last
+                + (lastError == null ? "" : ", last error " + lastError) + ")");
     }
 
     private void dockerLogin(String registry) throws IOException {
