@@ -1,6 +1,7 @@
 package eu.cloudhopper.mc.provider.aws;
 
 import eu.cloudhopper.mc.runtime.Headers;
+import eu.cloudhopper.mc.runtime.HttpReply;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2ProxyRequestEvent;
@@ -56,46 +57,52 @@ public abstract class ApiGatewayV2ProxyRequestHandler<I, O> implements RequestHa
 
     @Override
     public APIGatewayV2ProxyResponseEvent handleRequest(APIGatewayV2ProxyRequestEvent event, Context context) {
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Access-Control-Allow-Origin", "*");
-        headers.put("Content-Type", "application/json");
-
+        HttpReply reply;
+        I input;
         try {
-            // Decode body if base64-encoded
             String body = event.getBody();
-            if (event.isIsBase64Encoded()) {
+            if (event.isIsBase64Encoded() && body != null) {
                 body = new String(java.util.Base64.getDecoder().decode(body), StandardCharsets.UTF_8);
             }
-
-            // Deserialize input
-            I input = (body != null && !body.isBlank())
-                    ? mapper.readValue(body, inputClass)
-                    : null;
-
+            input = (body != null && !body.isBlank()) ? mapper.readValue(body, inputClass) : null;
+        } catch (Exception e) {
+            return toResponse(HttpReply.invalidBody());
+        }
+        try {
             Map<String, String> pathParams = event.getPathParameters() != null
                     ? event.getPathParameters()
                     : Collections.emptyMap();
-
             Map<String, String> queryParams = event.getQueryStringParameters() != null
                     ? event.getQueryStringParameters()
                     : Collections.emptyMap();
-
             O output = handler.handleRequest(input, pathParams, queryParams, Headers.of(event.getHeaders()),
                     new AwsContextAdapter(context));
-            String result = mapper.writeValueAsString(output);
-            APIGatewayV2ProxyResponseEvent response = new APIGatewayV2ProxyResponseEvent();
-            response.setStatusCode(200);
-            response.setBody(result);
-            response.setHeaders(headers);
-            return response;
-
+            reply = HttpReply.of(output, this::json);
         } catch (Exception e) {
-            context.getLogger().log("Error: " + e.getMessage());
-            APIGatewayV2ProxyResponseEvent response = new APIGatewayV2ProxyResponseEvent();
-            response.setStatusCode(500);
-            response.setBody("{\"error\": \"" + e.getMessage().replace("\"", "\\\"") + "\"}");
-            response.setHeaders(headers);
-            return response;
+            reply = HttpReply.of(e);
+            if (reply.isUnexpected()) {
+                context.getLogger().log("Handler error: " + ApiGatewayV2HttpEventHandler.stackTrace(e));
+            }
         }
+        return toResponse(reply);
+    }
+
+    private String json(Object value) {
+        try {
+            return mapper.writeValueAsString(value);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalStateException("Cannot serialize the result as JSON", e);
+        }
+    }
+
+    private static APIGatewayV2ProxyResponseEvent toResponse(HttpReply reply) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Access-Control-Allow-Origin", "*");
+        headers.putAll(reply.headers());
+        APIGatewayV2ProxyResponseEvent response = new APIGatewayV2ProxyResponseEvent();
+        response.setStatusCode(reply.status());
+        response.setHeaders(headers);
+        response.setBody(reply.body());
+        return response;
     }
 }

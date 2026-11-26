@@ -26,11 +26,13 @@ package eu.cloudhopper.mc.provider.aws;
  */
 
 import eu.cloudhopper.mc.runtime.Headers;
+import eu.cloudhopper.mc.runtime.HttpReply;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import eu.cloudhopper.mc.runtime.CloudRequestHandler;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
@@ -58,46 +60,58 @@ public abstract class ApiGatewayV2HttpEventHandler<I, O> implements RequestHandl
 
     @Override
     public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent event, Context awsContext) {
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Access-Control-Allow-Origin", "*");
-        headers.put("Content-Type", "application/json");
-
+        HttpReply reply;
+        I input;
         try {
-            // Decode and deserialize input
             String body = event.getBody();
             if (event.getIsBase64Encoded() && body != null) {
                 body = new String(Base64.getDecoder().decode(body), StandardCharsets.UTF_8);
             }
-
-            I input = (body != null && !body.isBlank())
-                    ? objectMapper.readValue(body, inputClass)
-                    : null;
-
+            input = (body != null && !body.isBlank()) ? objectMapper.readValue(body, inputClass) : null;
+        } catch (Exception e) {
+            return toResponse(HttpReply.invalidBody());
+        }
+        try {
             Map<String, String> pathParams = event.getPathParameters() != null
                     ? event.getPathParameters()
                     : Collections.emptyMap();
-
             Map<String, String> queryParams = event.getQueryStringParameters() != null
                     ? event.getQueryStringParameters()
                     : Collections.emptyMap();
-
             O output = handler.handleRequest(input, pathParams, queryParams, Headers.of(event.getHeaders()),
                     new AwsContextAdapter(awsContext));
-
-            APIGatewayV2HTTPResponse response = new APIGatewayV2HTTPResponse();
-            response.setStatusCode(200);
-            response.setBody(objectMapper.writeValueAsString(output));
-            response.setHeaders(headers);
-            return response;
-
+            reply = HttpReply.of(output, this::json);
         } catch (Exception e) {
-            awsContext.getLogger().log("Handler error: " + e.getMessage());
-
-            APIGatewayV2HTTPResponse error = new APIGatewayV2HTTPResponse();
-            error.setStatusCode(500);
-            error.setBody("{\"error\": \"" + e.getMessage().replace("\"", "\\\"") + "\"}");
-            error.setHeaders(headers);
-            return error;
+            reply = HttpReply.of(e);
+            if (reply.isUnexpected()) {
+                awsContext.getLogger().log("Handler error: " + stackTrace(e));
+            }
         }
+        return toResponse(reply);
+    }
+
+    private String json(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Cannot serialize the result as JSON", e);
+        }
+    }
+
+    private static APIGatewayV2HTTPResponse toResponse(HttpReply reply) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Access-Control-Allow-Origin", "*");
+        headers.putAll(reply.headers());
+        APIGatewayV2HTTPResponse response = new APIGatewayV2HTTPResponse();
+        response.setStatusCode(reply.status());
+        response.setHeaders(headers);
+        response.setBody(reply.body());
+        return response;
+    }
+
+    static String stackTrace(Throwable e) {
+        java.io.StringWriter text = new java.io.StringWriter();
+        e.printStackTrace(new java.io.PrintWriter(text));
+        return text.toString();
     }
 }

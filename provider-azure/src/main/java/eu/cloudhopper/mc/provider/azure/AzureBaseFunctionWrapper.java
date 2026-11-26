@@ -25,6 +25,7 @@ package eu.cloudhopper.mc.provider.azure;
  * #L%
  */
 import eu.cloudhopper.mc.runtime.Headers;
+import eu.cloudhopper.mc.runtime.HttpReply;
 import com.microsoft.azure.functions.*;
 import eu.cloudhopper.mc.runtime.CloudRequestHandler;
 import eu.cloudhopper.mc.runtime.HandlerContext;
@@ -96,19 +97,7 @@ public abstract class AzureBaseFunctionWrapper<I, O> {
      * @return the HTTP response message
      */
     protected HttpResponseMessage handleRequest(HttpRequestMessage<String> request, ExecutionContext context) {
-        try {
-            I input = null;
-
-            if (expectsRequestBody(request)) {
-                input = parseInput(request);
-            }
-
-            O output = handler.handleRequest(input, Collections.emptyMap(), request.getQueryParameters(),
-                    Headers.of(request.getHeaders()), new AzureContextAdapter(context));
-            return createSuccessResponse(request, output);
-        } catch (Exception e) {
-            return createErrorResponse(request, e);
-        }
+        return handleRequest(request, context, null);
     }
 
     /**
@@ -121,22 +110,29 @@ public abstract class AzureBaseFunctionWrapper<I, O> {
      * @return the HTTP response message
      */
     protected HttpResponseMessage handleRequest(HttpRequestMessage<String> request, ExecutionContext context, String routePattern) {
-        try {
-            I input = null;
-
-            if (expectsRequestBody(request)) {
+        I input = null;
+        if (expectsRequestBody(request)) {
+            try {
                 input = parseInput(request);
+            } catch (Exception e) {
+                return createResponse(request, HttpReply.invalidBody());
             }
-
-            Map<String, String> pathParams = extractPathParams(request, routePattern);
-            Map<String, String> queryParams = request.getQueryParameters();
-
-            O output = handler.handleRequest(input, pathParams, queryParams, Headers.of(request.getHeaders()),
-                    new AzureContextAdapter(context));
-            return createSuccessResponse(request, output);
-        } catch (Exception e) {
-            return createErrorResponse(request, e);
         }
+        HttpReply reply;
+        try {
+            Map<String, String> pathParams = routePattern != null
+                    ? extractPathParams(request, routePattern)
+                    : Collections.emptyMap();
+            O output = handler.handleRequest(input, pathParams, request.getQueryParameters(),
+                    Headers.of(request.getHeaders()), new AzureContextAdapter(context));
+            reply = HttpReply.of(output, this::json);
+        } catch (Exception e) {
+            reply = HttpReply.of(e);
+            if (reply.isUnexpected()) {
+                Logger.getLogger(AzureBaseFunctionWrapper.class.getName()).log(Level.SEVERE, "Function failed", e);
+            }
+        }
+        return createResponse(request, reply);
     }
 
     private boolean expectsRequestBody(HttpRequestMessage<String> request) {
@@ -301,38 +297,35 @@ public abstract class AzureBaseFunctionWrapper<I, O> {
      * @throws IOException if the payload is invalid
      */
     private I parseInput(HttpRequestMessage<String> request) throws IOException {
+        if (request.getBody() == null || request.getBody().isBlank()) {
+            return null;
+        }
         JavaType javaType = objectMapper.getTypeFactory().constructType(inputType);
         return objectMapper.readValue(request.getBody(), javaType);
     }
 
-    /**
-     * Creates a successful JSON response.
-     *
-     * @param request the original HTTP request
-     * @param output the function output
-     * @return the success response
-     * @throws JsonProcessingException if serialization fails
-     */
-    private HttpResponseMessage createSuccessResponse(HttpRequestMessage<String> request, O output)
-            throws JsonProcessingException {
-        return request.createResponseBuilder(HttpStatus.OK)
-                .body(objectMapper.writeValueAsString(output))
-                .header("Content-Type", "application/json")
-                .build();
+    private String json(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Cannot serialize the result as JSON", e);
+        }
     }
 
     /**
-     * Creates a generic error response.
+     * Writes the answer of the function.
      *
      * @param request the original HTTP request
-     * @param e the exception thrown
-     * @return the error response
+     * @param reply   status, headers and body
+     * @return the response
      */
-    private HttpResponseMessage createErrorResponse(HttpRequestMessage<String> request, Exception e) {
-        Logger.getLogger(AzureBaseFunctionWrapper.class.getName()).log(Level.SEVERE, "Error creating Response", e);
-        return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error processing request: " + e.getMessage())
-                .build();
+    private static HttpResponseMessage createResponse(HttpRequestMessage<String> request, HttpReply reply) {
+        HttpResponseMessage.Builder builder = request.createResponseBuilder(HttpStatusType.custom(reply.status()));
+        reply.headers().forEach(builder::header);
+        if (reply.body() != null) {
+            builder.body(reply.body());
+        }
+        return builder.build();
     }
 
     /**

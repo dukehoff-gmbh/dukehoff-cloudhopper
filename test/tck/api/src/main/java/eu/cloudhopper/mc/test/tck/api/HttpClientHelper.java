@@ -80,16 +80,43 @@ public class HttpClientHelper {
         String responseBody = responseStream == null ? ""
                 : new String(responseStream.readAllBytes(), StandardCharsets.UTF_8);
 
-        return new HttpResponse(responseCode, responseBody);
+        Map<String, String> responseHeaders = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        conn.getHeaderFields().forEach((name, values) -> {
+            if (name != null && values != null && !values.isEmpty()) {
+                responseHeaders.put(name, values.get(0));
+            }
+        });
+        return new HttpResponse(responseCode, responseBody, responseHeaders);
     }
 
     public static class HttpResponse {
         private final int statusCode;
         private final String body;
+        private final Map<String, String> headers;
 
         public HttpResponse(int statusCode, String body) {
+            this(statusCode, body, Map.of());
+        }
+
+        public HttpResponse(int statusCode, String body, Map<String, String> headers) {
             this.statusCode = statusCode;
             this.body = body;
+            this.headers = headers;
+        }
+
+        /**
+         * @return the response headers (first value of each), keyed case-insensitively
+         */
+        public Map<String, String> getHeaders() {
+            return headers;
+        }
+
+        /**
+         * @param name the header name, matched case-insensitively
+         * @return the first value of the header, or {@code null}
+         */
+        public String getHeader(String name) {
+            return headers.get(name);
         }
 
         public int getStatusCode() {
