@@ -48,7 +48,7 @@ public class HandlerGenerator {
     public static class ParamInfo {
 
         public enum ParamType {
-            BODY, PATH, QUERY, HEADER, CONTEXT, EVENT_METADATA, CONFIG, QUEUE, BUCKET, TABLE
+            BODY, PATH, QUERY, HEADER, CONTEXT, EVENT_METADATA, CONFIG, QUEUE, BUCKET, TABLE, CLAIM, CLAIMS
         }
 
         private final ParamType type;
@@ -103,6 +103,8 @@ public class HandlerGenerator {
         private final String returnType;
         private final List<ParamInfo> params;
         private final boolean declaresExceptions;
+        private boolean authenticated;
+        private List<String> scopes = List.of();
 
         public MethodHandlerInfo(String packageName,
                 String handlerClassName,
@@ -138,6 +140,29 @@ public class HandlerGenerator {
 
         public boolean isDeclaresExceptions() {
             return declaresExceptions;
+        }
+
+        /**
+         * @return whether the route requires a valid token ({@code @HttpTrigger(authenticated = true)})
+         */
+        public boolean isAuthenticated() {
+            return authenticated;
+        }
+
+        /**
+         * @return the scopes the token must have
+         */
+        public List<String> getScopes() {
+            return scopes;
+        }
+
+        /**
+         * @param authenticated whether the route requires a valid token
+         * @param scopes        the scopes the token must have
+         */
+        public void setAuthentication(boolean authenticated, List<String> scopes) {
+            this.authenticated = authenticated;
+            this.scopes = List.copyOf(scopes);
         }
 
         public String getPackageName() {
@@ -299,6 +324,22 @@ public class HandlerGenerator {
                 .addStatement("return handleRequest(_body, _path, _query, $T.emptyMap(), _ctx)", Collections.class)
                 .build());
 
+        // the token is checked before anything else; without a valid one the function is not called
+        ClassName claimsType = ClassName.get("eu.cloudhopper.mc.runtime", "Claims");
+        if (info.isAuthenticated()) {
+            StringBuilder scopes = new StringBuilder();
+            for (String scope : info.getScopes()) {
+                scopes.append(", $S");
+            }
+            Object[] args = new Object[2 + info.getScopes().size()];
+            args[0] = claimsType;
+            args[1] = ClassName.get("eu.cloudhopper.mc.runtime", "Authenticator");
+            for (int i = 0; i < info.getScopes().size(); i++) {
+                args[2 + i] = info.getScopes().get(i);
+            }
+            methodBuilder.addStatement("$T _claims = $T.authenticate(_headers" + scopes + ")", args);
+        }
+
         // Parameter extraction
         for (ParamInfo p : info.getParams()) {
             String typeName = p.getTypeName();
@@ -401,6 +442,32 @@ public class HandlerGenerator {
                                 conv,
                                 p.getName());
                     }
+                    break;
+                }
+
+                case CLAIMS:
+                    methodBuilder.addStatement("$T $L = _claims", toTypeName(typeName), p.getVarName());
+                    break;
+
+                case CLAIM: {
+                    String getter;
+                    if ("java.lang.String".equals(typeName)) {
+                        getter = "getString";
+                    } else if ("java.lang.Long".equals(typeName)) {
+                        getter = "getLong";
+                    } else if ("java.lang.Integer".equals(typeName)) {
+                        getter = "getInteger";
+                    } else if ("java.lang.Double".equals(typeName)) {
+                        getter = "getDouble";
+                    } else if ("java.lang.Boolean".equals(typeName)) {
+                        getter = "getBoolean";
+                    } else if ("java.util.List<java.lang.String>".equals(typeName)) {
+                        getter = "getStringList";
+                    } else {
+                        throw new IllegalArgumentException("Unsupported @ClaimParam type: " + typeName);
+                    }
+                    methodBuilder.addStatement("$T $L = _claims.$L($S)", toTypeName(typeName), p.getVarName(),
+                            getter, p.getName());
                     break;
                 }
 

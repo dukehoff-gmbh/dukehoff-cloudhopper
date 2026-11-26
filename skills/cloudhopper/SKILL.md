@@ -66,6 +66,10 @@ public class PlayerFunctions {
   client errors throw `HttpStatusException` (`new HttpStatusException(404, "no such item")`,
   body `{"error": "..."}`). Any other exception answers 500 without details; a body that is not
   valid JSON answers 400. Never return error objects with status 200.
+- Routes for signed-in users: `@HttpTrigger(..., authenticated = true, scopes = {"items:read"})`;
+  read the caller with `@ClaimParam("sub") String userId` or a `Claims` parameter. The provider
+  is configured with the properties `cloudhopper.auth.issuer` and `cloudhopper.auth.audience`
+  (e.g. in `cloudhopper_config`). Never verify JWTs in function code.
 - An unannotated parameter is the request body; `HandlerContext` and `EventMetadata` are
   recognized by type.
 - Events are delivered at least once: make event functions tolerate duplicates.

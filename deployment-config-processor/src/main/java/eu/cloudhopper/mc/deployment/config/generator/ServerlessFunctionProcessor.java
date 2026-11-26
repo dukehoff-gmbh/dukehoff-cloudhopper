@@ -80,6 +80,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
     private Elements elementUtils;
     private TypeMirror contextType;
     private TypeMirror eventMetadataType;
+    private TypeMirror claimsType;
     private TypeMirror storageEventType;
 
     /**
@@ -130,6 +131,9 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
         this.eventMetadataType = elementUtils
                 .getTypeElement("eu.cloudhopper.mc.runtime.EventMetadata")
                 .asType();
+        this.claimsType = elementUtils
+                .getTypeElement("eu.cloudhopper.mc.runtime.Claims")
+                .asType();
         this.storageEventType = elementUtils
                 .getTypeElement("eu.cloudhopper.mc.runtime.StorageEvent")
                 .asType();
@@ -160,6 +164,11 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     params.add(new ParamInfo(CONTEXT, null, tm.toString(), name));
                 } else if (typeUtils.isSameType(tm, eventMetadataType)) {
                     params.add(new ParamInfo(EVENT_METADATA, null, tm.toString(), name));
+                } else if (typeUtils.isSameType(tm, claimsType)) {
+                    params.add(new ParamInfo(ParamType.CLAIMS, null, tm.toString(), name));
+                } else if (p.getAnnotation(eu.cloudhopper.mc.annotations.ClaimParam.class) != null) {
+                    params.add(new ParamInfo(ParamType.CLAIM,
+                            p.getAnnotation(eu.cloudhopper.mc.annotations.ClaimParam.class).value(), tm.toString(), name));
                 } else if (p.getAnnotation(PathParam.class) != null) {
                     PathParam ann = p.getAnnotation(PathParam.class);
 
@@ -203,8 +212,9 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                 }
             }
 
+            boolean authenticated = http != null && (http.authenticated() || http.scopes().length > 0);
             if (!validateParams(m, params) || (event != null && !validateEventTrigger(m, event, params))
-                    || !validateIdentity(m, fn)) {
+                    || !validateIdentity(m, fn) || !validateClaims(m, params, authenticated)) {
                 continue;
             }
             String pkg = elementUtils.getPackageOf(cls).getQualifiedName().toString();
@@ -222,6 +232,7 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     bodyType, returnType, params,
                     !m.getThrownTypes().isEmpty()
             );
+            info.setAuthentication(authenticated, http == null ? List.of() : List.of(http.scopes()));
             try {
                 HandlerGenerator.generateHandler(info, processingEnv.getFiler());
             } catch (Exception ex) {
@@ -267,12 +278,26 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     .toList();
             hinfo.setTables(tables);
             tables.forEach(t -> tableUses.add(new TableUse(m, t)));
-            hinfo.setConfigProperties(params.stream()
+            List<eu.cloudhopper.mc.generator.api.ConfigPropertyInfo> configProperties = new ArrayList<>(params.stream()
                     .filter(pi -> pi.getType() == ParamType.CONFIG)
                     .map(pi -> new eu.cloudhopper.mc.generator.api.ConfigPropertyInfo(pi.getName(),
                             !pi.getTypeName().startsWith("java.util.Optional<")
                             && org.eclipse.microprofile.config.inject.ConfigProperty.UNCONFIGURED_VALUE.equals(pi.getDefaultValue())))
                     .toList());
+            if (authenticated) {
+                // the provider of the tokens, passed like any other configuration property
+                for (String[] auth : new String[][] {
+                        {eu.cloudhopper.mc.runtime.Authenticator.ISSUER, "true"},
+                        {eu.cloudhopper.mc.runtime.Authenticator.AUDIENCE, "true"},
+                        {eu.cloudhopper.mc.runtime.Authenticator.JWKS_URI, "false"},
+                        {eu.cloudhopper.mc.runtime.Authenticator.JWKS, "false"}}) {
+                    if (configProperties.stream().noneMatch(c -> c.getName().equals(auth[0]))) {
+                        configProperties.add(new eu.cloudhopper.mc.generator.api.ConfigPropertyInfo(auth[0],
+                                Boolean.parseBoolean(auth[1])));
+                    }
+                }
+            }
+            hinfo.setConfigProperties(configProperties);
             try {
                 deploymentGenerator.generateServerlessFunctionConfiguration(
                         generatorId, configOutputDir, hinfo, processingEnv);
@@ -445,6 +470,32 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                             + "' has type " + p.asType() + ".", p);
                     return false;
                 }
+            }
+        }
+        return true;
+    }
+
+    private static final java.util.Set<String> CLAIM_TYPES = java.util.Set.of("java.lang.String", "java.lang.Long",
+            "java.lang.Integer", "java.lang.Double", "java.lang.Boolean", "java.util.List<java.lang.String>");
+
+    /** Claims exist only on routes that require a token. */
+    private boolean validateClaims(ExecutableElement method, List<ParamInfo> params, boolean authenticated) {
+        Messager messager = processingEnv.getMessager();
+        for (ParamInfo p : params) {
+            if (p.getType() != ParamType.CLAIM && p.getType() != ParamType.CLAIMS) {
+                continue;
+            }
+            if (!authenticated) {
+                messager.printMessage(Diagnostic.Kind.ERROR, "Parameter '" + p.getVarName() + "' of "
+                        + method.getSimpleName() + " reads the caller's token: the route needs"
+                        + " @HttpTrigger(authenticated = true)", method);
+                return false;
+            }
+            if (p.getType() == ParamType.CLAIM && !CLAIM_TYPES.contains(p.getTypeName())) {
+                messager.printMessage(Diagnostic.Kind.ERROR, "@ClaimParam on parameter '" + p.getVarName() + "' of "
+                        + method.getSimpleName() + " needs the type String, Long, Integer, Double, Boolean or"
+                        + " List<String>, not " + p.getTypeName(), method);
+                return false;
             }
         }
         return true;

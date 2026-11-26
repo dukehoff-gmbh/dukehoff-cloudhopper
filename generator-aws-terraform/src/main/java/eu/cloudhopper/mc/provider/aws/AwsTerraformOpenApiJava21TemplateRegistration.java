@@ -102,6 +102,8 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                         HttpTrigger.HttpTriggerAttribute.OPERATION_ID,
                         HttpTrigger.HttpTriggerAttribute.PATH,
                         HttpTrigger.HttpTriggerAttribute.METHOD,
+                        HttpTrigger.HttpTriggerAttribute.AUTHENTICATED,
+                        HttpTrigger.HttpTriggerAttribute.SCOPES,
                     }
             )
         }

@@ -95,6 +95,8 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger.ScheduleAttribute;
                 HttpTriggerAttribute.OPERATION_ID,
                 HttpTriggerAttribute.PATH,
                 HttpTriggerAttribute.METHOD,
+                HttpTriggerAttribute.AUTHENTICATED,
+                HttpTriggerAttribute.SCOPES,
             }
         ),
         @GeneratorFeature(
