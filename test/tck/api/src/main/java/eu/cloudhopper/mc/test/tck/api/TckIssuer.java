@@ -93,7 +93,19 @@ public final class TckIssuer {
      * @return the signed token
      */
     public static String token(String audience, Instant expires, Map<String, String> claims) {
-        String payload = "{\"iss\":\"" + ISSUER + "\",\"aud\":\"" + audience + "\",\"exp\":" + expires.getEpochSecond()
+        return token(ISSUER, audience, expires, claims);
+    }
+
+    /**
+     * @param issuer   the issuer: {@link #ISSUER}, or where a binding publishes the key set
+     *                 ({@link TestContext#getAuthIssuer()})
+     * @param audience the audience
+     * @param expires  the expiry
+     * @param claims   further claims, values as JSON
+     * @return the signed token
+     */
+    public static String token(String issuer, String audience, Instant expires, Map<String, String> claims) {
+        String payload = "{\"iss\":\"" + issuer + "\",\"aud\":\"" + audience + "\",\"exp\":" + expires.getEpochSecond()
                 + claims.entrySet().stream().map(e -> ",\"" + e.getKey() + "\":" + e.getValue()).collect(Collectors.joining())
                 + "}";
         return sign("{\"alg\":\"RS256\",\"typ\":\"JWT\",\"kid\":\"" + KID + "\"}", payload, KEYS.getPrivate());

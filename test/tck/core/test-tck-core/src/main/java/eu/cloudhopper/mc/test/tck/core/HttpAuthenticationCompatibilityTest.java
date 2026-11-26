@@ -40,7 +40,9 @@ import org.junit.Assert;
 
 /**
  * A route with {@code @HttpTrigger(authenticated = true, scopes = "tck:read")}: tokens of the
- * TCK's issuer ({@link TckIssuer}), whose key set the deployment gets as configuration.
+ * TCK's issuer ({@link TckIssuer}), whose key set the deployment gets as configuration or, on
+ * targets whose gateway checks the tokens, reads from the issuer
+ * ({@link TestContext#getAuthIssuer()}).
  */
 public class HttpAuthenticationCompatibilityTest implements FeatureAwareTest {
 
@@ -49,6 +51,8 @@ public class HttpAuthenticationCompatibilityTest implements FeatureAwareTest {
     @Override
     public void run(TestContext context) throws Exception {
         URI url = new URI(context.getHttpUrl(FUNCTION_NAME));
+        String issuer = context.getAuthIssuer();
+        Instant valid5m = Instant.now().plusSeconds(300);
         Map<String, String> claims = Map.of("sub", "\"user-42\"", "level", "3", "custom:tenant", "\"acme\"",
                 "scope", "\"profile tck:read\"");
 
@@ -58,17 +62,19 @@ public class HttpAuthenticationCompatibilityTest implements FeatureAwareTest {
                 String.valueOf(missing.getHeader("WWW-Authenticate")).startsWith("Bearer"));
 
         Assert.assertEquals(401, call(url, "Bearer not.a.token", "garbage").getStatusCode());
-        Assert.assertEquals(401, call(url, "Bearer " + TckIssuer.token(TckIssuer.AUDIENCE,
+        Assert.assertEquals(401, call(url, "Bearer " + TckIssuer.token(issuer, TckIssuer.AUDIENCE,
                 Instant.now().minusSeconds(600), claims), "expired").getStatusCode());
-        Assert.assertEquals(401, call(url, "Bearer " + TckIssuer.token("another-app",
-                Instant.now().plusSeconds(300), claims), "other audience").getStatusCode());
-        String valid = TckIssuer.token(claims);
+        Assert.assertEquals(401, call(url, "Bearer " + TckIssuer.token(issuer, "another-app",
+                valid5m, claims), "other audience").getStatusCode());
+        Assert.assertEquals(401, call(url, "Bearer " + TckIssuer.token("https://other-issuer.cloudhopper.invalid",
+                TckIssuer.AUDIENCE, valid5m, claims), "other issuer").getStatusCode());
+        String valid = TckIssuer.token(issuer, TckIssuer.AUDIENCE, valid5m, claims);
         String[] parts = valid.split("\\.");
         Assert.assertEquals(401, call(url, "Bearer " + parts[0] + "." + parts[1] + "." + parts[2].substring(0, 20) + "x",
                 "bad signature").getStatusCode());
 
-        HttpClientHelper.HttpResponse scope = call(url, "Bearer " + TckIssuer.token(Map.of("sub", "\"user-42\"",
-                "scope", "\"profile\"")), "without scope");
+        HttpClientHelper.HttpResponse scope = call(url, "Bearer " + TckIssuer.token(issuer, TckIssuer.AUDIENCE, valid5m,
+                Map.of("sub", "\"user-42\"", "scope", "\"profile\"")), "without scope");
         Assert.assertEquals(403, scope.getStatusCode());
 
         HttpClientHelper.HttpResponse ok = call(url, "Bearer " + valid, "valid");

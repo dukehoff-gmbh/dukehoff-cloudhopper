@@ -61,15 +61,21 @@ public final class TckConfiguration {
      */
     public static final String PROJECT_VALUE = "from the project's Terraform";
 
+    /** The issuer of the tokens the functions accept. */
+    public static final String ISSUER_PROPERTY = "cloudhopper.auth.issuer";
+
+    /** The key set of the issuer, so that the functions need not fetch it. */
+    public static final String JWKS_PROPERTY = "cloudhopper.auth.jwks";
+
     /**
      * The properties and their values: the greeting, and the identity provider of the
      * authentication test ({@link TckIssuer}).
      */
     public static final Map<String, String> VALUES = Map.of(GREETING_PROPERTY, GREETING,
-            "cloudhopper.auth.issuer", TckIssuer.ISSUER,
+            ISSUER_PROPERTY, TckIssuer.ISSUER,
             "cloudhopper.auth.audience", TckIssuer.AUDIENCE,
             // Base64: Scaleway does not pass the quotes and braces of JSON in environment variables reliably
-            "cloudhopper.auth.jwks", java.util.Base64.getEncoder().encodeToString(
+            JWKS_PROPERTY, java.util.Base64.getEncoder().encodeToString(
                     TckIssuer.jwks().getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 
     private TckConfiguration() {
@@ -88,7 +94,17 @@ public final class TckConfiguration {
      * @return the value of the Terraform variable {@code cloudhopper_config}, as HCL/JSON
      */
     public static String terraformVariable() {
-        return VALUES.entrySet().stream()
+        return terraformVariable(java.util.Set.of());
+    }
+
+    /**
+     * @param without properties the binding sets differently (e.g. through
+     *                {@code cloudhopper_extra_config})
+     * @return the value of the Terraform variable {@code cloudhopper_config} without these
+     *         properties, as HCL/JSON
+     */
+    public static String terraformVariable(java.util.Set<String> without) {
+        return VALUES.entrySet().stream().filter(e -> !without.contains(e.getKey()))
                 .map(e -> "\"" + e.getKey() + "\" = \"" + e.getValue().replace("\"", "\\\"") + "\"")
                 .collect(Collectors.joining(", ", "{", "}"));
     }
@@ -98,5 +114,13 @@ public final class TckConfiguration {
      */
     public static Map<String, String> terraformEnvironment() {
         return Map.of("TF_VAR_cloudhopper_config", terraformVariable());
+    }
+
+    /**
+     * @param without properties the binding sets differently
+     * @return the environment for Terraform commands without these properties
+     */
+    public static Map<String, String> terraformEnvironment(java.util.Set<String> without) {
+        return Map.of("TF_VAR_cloudhopper_config", terraformVariable(without));
     }
 }
