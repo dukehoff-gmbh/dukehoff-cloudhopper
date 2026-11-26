@@ -33,7 +33,7 @@ Maven profile selects one. Full documentation: https://cloudhopper.eu/docs/intro
 
 ```java
 import eu.cloudhopper.mc.annotations.*;          // Function, HttpTrigger, PathParam, ...
-import eu.cloudhopper.mc.runtime.*;              // Publisher, BlobStore, EventMetadata, StorageEvent, HandlerContext
+import eu.cloudhopper.mc.runtime.*;              // HttpResponse, HttpStatusException, Publisher, BlobStore, ...
 
 public class PlayerFunctions {
 
@@ -60,7 +60,12 @@ public class PlayerFunctions {
 }
 ```
 
-- The return value is the response body (JSON); a `String` is returned as a JSON string.
+- The return value is the response body (JSON, status 200); a `String` is returned as a JSON
+  string. For another status or headers return `HttpResponse<T>`
+  (`HttpResponse.status(201, item).header("Location", ...)`, `HttpResponse.noContent()`); for
+  client errors throw `HttpStatusException` (`new HttpStatusException(404, "no such item")`,
+  body `{"error": "..."}`). Any other exception answers 500 without details; a body that is not
+  valid JSON answers 400. Never return error objects with status 200.
 - An unannotated parameter is the request body; `HandlerContext` and `EventMetadata` are
   recognized by type.
 - Events are delivered at least once: make event functions tolerate duplicates.

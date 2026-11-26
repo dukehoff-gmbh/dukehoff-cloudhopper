@@ -25,6 +25,7 @@ package eu.cloudhopper.mc.provider.gcp;
  * #L%
  */
 import eu.cloudhopper.mc.runtime.Headers;
+import eu.cloudhopper.mc.runtime.HttpReply;
 import com.google.cloud.functions.HttpFunction;
 import com.google.cloud.functions.HttpRequest;
 import com.google.cloud.functions.HttpResponse;
@@ -49,6 +50,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Abstract base class for GCP HTTP-triggered functions that delegate execution
@@ -67,6 +70,8 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
 
     /** The CloudEvent type Eventarc sets for objects created or overwritten in Cloud Storage. */
     private static final String STORAGE_OBJECT_FINALIZED = "google.cloud.storage.object.v1.finalized";
+
+    private static final Logger LOG = Logger.getLogger(GcpCloudFunctionRequestHandler.class.getName());
 
     private final CloudRequestHandler<I, O> handler;
     private final Type inputType;
@@ -101,7 +106,13 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
             handleStorageEvent(request, response);
             return;
         }
-        I input = parseInput(request);
+        I input;
+        try {
+            input = parseInput(request);
+        } catch (RuntimeException e) {
+            write(response, HttpReply.invalidBody());
+            return;
+        }
 
         Map<String, String> queryParams = new HashMap<>();
         request.getQueryParameters().forEach((key, valueList) -> {
@@ -117,9 +128,18 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
             pathParams = extractPathParams(request.getPath(), routePattern);
         }
 
-        O output = handler.handleRequest(input, pathParams, queryParams, Headers.ofFirstValues(request.getHeaders()),
-                new GcpContextAdapter(request));
-        writeOutput(response, output);
+        HttpReply reply;
+        try {
+            O output = handler.handleRequest(input, pathParams, queryParams,
+                    Headers.ofFirstValues(request.getHeaders()), new GcpContextAdapter(request));
+            reply = HttpReply.of(output, gson::toJson);
+        } catch (RuntimeException e) {
+            reply = HttpReply.of(e);
+            if (reply.isUnexpected()) {
+                LOG.log(Level.SEVERE, "Function failed", e);
+            }
+        }
+        write(response, reply);
     }
 
     /**
@@ -230,16 +250,25 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
     }
 
     /**
-     * Writes the function output as a JSON response.
+     * Writes the answer of the function.
      *
      * @param response the HTTP response
-     * @param output the output object to serialize
+     * @param reply    status, headers and body
      * @throws IOException if writing fails
      */
-    private void writeOutput(HttpResponse response, O output) throws IOException {
-        response.setContentType("application/json");
-        BufferedWriter writer = response.getWriter();
-        writer.write(gson.toJson(output));
+    private static void write(HttpResponse response, HttpReply reply) throws IOException {
+        response.setStatusCode(reply.status());
+        reply.headers().forEach((name, value) -> {
+            if (HttpReply.CONTENT_TYPE.equalsIgnoreCase(name)) {
+                response.setContentType(value);
+            } else {
+                response.appendHeader(name, value);
+            }
+        });
+        if (reply.body() != null) {
+            BufferedWriter writer = response.getWriter();
+            writer.write(reply.body());
+        }
     }
 
     private Map<String, String> extractPathParams(String actualPath, String routePattern) {

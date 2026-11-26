@@ -62,6 +62,7 @@ public class CompatibilityTestRunner {
                 new HttpGetMatchCompatibilityTest(),
                 new HttpSearchPlayersCompatibilityTest(),
                 new HttpHeaderParamCompatibilityTest(),
+                new HttpStatusCompatibilityTest(),
                 new HttpGenericBodyCompatibilityTest(),
                 new HttpApiDescriptionCompatibilityTest(),
                 new ScheduleTimezoneCompatibilityTest(),

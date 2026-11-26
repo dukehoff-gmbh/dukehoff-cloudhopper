@@ -25,7 +25,7 @@ public class ${handlerInfo.handlerClassName}FunctionController extends SpringBoo
     }
 
     @RequestMapping(path = "/functions/${handlerInfo.functionId}", method = {RequestMethod.GET, RequestMethod.POST})
-    public ResponseEntity<${handlerInfo.outputType}> invoke(<#if !noInput>@RequestBody(required = false) ${handlerInfo.inputType} input</#if>) {
+    public ResponseEntity<?> invoke(<#if !noInput>@RequestBody(required = false) ${handlerInfo.inputType} input</#if>) {
         return handle(<#if noInput>null<#else>input</#if>);
     }
 }

@@ -27,7 +27,7 @@ public class ${className} extends SpringBootRequestHandler<${inputType}, ${outpu
     }
 
     @${httpMethod?lower_case?cap_first}Mapping
-    public ResponseEntity<${outputType}> handle(
+    public ResponseEntity<?> handle(
             @PathVariable Map<String, String> pathParams,
             @RequestParam Map<String, String> queryParams,
             @RequestHeader HttpHeaders headers<#if inputType != "void">,

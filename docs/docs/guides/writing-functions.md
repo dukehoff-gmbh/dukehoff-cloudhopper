@@ -229,14 +229,63 @@ public Player update(@RequestBody Player input,
 }
 ```
 
-The method's return value becomes the response body; a `void` method produces no
-response payload. Body and return value can be parameterized types such as
-`Map<String, List<String>>`.
+The method's return value becomes the response body, as JSON with status 200.
+Body and return value can be parameterized types such as
+`Map<String, List<String>>`. Other statuses and response headers are described in
+[Responses](#responses).
 
 A method may declare checked exceptions (`throws IOException`). Any exception the
-method throws fails the invocation: an HTTP call answers with a server error, an
-event is redelivered. Checked exceptions reach the platform wrapped in
-`FunctionException`, runtime exceptions unchanged.
+method throws fails the invocation: an HTTP call answers with a server error (see
+[Responses](#responses)), an event is redelivered. Checked exceptions reach the
+platform wrapped in `FunctionException`, runtime exceptions unchanged.
+
+## Responses
+
+An HTTP function answers the same way on every target:
+
+| The function | Status | Body |
+|--------------|--------|------|
+| returns a value | 200 | the value as JSON |
+| returns an `HttpResponse<T>` | its status, with its headers | its body as JSON, or none |
+| throws `HttpStatusException` | its status (400 to 599), with its headers | `{"error": "<message>"}` |
+| throws any other exception | 500 | `{"error": "Internal Server Error"}` |
+| receives a body that is not valid JSON for its input type | 400 | `{"error": "Invalid request body"}` |
+
+Return `HttpResponse` (package `eu.cloudhopper.mc.runtime`) for a status other
+than 200 or for response headers, and throw `HttpStatusException` for client errors:
+
+```java
+@Function(name = "getItem")
+@HttpTrigger(method = "GET", path = "/items/{id}")
+public HttpResponse<Item> get(@PathParam("id") String id) {
+    Item item = items.find(id)
+            .orElseThrow(() -> new HttpStatusException(404, "no such item"));
+    return HttpResponse.ok(item).header("Cache-Control", "max-age=60");
+}
+
+@Function(name = "createItem")
+@HttpTrigger(method = "POST", path = "/items")
+public HttpResponse<Item> create(@RequestBody Item item,
+                                 @HeaderParam("Authorization") String authorization) {
+    if (authorization == null) {
+        throw new HttpStatusException(401, "missing token").header("WWW-Authenticate", "Bearer");
+    }
+    Item created = items.add(item);
+    return HttpResponse.status(201, created).header("Location", "/items/" + created.id());
+}
+```
+
+- `HttpResponse.ok(body)`, `HttpResponse.status(status, body)`,
+  `HttpResponse.status(status)` and `HttpResponse.noContent()` (204) create a
+  response; `header(name, value)` returns a copy with the header. Header names are
+  case-insensitive.
+- The body is sent as JSON with `Content-Type: application/json`. With a
+  `Content-Type` header of another media type and a `String` body, the body is
+  sent as it is, e.g. `HttpResponse.ok(csv).header("Content-Type", "text/csv")`.
+- The message of an `HttpStatusException` goes to the client; keep internal
+  details out of it. Any other exception is logged with its stack trace, and the
+  client gets no details.
+- On AWS, every response also carries `Access-Control-Allow-Origin: *`.
 
 ---
 
