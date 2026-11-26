@@ -130,7 +130,20 @@ public class TestContextScaleway implements TestContext {
             System.out.println(terraform(variables(image, "apply", "-auto-approve", "-input=false")));
             outputs = null;
             baseUrl = output("url").replaceAll("/+$", "");
-            waitUntilUp();
+            try {
+                waitUntilUp();
+            } catch (IllegalStateException notUp) {
+                // the container's status and error message, before the deployment is destroyed
+                try {
+                    terraform(variables(image, "apply", "-refresh-only", "-auto-approve", "-input=false"));
+                    terraform("state", "show", "scaleway_container.app").lines()
+                            .filter(line -> line.contains("status") || line.contains("error_message"))
+                            .forEach(line -> System.out.println("🩺 " + line.trim()));
+                } catch (IOException | RuntimeException diagnosis) {
+                    System.out.println("ℹ️ No container status: " + diagnosis.getMessage());
+                }
+                throw notUp;
+            }
             System.out.println("✅ Container is up at " + baseUrl);
         } catch (IOException e) {
             throw new RuntimeException("Failed to deploy the Scaleway container", e);
@@ -302,6 +315,7 @@ public class TestContextScaleway implements TestContext {
     private void waitUntilUp() {
         Instant deadline = Instant.now().plus(STARTUP_TIMEOUT);
         int last = -1;
+        String lastError = null;
         while (Instant.now().isBefore(deadline)) {
             try {
                 HttpResponse<Void> response = http.send(HttpRequest.newBuilder(URI.create(baseUrl + "/"))
@@ -312,13 +326,15 @@ public class TestContextScaleway implements TestContext {
                 }
             } catch (IOException e) {
                 // not reachable yet
+                lastError = e.toString();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
             sleep(Duration.ofSeconds(5));
         }
-        throw new IllegalStateException(baseUrl + " did not come up within " + STARTUP_TIMEOUT + " (last status " + last + ")");
+        throw new IllegalStateException(baseUrl + " did not come up within " + STARTUP_TIMEOUT + " (last status " + last
+                + (lastError == null ? "" : ", last error " + lastError) + ")");
     }
 
     private void dockerLogin(String registry) throws IOException {

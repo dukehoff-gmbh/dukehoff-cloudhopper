@@ -3,6 +3,23 @@
 <#assign requiredNames><#list handlerInfo.configProperties?filter(p -> p.required) as p>"${p.name}"<#sep>, </#sep></#list></#assign>
 # Function-specific resources
 
+# the environment of the function, also of its copy behind the API Gateway (apiRegistration)
+locals {
+  cloudhopper_function_${handlerInfo.functionId}_environment = merge({
+    FUNCTION_MEMORY_MB       = ${handlerInfo.memory}
+    FUNCTION_TIMEOUT_SECONDS = ${handlerInfo.timeout}
+<#list handlerInfo.buckets as b>
+    # @Bucket(name = "${b.name}"), defined in buckets.tf
+    ${b.nameEnvironmentName} = local.cloudhopper_bucket_${b.id}
+</#list>
+<#list handlerInfo.tables as t>
+    # @Table(name = "${t.name}"), defined in tables.tf
+    ${t.nameEnvironmentName} = local.cloudhopper_table_${t.id}
+</#list>
+  }, { for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value if contains([${configNames}], name) })
+  cloudhopper_function_${handlerInfo.functionId}_secrets = { for name, ref in local.cloudhopper_secrets : name => ref if contains([${configNames}], name) }
+}
+
 resource "google_cloudfunctions2_function" "${handlerInfo.functionId}" {
   name        = "${handlerInfo.functionId}"
   location    = var.gcp_region
@@ -25,23 +42,12 @@ resource "google_cloudfunctions2_function" "${handlerInfo.functionId}" {
     available_memory   = "${handlerInfo.memory}Mi"
     timeout_seconds    = ${handlerInfo.timeout}
     min_instance_count = ${handlerInfo.minInstances?c}
-    environment_variables = merge({
-      FUNCTION_MEMORY_MB       = ${handlerInfo.memory}
-      FUNCTION_TIMEOUT_SECONDS = ${handlerInfo.timeout}
-<#list handlerInfo.buckets as b>
-      # @Bucket(name = "${b.name}"), defined in buckets.tf
-      ${b.nameEnvironmentName} = local.cloudhopper_bucket_${b.id}
-</#list>
-<#list handlerInfo.tables as t>
-      # @Table(name = "${t.name}"), defined in tables.tf
-      ${t.nameEnvironmentName} = local.cloudhopper_table_${t.id}
-</#list>
-    }, { for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value if contains([${configNames}], name) })
+    environment_variables = local.cloudhopper_function_${handlerInfo.functionId}_environment
 <#if configNames?has_content>
 
     # the secrets of the properties the function reads, set by Cloud Functions from Secret Manager
     dynamic "secret_environment_variables" {
-      for_each = { for name, ref in local.cloudhopper_secrets : name => ref if contains([${configNames}], name) }
+      for_each = local.cloudhopper_function_${handlerInfo.functionId}_secrets
       content {
         key        = upper(replace(secret_environment_variables.key, "/[^A-Za-z0-9]/", "_"))
         project_id = length(split("/", secret_environment_variables.value)) == 4 ? split("/", secret_environment_variables.value)[1] : var.gcp_project_id

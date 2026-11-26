@@ -61,8 +61,16 @@ public final class TckConfiguration {
      */
     public static final String PROJECT_VALUE = "from the project's Terraform";
 
-    /** The properties and their values. */
-    public static final Map<String, String> VALUES = Map.of(GREETING_PROPERTY, GREETING);
+    /**
+     * The properties and their values: the greeting, and the identity provider of the
+     * authentication test ({@link TckIssuer}).
+     */
+    public static final Map<String, String> VALUES = Map.of(GREETING_PROPERTY, GREETING,
+            "cloudhopper.auth.issuer", TckIssuer.ISSUER,
+            "cloudhopper.auth.audience", TckIssuer.AUDIENCE,
+            // Base64: Scaleway does not pass the quotes and braces of JSON in environment variables reliably
+            "cloudhopper.auth.jwks", java.util.Base64.getEncoder().encodeToString(
+                    TckIssuer.jwks().getBytes(java.nio.charset.StandardCharsets.UTF_8)));
 
     private TckConfiguration() {
     }

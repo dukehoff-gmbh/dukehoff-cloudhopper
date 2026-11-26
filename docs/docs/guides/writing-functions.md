@@ -287,6 +287,69 @@ public HttpResponse<Item> create(@RequestBody Item item,
   client gets no details.
 - On AWS, every response also carries `Access-Control-Allow-Origin: *`.
 
+## Authentication
+
+A route that only signed-in users of an OpenID Connect provider (Amazon
+Cognito, Microsoft Entra ID, Google, Auth0, Keycloak, …) may call declares
+`authenticated = true`; `scopes` additionally requires scopes of the token. The
+function reads the caller's claims with `@ClaimParam` or a `Claims` parameter:
+
+```java
+@Function(name = "listItems")
+@HttpTrigger(method = "GET", path = "/items", authenticated = true, scopes = {"items:read"})
+public List<Item> list(@ClaimParam("sub") String userId, Claims claims) {
+    String tenant = claims.getString("custom:tenant");
+    // ...
+}
+```
+
+The client sends `Authorization: Bearer <JWT>`. Before the function is called,
+the generated handler verifies the token, the same way on every target:
+
+| The request | Status |
+|-------------|--------|
+| has no bearer token | 401 with `WWW-Authenticate: Bearer` |
+| has a token that is not valid: signature, issuer, audience, expiry | 401 with `WWW-Authenticate: Bearer error="invalid_token"` |
+| has a valid token without one of the `scopes` | 403 |
+| has a valid token | the function is called |
+
+The provider is configured once per deployment, with
+[configuration properties](#configuration) (for example in the Terraform
+variable `cloudhopper_config`):
+
+| Property | |
+|----------|---|
+| `cloudhopper.auth.issuer` | required: the issuer, exactly as in the tokens' `iss` claim, e.g. `https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_AbC123` |
+| `cloudhopper.auth.audience` | required: the expected `aud` claim; for access tokens of Amazon Cognito, which have none, the app client ID in `client_id` |
+| `cloudhopper.auth.jwks-uri` | the address of the provider's key set; by default the `jwks_uri` of `<issuer>/.well-known/openid-configuration` |
+| `cloudhopper.auth.jwks` | the key set itself as JSON, or Base64-encoded JSON, for providers the functions cannot reach; then nothing is fetched |
+
+```hcl
+cloudhopper_config = {
+  "cloudhopper.auth.issuer"   = "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_AbC123"
+  "cloudhopper.auth.audience" = "4m2fv0example"
+}
+```
+
+- Tokens are signed JWTs with RS256, RS384, RS512, ES256, ES384 or ES512.
+  Unsigned tokens, tokens signed with a shared secret (HS256) and RSA keys
+  shorter than 2048 bits are refused. `exp` is required; `exp` and `nbf` allow
+  a minute of clock skew.
+- The key set is fetched on the first authenticated request of an instance and
+  kept for an hour; a token with an unknown key ID fetches it again, at most
+  every 30 seconds. The discovery document and the key set are fetched over
+  HTTPS, unless `cloudhopper.auth.jwks-uri` names another address.
+- Scopes are read from the `scope` claim (separated by spaces) and the `scp`
+  claim (Microsoft Entra ID).
+- `@ClaimParam` binds `String`, `Long`, `Integer`, `Double`, `Boolean` or
+  `List<String>`; a claim the token does not have is `null`. `Claims` reads any
+  claim, e.g. `getSubject()`, `getString("email")`, `getStringList("groups")`.
+- The reason a token was refused goes to the log, not to the client.
+- The check runs in the function, on every target. A deployment with an
+  authenticated route needs `cloudhopper.auth.issuer` and
+  `cloudhopper.auth.audience`; on AWS and GCP, Terraform refuses to plan without
+  them.
+
 ---
 
 ## Sending messages

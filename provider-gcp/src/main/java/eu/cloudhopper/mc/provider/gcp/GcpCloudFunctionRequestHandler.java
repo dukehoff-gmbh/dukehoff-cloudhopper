@@ -131,7 +131,7 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
         HttpReply reply;
         try {
             O output = handler.handleRequest(input, pathParams, queryParams,
-                    Headers.ofFirstValues(request.getHeaders()), new GcpContextAdapter(request));
+                    headers(request, routePattern != null && !routePattern.isBlank()), new GcpContextAdapter(request));
             reply = HttpReply.of(output, gson::toJson);
         } catch (RuntimeException e) {
             reply = HttpReply.of(e);
@@ -269,6 +269,25 @@ public abstract class GcpCloudFunctionRequestHandler<I, O> implements HttpFuncti
             BufferedWriter writer = response.getWriter();
             writer.write(reply.body());
         }
+    }
+
+    /**
+     * The request headers. Behind the API Gateway, {@code Authorization} carries the gateway's own
+     * token for the function; the gateway moves the client's to {@code X-Forwarded-Authorization}.
+     */
+    static Map<String, String> headers(HttpRequest request, boolean behindGateway) {
+        Map<String, String> headers = Headers.ofFirstValues(request.getHeaders());
+        if (!behindGateway) {
+            return headers;
+        }
+        Map<String, String> result = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        result.putAll(headers);
+        result.remove("Authorization");
+        String forwarded = headers.get("X-Forwarded-Authorization");
+        if (forwarded != null) {
+            result.put("Authorization", forwarded);
+        }
+        return Collections.unmodifiableMap(result);
     }
 
     private Map<String, String> extractPathParams(String actualPath, String routePattern) {

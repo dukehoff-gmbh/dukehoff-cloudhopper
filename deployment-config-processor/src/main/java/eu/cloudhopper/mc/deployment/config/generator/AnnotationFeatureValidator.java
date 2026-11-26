@@ -24,6 +24,7 @@ package eu.cloudhopper.mc.deployment.config.generator;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import eu.cloudhopper.mc.annotations.ClaimParam;
 import eu.cloudhopper.mc.annotations.Extension;
 import eu.cloudhopper.mc.annotations.Extensions;
 import eu.cloudhopper.mc.annotations.Function;
@@ -66,7 +67,7 @@ public class AnnotationFeatureValidator {
      */
     private static final Set<String> HTTP_PARAMETER_ANNOTATIONS = Set.of(
             PathParam.class.getName(), QueryParam.class.getName(),
-            HeaderParam.class.getName(), RequestBody.class.getName());
+            HeaderParam.class.getName(), RequestBody.class.getName(), ClaimParam.class.getName());
 
     private final Messager messager;
     private final boolean strictMode;

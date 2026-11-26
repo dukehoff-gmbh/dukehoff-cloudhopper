@@ -299,6 +299,34 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void claimsNeedAnAuthenticatedRouteAndASupportedType() {
+        String source = ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "public class Claimed {\n"
+                + "  @Function(name=\"me\")\n"
+                + "  @HttpTrigger(method=\"GET\", path=\"/me\"AUTH)\n"
+                + "  public String me(@ClaimParam(\"sub\") TYPE sub) { return null; }\n"
+                + "}\n";
+        Compilation public_ = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.Claimed",
+                        source.replace("AUTH", "").replace("TYPE", "String")));
+        assertThat(public_).hadErrorContaining("reads the caller's token: the route needs @HttpTrigger(authenticated = true)");
+
+        Compilation type = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.Claimed",
+                        source.replace("AUTH", ", authenticated=true").replace("TYPE", "java.util.Date")));
+        assertThat(type).hadErrorContaining("@ClaimParam on parameter 'sub' of me needs the type String");
+
+        Compilation ok = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.Claimed",
+                        source.replace("AUTH", ", scopes={\"a\", \"b\"}").replace("TYPE", "String")));
+        assertThat(ok).succeeded();
+        assertThat(ok).generatedSourceFile("com.example.Claimed_me_Handler")
+                .contentsAsUtf8String().contains("Authenticator.authenticate(_headers, \"a\", \"b\")");
+    }
+
+    @Test
     public void bucketParametersOfOneNameAgreeOnExisting() {
         String source = ""
                 + "package com.example;\n"

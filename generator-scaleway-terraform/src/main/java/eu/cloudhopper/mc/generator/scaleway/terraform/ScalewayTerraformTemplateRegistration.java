@@ -108,6 +108,8 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
                 HttpTriggerAttribute.OPERATION_ID,
                 HttpTriggerAttribute.PATH,
                 HttpTriggerAttribute.METHOD,
+                HttpTriggerAttribute.AUTHENTICATED,
+                HttpTriggerAttribute.SCOPES,
             }
         ),
         @GeneratorFeature(
