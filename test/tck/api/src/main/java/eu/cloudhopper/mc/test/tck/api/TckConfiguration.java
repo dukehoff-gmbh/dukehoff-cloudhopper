@@ -61,8 +61,14 @@ public final class TckConfiguration {
      */
     public static final String PROJECT_VALUE = "from the project's Terraform";
 
-    /** The properties and their values. */
-    public static final Map<String, String> VALUES = Map.of(GREETING_PROPERTY, GREETING);
+    /**
+     * The properties and their values: the greeting, and the identity provider of the
+     * authentication test ({@link TckIssuer}).
+     */
+    public static final Map<String, String> VALUES = Map.of(GREETING_PROPERTY, GREETING,
+            "cloudhopper.auth.issuer", TckIssuer.ISSUER,
+            "cloudhopper.auth.audience", TckIssuer.AUDIENCE,
+            "cloudhopper.auth.jwks", TckIssuer.jwks());
 
     private TckConfiguration() {
     }

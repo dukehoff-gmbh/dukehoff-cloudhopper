@@ -106,6 +106,26 @@ public @interface HttpTrigger {
     String method() default "";
 
     /**
+     * Whether the route requires an authenticated caller: a request needs an
+     * {@code Authorization: Bearer <JWT>} header with a token of the deployment's OpenID Connect
+     * provider, configured with the properties {@code cloudhopper.auth.issuer} and
+     * {@code cloudhopper.auth.audience}. Without a valid token the function answers {@code 401}
+     * and is not called. The function reads the token's claims with {@link ClaimParam} or a
+     * parameter of type {@link eu.cloudhopper.mc.runtime.Claims}.
+     *
+     * @return {@code true} if the route requires a valid token
+     */
+    boolean authenticated() default false;
+
+    /**
+     * The scopes the token must have (in its {@code scope} or {@code scp} claim); a valid token
+     * without one of them answers {@code 403}. Implies {@link #authenticated()}.
+     *
+     * @return the required scopes
+     */
+    String[] scopes() default {};
+
+    /**
      * Constants representing attribute names of {@link HttpTrigger}.
      *
      * <p>These can be used by generator implementations to declare
@@ -117,5 +137,7 @@ public @interface HttpTrigger {
         public static final String OPERATION_ID = "operationId";
         public static final String PATH = "path";
         public static final String METHOD = "method";
+        public static final String AUTHENTICATED = "authenticated";
+        public static final String SCOPES = "scopes";
     }
 }

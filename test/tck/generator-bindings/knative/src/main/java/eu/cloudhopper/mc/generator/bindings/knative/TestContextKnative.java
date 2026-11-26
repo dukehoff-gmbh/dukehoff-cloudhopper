@@ -133,12 +133,20 @@ public class TestContextKnative implements TestContext {
             System.out.println("⎈ Installing the chart as release " + RELEASE + " in namespace " + namespace);
             List<String> helm = new ArrayList<>(List.of("helm", "upgrade", "--install", RELEASE,
                     deploymentDir.resolve("chart").toString(), "--namespace", namespace));
-            int index = 0;
+            // the configuration as a values file: --set-string would parse commas, braces and brackets,
+            // e.g. in the JSON of the key set
+            StringBuilder env = new StringBuilder("{\"env\": [");
             for (var variable : eu.cloudhopper.mc.test.tck.api.TckConfiguration.environment().entrySet()) {
-                helm.addAll(List.of("--set-string", "env[" + index + "].name=" + variable.getKey(),
-                        "--set-string", "env[" + index + "].value=" + variable.getValue()));
-                index++;
+                if (env.charAt(env.length() - 1) != '[') {
+                    env.append(", ");
+                }
+                env.append("{\"name\": ").append(jsonString(variable.getKey()))
+                        .append(", \"value\": ").append(jsonString(variable.getValue())).append('}');
             }
+            Path envValues = moduleDir.resolve("target").resolve("tck-env-values.json");
+            Files.createDirectories(envValues.getParent());
+            Files.writeString(envValues, env.append("]}").toString());
+            helm.addAll(List.of("--values", envValues.toString()));
             helm.addAll(List.of(
                     "--set-string", "secrets[0].property=" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET_PROPERTY,
                     "--set-string", "secrets[0].secret=" + SECRET_NAME,
@@ -364,5 +372,19 @@ public class TestContextKnative implements TestContext {
             throw new RuntimeException("Failed to read " + file, e);
         }
         return properties;
+    }
+
+    private static String jsonString(String value) {
+        StringBuilder json = new StringBuilder("\"");
+        for (char c : value.toCharArray()) {
+            if (c == '"' || c == '\\') {
+                json.append('\\').append(c);
+            } else if (c < 0x20) {
+                json.append(String.format("\\u%04x", (int) c));
+            } else {
+                json.append(c);
+            }
+        }
+        return json.append('"').toString();
     }
 }
