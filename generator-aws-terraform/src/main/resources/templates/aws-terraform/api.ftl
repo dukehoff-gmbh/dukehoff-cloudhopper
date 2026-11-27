@@ -1,3 +1,5 @@
+<#-- the API only for projects with HTTP functions -->
+<#if lambdaMap?has_content>
 resource "aws_apigatewayv2_api" "main" {
   name          = "${"$"}{var.cloudhopper_name_prefix}${"$"}{var.environment}_${"$"}{var.project_name}_public_api"
   protocol_type = "HTTP"
@@ -70,3 +72,4 @@ resource "aws_apigatewayv2_stage" "main_stage" {
   name          = var.api_stage_name
   deployment_id = aws_apigatewayv2_deployment.main_deployment.id
 }
+</#if>
