@@ -90,6 +90,23 @@ public abstract class ApiGatewayV2HttpEventHandler<I, O> implements RequestHandl
         return toResponse(reply);
     }
 
+    /**
+     * Runs the path of a request without the function, so that a SnapStart snapshot contains it
+     * loaded and initialized: Jackson for the body type (from an empty object, if that is valid
+     * for it) and for JSON results, and the responses of a result, an error and an invalid body.
+     */
+    void prime() {
+        Object body = null;
+        try {
+            body = objectMapper.readValue("{}", inputClass);
+        } catch (Exception e) {
+            // not an object type, or one that needs properties: the reader is initialized anyway
+        }
+        toResponse(HttpReply.of(body != null ? body : Map.of("primed", true), this::json));
+        toResponse(HttpReply.of(new IllegalStateException("priming")));
+        toResponse(HttpReply.invalidBody());
+    }
+
     private String json(Object value) {
         try {
             return objectMapper.writeValueAsString(value);

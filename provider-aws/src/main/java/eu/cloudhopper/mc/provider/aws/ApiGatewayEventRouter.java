@@ -102,6 +102,27 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
         this.sqs = sqs;
         this.s3 = s3;
         this.inputType = inputType;
+        if (SnapStartPriming.ACTIVE) {
+            SnapStartPriming.register(this);
+        }
+    }
+
+    /**
+     * Runs the path of an API Gateway request without calling the function: the conversion of
+     * the event, and {@link ApiGatewayV2HttpEventHandler#prime()}.
+     */
+    void prime() {
+        Map<String, Object> http = Map.of("method", "GET", "path", "/", "protocol", "HTTP/1.1",
+                "sourceIp", "127.0.0.1", "userAgent", "cloudhopper-priming");
+        Map<String, Object> event = Map.of("version", "2.0", "routeKey", "GET /", "rawPath", "/",
+                "rawQueryString", "", "headers", Map.of("content-type", "application/json"),
+                "requestContext", Map.of("http", http, "requestId", "priming", "routeKey", "GET /",
+                        "stage", "$default"),
+                "body", "{}", "isBase64Encoded", false);
+        objectMapper.convertValue(event, APIGatewayV2HTTPEvent.class);
+        if (this.http instanceof ApiGatewayV2HttpEventHandler<?, ?> handler) {
+            handler.prime();
+        }
     }
 
     /** The payload of a direct invocation as the function's input, or {@code null} if it takes none. */

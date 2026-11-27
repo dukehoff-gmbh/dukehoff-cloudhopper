@@ -60,6 +60,16 @@ deployment. This needs the [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/u
 on the machine running Terraform, with the same credentials as Terraform, and it
 adds the time of the snapshot (usually under a minute) to the deployment.
 
+Before the snapshot, the generated handler primes itself: it runs the path of a request once
+without calling the function (the conversion of an API Gateway event, Jackson for the function's
+body type, the responses of a result, an error and an invalid body), so that restored instances
+do not load and compile it on their first request. In a measurement (arm64, 512 MB, an HTTP
+function with a JSON body) the first request after a restore took about 380 ms instead of 1.4 s,
+and the cold start about 840 ms instead of 1.9 s. The function's own code is not run before the
+snapshot, so it has no effects on tables, queues or buckets; to warm clients or caches of your
+own, register an `org.crac` `Resource` and do it in `beforeCheckpoint`. For the shortest cold
+starts, see [Native image](#native-image).
+
 All instances restored from one snapshot share the state created during initialization:
 create random values, unique IDs and network connections in the function call, not in
 constructors or static initializers, or renew them in a `org.crac` `afterRestore` hook.
@@ -72,7 +82,8 @@ region. SnapStart cannot be combined with provisioned concurrency.
 The functions can also run as a GraalVM native image on the Lambda custom runtime
 (`provided.al2023`) instead of the Java runtime. A native image starts in a fraction of the
 time and needs about a third of the memory: for a function with a JSON body, a cold start took
-about 140 ms instead of 1.2–1.8 s (Java runtime, 512–1024 MB), with or without SnapStart.
+about 140 ms instead of 1.2–1.8 s on the Java runtime (512–1024 MB) and about 840 ms with
+SnapStart.
 
 Build with the profile `aws-native` in addition to `aws-terraform`:
 
