@@ -366,7 +366,7 @@ public class ServerlessFunctionProcessorTest {
                 + "  public static class Note { public Note[] replies; }\n"
                 + "  public record Receipt(double total, Optional<Order> order) { }\n"
                 + "  public static class Unused { }\n"
-                + "  public Receipt order(Order order, eu.cloudhopper.mc.runtime.Publisher<Stock> stock) { return null; }\n"
+                + "  public Receipt order(Order order, eu.cloudhopper.mc.runtime.Publisher<Stock> stock, eu.cloudhopper.mc.runtime.HandlerContext context) { return null; }\n"
                 + "  public static class Stock { public int count; }\n"
                 + "}\n";
         List<String> found = new java.util.ArrayList<>();

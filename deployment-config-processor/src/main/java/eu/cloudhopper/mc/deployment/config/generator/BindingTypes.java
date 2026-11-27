@@ -52,7 +52,10 @@ import javax.lang.model.util.Elements;
  */
 final class BindingTypes {
 
-    private static final List<String> EXCLUDED = List.of("java.", "javax.", "jdk.", "sun.", "eu.cloudhopper.mc.");
+    // the JDK, and the API of Cloudhopper (HandlerContext, Publisher, HttpResponse, ...); not its users' types,
+    // which may live in packages below eu.cloudhopper.mc too
+    private static final List<String> EXCLUDED = List.of("java.", "javax.", "jdk.", "sun.",
+            "eu.cloudhopper.mc.runtime.", "eu.cloudhopper.mc.annotations.");
 
     private final Elements elements;
     private final Set<String> names = new LinkedHashSet<>();
