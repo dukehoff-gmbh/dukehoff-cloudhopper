@@ -234,6 +234,7 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
 
         Properties properties = loadProperties(configOutputDir);
         Map<String, Object> dataModel = new HashMap<>();
+        putOptions(dataModel);
         final Map<String, String> lambdaMap = properties.stringPropertyNames().stream()
                 .filter(k -> k.endsWith("_Arn"))
                 .collect(Collectors.toMap(k -> k, properties::getProperty));
@@ -324,7 +325,10 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
             return; // No templates for this phase
         }
         for (TemplateDescriptor descriptor : templates) {
-            if (descriptor.isJavaFile()) {
+            if (descriptor.isClassOutput()) {
+                // a resource of the compiled classes, e.g. META-INF/native-image/.../reachability-metadata.json
+                templateRenderer.renderClassOutput(processingEnv, descriptor, dataModel, fileName);
+            } else if (descriptor.isJavaFile()) {
                 if (handlerInfo == null) {
                     processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
                             "Cannot generate Java file in phase '" + phase.getId() + "' because there is no HandlerInfo.");
@@ -350,7 +354,18 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
     protected Map<String, Object> createBaseDataModel(HandlerInfo handlerInfo) {
         Map<String, Object> dataModel = new HashMap<>();
         dataModel.put("handlerInfo", handlerInfo);
+        putOptions(dataModel);
         return dataModel;
+    }
+
+    /**
+     * Options of the build that templates may read: {@code runtime} ({@code jvm} by default, or
+     * {@code native} for a native image) and {@code nativeArchitecture} (e.g. {@code arm64}).
+     */
+    private void putOptions(Map<String, Object> dataModel) {
+        Map<String, String> options = processingEnv.getOptions();
+        dataModel.put("runtime", options.getOrDefault("runtime", "jvm").trim());
+        dataModel.put("nativeArchitecture", options.getOrDefault("nativeArchitecture", "arm64").trim());
     }
 
     protected Map<String, Object> getApiIntegrationDataModelForTemplateRendering(HandlerInfo handlerInfo, HttpTrigger apiOp) {

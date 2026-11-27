@@ -4,7 +4,12 @@
 <#assign configNames><#list handlerInfo.configProperties as p>"${p.name}"<#sep>, </#sep></#list></#assign>
 <#assign requiredNames><#list handlerInfo.configProperties?filter(p -> p.required) as p>"${p.name}"<#sep>, </#sep></#list></#assign>
 <#-- with SnapStart, the triggers invoke the published version through the alias "live" -->
-<#assign snapStart = (handlerInfo.extensionsMap["x-aws-snapstart"]!"") == "PublishedVersions">
+<#-- with -Aruntime=native, the functions run a native image on the custom runtime: one
+     executable for all functions, built for the architecture -AnativeArchitecture -->
+<#assign native = (runtime!"jvm") == "native">
+<#assign artifact = native?then("${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}-native.zip", "${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.jar")>
+<#-- SnapStart exists only for the Java runtime; a native image starts fast without it -->
+<#assign snapStart = !native && (handlerInfo.extensionsMap["x-aws-snapstart"]!"") == "PublishedVersions">
 <#assign lambdaTarget = snapStart?then("aws_lambda_alias.${handlerInfo.functionId}_live", "aws_lambda_function.${handlerInfo.functionId}")>
 resource "aws_lambda_function" "${handlerInfo.functionId}" {
   #filename      = "${handlerInfo.targetDir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.jar"
@@ -14,16 +19,22 @@ resource "aws_lambda_function" "${handlerInfo.functionId}" {
   
   s3_bucket     = aws_s3_bucket.lambda_artifacts.bucket
   s3_key        = aws_s3_object.lambda_jar.key
-  source_code_hash = filebase64sha256("${handlerInfo.targetDir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.jar")
+  source_code_hash = filebase64sha256("${handlerInfo.targetDir}/${artifact}")
 
   timeout = ${handlerInfo.timeout}
   memory_size = ${handlerInfo.memory}
-  runtime = "java21"
   <#-- look up the AWS architecture extension (falls back to empty string) -->
   <#assign awsArch = handlerInfo.extensionsMap["x-aws-architecture"]!>
+<#if native>
+  # native image (bootstrap): eu.cloudhopper.mc.provider.aws.NativeRuntime creates the handler
+  runtime       = "provided.al2023"
+  architectures = ["${nativeArchitecture}"]
+<#else>
+  runtime = "java21"
   <#if awsArch?has_content>
   architectures = ["${awsArch}"]
   </#if>
+</#if>
   depends_on = [aws_cloudwatch_log_group.${handlerInfo.functionId}_logs]
 <#if snapStart>
 

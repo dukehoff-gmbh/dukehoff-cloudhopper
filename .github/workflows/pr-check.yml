@@ -27,6 +27,7 @@ jobs:
       springboot: ${{ steps.diff.outputs.springboot }}
       knative: ${{ steps.diff.outputs.knative }}
       scaleway: ${{ steps.diff.outputs.scaleway }}
+      awsnative: ${{ steps.diff.outputs.awsnative }}
     steps:
     - name: Check out code
       uses: actions/checkout@v7
@@ -48,7 +49,7 @@ jobs:
           cat changed.txt
           .github/scripts/affected-targets.sh < changed.txt > result.txt
         else
-          printf 'code=true\naws=true\nazure=true\ngcp=true\nspringboot=true\nknative=true\nscaleway=true\n' > result.txt
+          printf 'code=true\naws=true\nazure=true\ngcp=true\nspringboot=true\nknative=true\nscaleway=true\nawsnative=true\n' > result.txt
         fi
         cat result.txt
         cat result.txt >> "$GITHUB_OUTPUT"
@@ -501,6 +502,95 @@ jobs:
         run: |
           echo '🔍 Recompiling only system tests...'
           mvn -f /workspace/pom.xml install -DskipTests -pl test/system-tests/generator-aws-terraform &&
+          echo '▶ Running TCK...'
+          cd /workspace/test/system-tests/generator-aws-terraform/
+          mvn exec:java \
+            -Dexec.mainClass=eu.cloudhopper.mc.test.system.tests.generator.aws.terraform.TckLauncher \
+            -Dexec.classpathScope=test
+
+  # aws-terraform with the functions as a native image on the custom runtime (provided.al2023).
+  # Only for changes to the AWS runtime, generator and TCK, and on manual runs: the native
+  # build takes minutes. An arm64 runner builds the arm64 executable without emulation. It
+  # shares the concurrency group with the JVM run: both create the existing queues and buckets
+  # under fixed names.
+  tck-aws-native:
+    name: TCK aws-terraform (native image)
+    needs: [changes, build-and-validate]
+    if: needs.changes.outputs.awsnative == 'true'
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      id-token: write   # OIDC token for the AWS role
+    concurrency:
+      group: cloud-tck-aws
+      cancel-in-progress: false
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v7
+
+    - name: Set up Java
+      uses: actions/setup-java@v6
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Maven settings for CI (Maven Central fallback)
+      run: cp .github/maven/ci-settings.xml ~/.m2/settings.xml
+
+    - name: Cache Maven packages
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Install the modules the TCK needs
+      run: mvn -B -ntp install -DskipTests -pl test/system-tests/generator-aws-terraform -am
+
+    # GraalVM in a container (as in the archetype's aws-native profile): bootstrap and the zip
+    - name: Build the native image
+      # clean: the annotation processor must run again with -Aruntime=native
+      run: mvn -B -ntp clean package -DskipTests -Pnative -pl test/system-tests/generator-aws-terraform
+
+    - name: Build TCK image for AWS
+      uses: docker/build-push-action@v7.4.0
+      with:
+        file: test/system-tests/generator-aws-terraform/Dockerfile.dockerfile
+        build-args: TERRAFORM_VERSION=${{ env.TERRAFORM_VERSION }}
+        tags: cloudhopper-tck-aws
+
+    - name: AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        role-to-assume: ${{ vars.AWS_TCK_ROLE_ARN }}
+        aws-region: ${{ vars.AWS_REGION }}
+        role-duration-seconds: 14400
+
+    - name: Run TCK for AWS (native image)
+      uses: addnab/docker-run-action@v3
+      env:
+        AWS_REGION: ${{ vars.AWS_REGION }}
+        # n: not the names of the JVM run of the same workflow run
+        TF_VAR_cloudhopper_name_prefix: ci-${{ github.run_id }}-${{ github.run_attempt }}-n-
+        CLOUDHOPPER_RUNTIME: native
+      with:
+        image: cloudhopper-tck-aws:latest
+        options: |
+          -v ${{ github.workspace }}:/workspace
+          -v /home/runner/.m2:/root/.m2
+          -w /workspace
+          -e AWS_ACCESS_KEY_ID
+          -e AWS_SECRET_ACCESS_KEY
+          -e AWS_SESSION_TOKEN
+          -e AWS_REGION
+          -e TF_VAR_cloudhopper_name_prefix
+          -e CLOUDHOPPER_RUNTIME
+        run: |
+          echo '🔍 Recompiling only system tests (native: generated Terraform for the zip built above)...'
+          mvn -f /workspace/pom.xml install -DskipTests -Pnative -Dexec.skip -Dassembly.skipAssembly -pl test/system-tests/generator-aws-terraform &&
           echo '▶ Running TCK...'
           cd /workspace/test/system-tests/generator-aws-terraform/
           mvn exec:java \

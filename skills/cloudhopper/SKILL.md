@@ -178,6 +178,7 @@ Docs: https://cloudhopper.eu/docs/guides/writing-functions#identities-and-permis
 |---|---|---|
 | `-Pspringboot-http` | Spring Boot application | `java -jar target/<artifactId>-<version>-springboot-http.jar`; no cloud needed |
 | `-Paws-terraform` | AWS Lambda | Terraform |
+| `-Paws-terraform,aws-native` | AWS Lambda, native image (`provided.al2023`, arm64) | Terraform; the build needs Docker |
 | `-Pazure-terraform` | Azure Functions | Terraform |
 | `-Pgcp-terraform` | Google Cloud Functions | Terraform |
 | `-Pscaleway-terraform` | Scaleway Serverless Containers | build and push the image, then Terraform |
@@ -187,6 +188,9 @@ Docs: https://cloudhopper.eu/docs/guides/writing-functions#identities-and-permis
 mvn clean package -Paws-terraform
 cd target/deployment/aws-terraform && terraform init && terraform apply
 ```
+
+With `aws-native`, own code that uses reflection, proxies or resources needs GraalVM
+reachability metadata; the functions' body, result and message types are registered automatically.
 
 Only the profiles the project was created with exist in `pom.xml`. Which annotations and
 attributes each target supports: https://cloudhopper.eu/docs/platforms/generator-overview#support-matrix

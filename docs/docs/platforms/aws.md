@@ -67,6 +67,41 @@ constructors or static initializers, or renew them in a `org.crac` `afterRestore
 Terraform does not delete old versions; they count toward Lambda's code storage quota per
 region. SnapStart cannot be combined with provisioned concurrency.
 
+## Native image
+
+The functions can also run as a GraalVM native image on the Lambda custom runtime
+(`provided.al2023`) instead of the Java runtime. A native image starts in a fraction of the
+time and needs about a third of the memory: for a function with a JSON body, a cold start took
+about 140 ms instead of 1.2–1.8 s (Java runtime, 512–1024 MB), with or without SnapStart.
+
+Build with the profile `aws-native` in addition to `aws-terraform`:
+
+```bash
+mvn package -Paws-terraform,aws-native
+```
+
+- The profile builds the executable `bootstrap` with GraalVM in a container, so it needs
+  Docker (native images cannot be cross-compiled), and packs it into
+  `target/<artifactId>-<version>-aws-terraform-native.zip`. The build takes about a minute and
+  a few GB of memory.
+- The generated Terraform deploys that zip with `runtime = "provided.al2023"`. One executable
+  serves all functions; `eu.cloudhopper.mc.provider.aws.NativeRuntime` creates the handler the
+  function's handler setting names.
+- The executable is built for `arm64` (Graviton) by default, and all functions run on that
+  architecture. For x86 set `-Dnative.architecture=x86_64`; building for an architecture other
+  than the machine's runs emulated and is much slower. A function whose
+  `ExtensionKeys.Aws.Architecture` extension asks for another architecture does not compile.
+- SnapStart is only available for the Java runtime: the extension is ignored for a native image
+  (with a warning).
+- Jackson binds the functions' body, result and queue message types reflectively. The annotation
+  processor generates the reflection configuration for these types and the types they contain
+  (`META-INF/native-image/cloudhopper/<function>/reachability-metadata.json`). Code of your own
+  that uses reflection, dynamic proxies or resources needs
+  [reachability metadata](https://www.graalvm.org/latest/reference-manual/native-image/metadata/)
+  of its own; libraries often bring it, or the
+  [tracing agent](https://www.graalvm.org/latest/reference-manual/native-image/metadata/AutomaticMetadataCollection/)
+  records it.
+
 ## Sending messages
 
 A function with a [`@Queue`](../guides/writing-functions.md#sending-messages)
@@ -200,7 +235,7 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | Dependency | Scope | Contains |
 |---|---|---|
 | `eu.cloudhopper.mc:generator-aws-terraform` | `provided`: only the annotation processor uses it | Templates and template registration |
-| `eu.cloudhopper.mc:provider-aws` | compile | Base classes of the generated handlers: `ApiGatewayEventRouter` (the Lambda entry point `<Handler>$Auto::handleRequest`, which routes API Gateway, SQS, S3, schedule and direct calls), `SqsEventHandler` (reports failed messages as batch item failures), `S3EventHandler`, `SigV4Signer`/`AwsCredentials` for the AWS APIs the runtime calls itself, and the `ConfigSource` that reads secrets from Secrets Manager |
+| `eu.cloudhopper.mc:provider-aws` | compile | `NativeRuntime`, the entry point of a [native image](#native-image); base classes of the generated handlers: `ApiGatewayEventRouter` (the Lambda entry point `<Handler>$Auto::handleRequest`, which routes API Gateway, SQS, S3, schedule and direct calls), `SqsEventHandler` (reports failed messages as batch item failures), `S3EventHandler`, `SigV4Signer`/`AwsCredentials` for the AWS APIs the runtime calls itself, and the `ConfigSource` that reads secrets from Secrets Manager |
 | `eu.cloudhopper.mc:provider-aws-publisher` | compile | `@Queue` publishers for SQS, without the AWS SDK |
 | `eu.cloudhopper.mc:provider-aws-blobstore` | compile | `@Bucket` stores for S3 and S3-compatible storage, without the AWS SDK |
 | `eu.cloudhopper.mc:provider-aws-keyvalue` | compile | `@Table` stores for DynamoDB, without the AWS SDK |

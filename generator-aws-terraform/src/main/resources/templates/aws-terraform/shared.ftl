@@ -84,11 +84,13 @@ resource "aws_s3_bucket" "lambda_artifacts" {
   force_destroy = var.artifact_bucket_force_destroy
 }
 
+<#-- the jar, or with -Aruntime=native the zip with the native executable bootstrap -->
+<#assign artifact = ((runtime!"jvm") == "native")?then("${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}-native.zip", "${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.jar")>
 resource "aws_s3_object" "lambda_jar" {
   bucket = aws_s3_bucket.lambda_artifacts.bucket
   # the bucket is per project and environment already
-  key    = "${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.jar"
-  source = "${handlerInfo.targetDir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.jar"
-  etag   = filemd5("${handlerInfo.targetDir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.jar")
+  key    = "${artifact}"
+  source = "${handlerInfo.targetDir}/${artifact}"
+  etag   = filemd5("${handlerInfo.targetDir}/${artifact}")
 }
 

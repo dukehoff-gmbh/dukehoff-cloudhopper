@@ -5,6 +5,9 @@
 #
 #   code=true|false        build, unit tests and archetype test
 #   <target>=true|false    TCK of that target (aws, azure, gcp, springboot, knative, scaleway)
+#   awsnative=true|false   TCK of aws-terraform as a native image: only for changes to the AWS
+#                          runtime, generator and TCK (a native build takes minutes); a manual
+#                          run of the workflow runs it too
 #
 # A path that belongs to exactly one target runs only that target's TCK. A path
 # that this table does not know runs everything, so a gap in the table costs
@@ -20,18 +23,18 @@ target_of() {
     # scaleway-terraform sends to its queues with the SQS client of provider-aws-publisher;
     # knative and scaleway-terraform use buckets with the S3 client of provider-aws-blobstore
     provider-aws/*)
-      echo "aws knative scaleway" ;;
+      echo "aws awsnative knative scaleway" ;;
     provider-aws-publisher/*)
-      echo "aws scaleway" ;;
+      echo "aws awsnative scaleway" ;;
     provider-aws-blobstore/*)
-      echo "aws knative scaleway" ;;
+      echo "aws awsnative knative scaleway" ;;
     provider-aws-keyvalue/*)
-      echo aws ;;
+      echo "aws awsnative" ;;
     # knative and scaleway-terraform keep tables in PostgreSQL
     provider-jdbc-keyvalue/*)
       echo "knative scaleway" ;;
     generator-aws-terraform/*|test/system-tests/generator-aws-terraform/*|test/tck/generator-bindings/aws-terraform/*)
-      echo aws ;;
+      echo "aws awsnative" ;;
     generator-azure-terraform/*|provider-azure/*|provider-azure-publisher/*|provider-azure-blobstore/*|provider-azure-keyvalue/*|test/system-tests/generator-azure-terraform/*|test/tck/generator-bindings/azure-terraform/*)
       echo azure ;;
     generator-gcp-terraform/*|provider-gcp/*|provider-gcp-publisher/*|provider-gcp-blobstore/*|provider-gcp-keyvalue/*|test/system-tests/generator-gcp-terraform/*|test/tck/generator-bindings/gcp-terraform/*)
@@ -79,3 +82,4 @@ echo "code=$code"
 for t in "${TARGETS[@]}"; do
   if [ "$all" = true ] || [[ "$hit" == *" $t "* ]]; then echo "$t=true"; else echo "$t=false"; fi
 done
+if [[ "$hit" == *" awsnative "* ]]; then echo "awsnative=true"; else echo "awsnative=false"; fi

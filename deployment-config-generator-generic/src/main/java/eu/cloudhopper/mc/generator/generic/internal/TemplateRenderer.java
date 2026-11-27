@@ -149,6 +149,37 @@ public class TemplateRenderer {
         }
     }
 
+    /**
+     * Renders a template into a resource of the class output.
+     *
+     * @param processingEnv the processing environment, for the Filer
+     * @param templateDescriptor the template
+     * @param dataModel the data model
+     * @param base the base of the path, e.g. the function
+     * @throws ConfigGenerationException if the template cannot be rendered or written
+     */
+    public void renderClassOutput(ProcessingEnvironment processingEnv, TemplateDescriptor templateDescriptor,
+            Map<String, Object> dataModel, String base) throws ConfigGenerationException {
+        try {
+            Template template = freemarkerConfig.getTemplate(templateDescriptor.getTemplateName());
+            StringWriter writer = new StringWriter();
+            template.process(dataModel, writer);
+            String name = templateDescriptor.getOutputFileName() != null
+                    ? templateDescriptor.getOutputFileName()
+                    : base + "." + templateDescriptor.getOutputFileExtension();
+            String directory = templateDescriptor.getOutputSubDirectory() == null ? "" : templateDescriptor.getOutputSubDirectory();
+            String path = (directory.isEmpty() ? "" : directory + "/") + base + "/" + name;
+            javax.tools.FileObject resource = processingEnv.getFiler()
+                    .createResource(javax.tools.StandardLocation.CLASS_OUTPUT, "", path);
+            try (java.io.Writer out = resource.openWriter()) {
+                out.write(writer.toString());
+            }
+            System.err.println("Generated resource: " + path);
+        } catch (IOException | TemplateException e) {
+            throw new ConfigGenerationException("Failed to render template: " + templateDescriptor.getTemplateName(), e);
+        }
+    }
+
     public void generateJavaFile(ProcessingEnvironment processingEnv, TemplateDescriptor templateDescriptor, Map<String, Object> dataModel, HandlerInfo handlerInfo) throws ConfigGenerationException {
         try {
             Template template = freemarkerConfig.getTemplate(templateDescriptor.getTemplateName());

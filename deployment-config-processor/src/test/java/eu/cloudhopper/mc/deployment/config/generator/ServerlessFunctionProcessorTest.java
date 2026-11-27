@@ -327,6 +327,83 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void aNativeImageHasOneArchitectureAndNoSnapStart() {
+        String source = ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "public class Arch {\n"
+                + "  @Function(name=\"hello\", extensions=@Extension(name=ExtensionKeys.Aws.Architecture.KEY, value=\"x86_64\"))\n"
+                + "  public String hello() { return null; }\n"
+                + "  @Function(name=\"snap\", extensions=@Extension(name=ExtensionKeys.Aws.SnapStart.KEY, value=\"PublishedVersions\"))\n"
+                + "  public String snap() { return null; }\n"
+                + "}\n";
+        Compilation arm = javac().withProcessors(new ServerlessFunctionProcessor())
+                .withOptions("-Aruntime=native")
+                .compile(JavaFileObjects.forSourceString("com.example.Arch", source));
+        assertThat(arm).hadErrorContaining("Function hello asks for the architecture x86_64, but the native image is built for arm64");
+        assertThat(arm).hadWarningContaining("Function snap: SnapStart is only available for the Java runtime");
+
+        Compilation x86 = javac().withProcessors(new ServerlessFunctionProcessor())
+                .withOptions("-Aruntime=native", "-AnativeArchitecture=x86_64")
+                .compile(JavaFileObjects.forSourceString("com.example.Arch", source));
+        assertThat(x86).succeeded();
+
+        Compilation jvm = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.Arch", source));
+        assertThat(jvm).succeeded();
+    }
+
+    @Test
+    public void bindingTypesAreTheTypesTheFunctionReadsAndWrites() {
+        String source = ""
+                + "package com.example;\n"
+                + "import java.util.*;\n"
+                + "public class Shop {\n"
+                + "  public record Order(String customer, List<Item> items, Map<String, Note> notes) { }\n"
+                + "  public record Item(String sku, Price price) { }\n"
+                + "  public static class Price { private Currency currency; public Currency getCurrency() { return currency; } }\n"
+                + "  public enum Currency { EUR }\n"
+                + "  public static class Note { public Note[] replies; }\n"
+                + "  public record Receipt(double total, Optional<Order> order) { }\n"
+                + "  public static class Unused { }\n"
+                + "  public Receipt order(Order order, eu.cloudhopper.mc.runtime.Publisher<Stock> stock, eu.cloudhopper.mc.runtime.HandlerContext context) { return null; }\n"
+                + "  public static class Stock { public int count; }\n"
+                + "}\n";
+        List<String> found = new java.util.ArrayList<>();
+        javax.annotation.processing.AbstractProcessor collector = new javax.annotation.processing.AbstractProcessor() {
+            @Override
+            public java.util.Set<String> getSupportedAnnotationTypes() {
+                return java.util.Set.of("*");
+            }
+
+            @Override
+            public javax.lang.model.SourceVersion getSupportedSourceVersion() {
+                return javax.lang.model.SourceVersion.latestSupported();
+            }
+
+            @Override
+            public boolean process(java.util.Set<? extends javax.lang.model.element.TypeElement> annotations,
+                    javax.annotation.processing.RoundEnvironment round) {
+                javax.lang.model.element.TypeElement shop = processingEnv.getElementUtils().getTypeElement("com.example.Shop");
+                if (shop != null && found.isEmpty()) {
+                    javax.lang.model.element.ExecutableElement method = javax.lang.model.util.ElementFilter
+                            .methodsIn(shop.getEnclosedElements()).get(0);
+                    BindingTypes types = new BindingTypes(processingEnv.getElementUtils()).add(method.getReturnType());
+                    method.getParameters().forEach(p -> types.add(p.asType()));
+                    found.addAll(types.names());
+                }
+                return false;
+            }
+        };
+        Compilation compilation = javac().withProcessors(collector)
+                .compile(JavaFileObjects.forSourceString("com.example.Shop", source));
+        assertThat(compilation).succeeded();
+        org.junit.jupiter.api.Assertions.assertEquals(java.util.Set.of("com.example.Shop$Receipt", "com.example.Shop$Order",
+                "com.example.Shop$Item", "com.example.Shop$Price", "com.example.Shop$Currency", "com.example.Shop$Note",
+                "com.example.Shop$Stock"), java.util.Set.copyOf(found));
+    }
+
+    @Test
     public void bucketParametersOfOneNameAgreeOnExisting() {
         String source = ""
                 + "package com.example;\n"

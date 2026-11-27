@@ -14,6 +14,10 @@
         <output.dir>target/generated-sources/aws</output.dir>
         <jar.classifier>aws</jar.classifier>
         <generator.id>aws-terraform</generator.id>
+        <!-- jvm, or native with the profile native -->
+        <cloudhopper.runtime>jvm</cloudhopper.runtime>
+        <native.architecture>arm64</native.architecture>
+        <native.image>ghcr.io/graalvm/native-image-community:25.0.2</native.image>
     </properties>
     <dependencies>        
         <dependency>
@@ -125,6 +129,8 @@
                         <arg>-Aversion=${project.version}</arg>
                         <arg>-Aclassifier=${jar.classifier}</arg>
                         <arg>-AtargetDir=${project.build.directory}</arg>
+                        <arg>-Aruntime=${cloudhopper.runtime}</arg>
+                        <arg>-AnativeArchitecture=${native.architecture}</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
@@ -151,4 +157,86 @@
         </plugins>
     </build>
     <name>system-tests-generator-aws-terraform</name>
+    <profiles>
+        <!-- The TCK with the functions as a native image (provided.al2023): -Pnative builds the
+             executable in a GraalVM container and packs it into
+             target/<artifactId>-<version>-aws-native.zip. Inside the TCK container, where there is
+             no Docker, build with -Pnative -Dexec.skip -Dassembly.skipAssembly after the image
+             was built outside: the generated Terraform then deploys the existing zip. -->
+        <profile>
+            <id>native</id>
+            <properties>
+                <cloudhopper.runtime>native</cloudhopper.runtime>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>native-image</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>docker</executable>
+                                    <arguments>
+                                        <argument>run</argument>
+                                        <argument>--rm</argument>
+                                        <argument>--platform</argument>
+                                        <argument>linux/${native.architecture}</argument>
+                                        <argument>-v</argument>
+                                        <argument>${project.build.directory}:/work</argument>
+                                        <argument>${native.image}</argument>
+                                        <argument>--no-fallback</argument>
+                                        <argument>-cp</argument>
+                                        <argument>/work/${project.artifactId}-${project.version}-${jar.classifier}.jar</argument>
+                                        <argument>-o</argument>
+                                        <argument>/work/bootstrap</argument>
+                                        <argument>eu.cloudhopper.mc.provider.aws.NativeRuntime</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>3.7.1</version>
+                        <executions>
+                            <execution>
+                                <id>native-zip</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <finalName>${project.artifactId}-${project.version}-${jar.classifier}</finalName>
+                                    <appendAssemblyId>true</appendAssemblyId>
+                                    <attach>false</attach>
+                                    <inlineDescriptors>
+                                        <inlineDescriptor>
+                                            <id>native</id>
+                                            <formats>
+                                                <format>zip</format>
+                                            </formats>
+                                            <includeBaseDirectory>false</includeBaseDirectory>
+                                            <files>
+                                                <file>
+                                                    <source>${project.build.directory}/bootstrap</source>
+                                                    <fileMode>0755</fileMode>
+                                                </file>
+                                            </files>
+                                        </inlineDescriptor>
+                                    </inlineDescriptors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

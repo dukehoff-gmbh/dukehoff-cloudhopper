@@ -104,5 +104,16 @@ public @interface Template {
      * @return the output file name, or an empty string
      */
     String outputFileName() default "";
+
+    /**
+     * Whether the rendered file is a resource of the compiled classes instead of a file of the
+     * configuration output directory, e.g. the reachability metadata of a native image. It is
+     * written with the Filer to the class output at
+     * {@code <outputSubDirectory>/<base>/<outputFileName or base.outputFileExtension>}, where the
+     * base is the function, so that every function has a file of its own.
+     *
+     * @return true if the template generates a class output resource
+     */
+    boolean classOutput() default false;
     
 }
