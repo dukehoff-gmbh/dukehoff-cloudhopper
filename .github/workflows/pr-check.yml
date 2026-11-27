@@ -552,7 +552,8 @@ jobs:
 
     # GraalVM in a container (as in the archetype's aws-native profile): bootstrap and the zip
     - name: Build the native image
-      run: mvn -B -ntp package -DskipTests -Pnative -pl test/system-tests/generator-aws-terraform
+      # clean: the annotation processor must run again with -Aruntime=native
+      run: mvn -B -ntp clean package -DskipTests -Pnative -pl test/system-tests/generator-aws-terraform
 
     - name: Build TCK image for AWS
       uses: docker/build-push-action@v7.4.0

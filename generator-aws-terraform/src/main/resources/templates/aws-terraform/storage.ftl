@@ -1,5 +1,6 @@
 <#-- with SnapStart, the triggers invoke the published version through the alias "live" -->
-<#assign snapStart = (handlerInfo.extensionsMap["x-aws-snapstart"]!"") == "PublishedVersions">
+<#-- SnapStart exists only for the Java runtime, not for a native image (-Aruntime=native) -->
+<#assign snapStart = (runtime!"jvm") != "native" && (handlerInfo.extensionsMap["x-aws-snapstart"]!"") == "PublishedVersions">
 <#assign lambdaTarget = snapStart?then("aws_lambda_alias.${handlerInfo.functionId}_live", "aws_lambda_function.${handlerInfo.functionId}")>
 <#if eventSource == "STORAGE">
 <#assign fid = handlerInfo.functionId>
