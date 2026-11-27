@@ -349,6 +349,15 @@ cloudhopper_config = {
   authenticated route needs `cloudhopper.auth.issuer` and
   `cloudhopper.auth.audience`; on AWS and GCP, Terraform refuses to plan without
   them.
+- On AWS, API Gateway checks the token as well, with a JWT authorizer, so
+  refused requests do not invoke the function: they are answered by API Gateway
+  with the same status codes and the body `{"message":"Unauthorized"}` or
+  `{"message":"Forbidden"}`. API Gateway reads the key set from
+  `<issuer>/.well-known/openid-configuration`, so the authorizer is created only
+  when `cloudhopper.auth.issuer` and `cloudhopper.auth.audience` are set in
+  `cloudhopper_config` (or `cloudhopper_extra_config`) and neither
+  `cloudhopper.auth.jwks-uri` nor `cloudhopper.auth.jwks` is set. The Terraform
+  variable `cloudhopper_api_jwt_authorizer = false` turns it off.
 
 ---
 
