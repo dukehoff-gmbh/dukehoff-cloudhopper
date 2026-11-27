@@ -15,6 +15,8 @@
         <output.dir>target/generated-sources/knative</output.dir>
         <jar.classifier>knative</jar.classifier>
         <main.class>eu.cloudhopper.mc.demo.Application</main.class>
+        <!-- jvm, or native with the profile native -->
+        <cloudhopper.runtime>jvm</cloudhopper.runtime>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -186,10 +188,38 @@
                         <arg>-Aversion=${project.version}</arg>
                         <arg>-Aclassifier=${jar.classifier}</arg>
                         <arg>-AtargetDir=${project.build.directory}</arg>
+                        <arg>-Aruntime=${cloudhopper.runtime}</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>
     </build>
     <name>system-tests-generator-knative</name>
+    <profiles>
+        <!-- The TCK with the application as a native image: -Pnative runs Spring AOT, and the generated
+             Dockerfile compiles the native image when the binding builds the image. -->
+        <profile>
+            <id>native</id>
+            <properties>
+                <cloudhopper.runtime>native</cloudhopper.runtime>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring-boot.version}</version>
+                        <executions>
+                            <execution>
+                                <id>process-aot</id>
+                                <goals>
+                                    <goal>process-aot</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

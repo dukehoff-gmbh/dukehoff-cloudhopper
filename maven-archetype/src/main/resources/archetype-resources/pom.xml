@@ -438,6 +438,35 @@
 #end
         </profile>
 #end
+#if($generatorIds.contains("springboot-http") || $generatorIds.contains("knative") || $generatorIds.contains("scaleway-terraform"))
+        <!-- The Spring Boot application (springboot-http, knative, scaleway-terraform) as a native image,
+             together with the target's profile, e.g. -Pknative,springboot-native: starts in well under a
+             second and needs a fraction of the memory. Runs Spring AOT on the build; the generated
+             Dockerfile then compiles the native image with GraalVM in its first stage (docker build). -->
+        <profile>
+            <id>springboot-native</id>
+            <properties>
+                <cloudhopper.runtime>native</cloudhopper.runtime>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring-boot.version}</version>
+                        <executions>
+                            <execution>
+                                <id>process-aot</id>
+                                <goals>
+                                    <goal>process-aot</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+#end
 #if($generatorIds.contains("aws-terraform"))
         <!-- aws-terraform as a native image on the Lambda custom runtime (provided.al2023), with
              -Paws-terraform,aws-native: shorter cold starts, less memory. Builds the executable

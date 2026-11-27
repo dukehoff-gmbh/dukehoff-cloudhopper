@@ -128,6 +128,13 @@ service with the next revision. Do not set the same property in `env` as well.
 functions run in one container, so these are set for the whole service in
 `values.yaml` (`resources`, `timeoutSeconds`, `scaling`).
 
+## Native image
+
+The service can run the application as a GraalVM native image, which starts in well under a
+second instead of several seconds on a cold request: build with
+`-Pknative,springboot-native`, and the generated Dockerfile compiles the native image; see
+[Spring Boot: Native image](springboot.md#native-image).
+
 ## Runtime modules
 
 The archetype adds these dependencies to the profile; add them yourself in a project of your own:

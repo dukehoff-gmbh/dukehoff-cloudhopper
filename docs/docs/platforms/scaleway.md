@@ -139,6 +139,13 @@ functions run in one container, so these are set for the whole container with
 the variables `memory_limit_bytes`, `cpu_limit`, `timeout`, `min_scale` and
 `max_scale`.
 
+## Native image
+
+The service can run the application as a GraalVM native image, which starts in well under a
+second instead of several seconds on a cold request: build with
+`-Pscaleway-terraform,springboot-native`, and the generated Dockerfile compiles the native image; see
+[Spring Boot: Native image](springboot.md#native-image). Scaleway runs `linux/amd64` containers: build the native image on an x86 machine (or in CI), since an emulated build takes very long.
+
 ## Runtime modules
 
 The archetype adds these dependencies to the profile; add them yourself in a project of your own:

@@ -8,6 +8,9 @@
 #   awsnative=true|false   TCK of aws-terraform as a native image: only for changes to the AWS
 #                          runtime, generator and TCK (a native build takes minutes); a manual
 #                          run of the workflow runs it too
+#   springnative=true|false TCK of knative with the Spring Boot application as a native image:
+#                          only for changes to the Spring Boot runtime and generator and the
+#                          Knative TCK, and on manual runs
 #
 # A path that belongs to exactly one target runs only that target's TCK. A path
 # that this table does not know runs everything, so a gap in the table costs
@@ -40,9 +43,9 @@ target_of() {
     generator-gcp-terraform/*|provider-gcp/*|provider-gcp-publisher/*|provider-gcp-blobstore/*|provider-gcp-keyvalue/*|test/system-tests/generator-gcp-terraform/*|test/tck/generator-bindings/gcp-terraform/*)
       echo gcp ;;
     generator-springboot/*|provider-springboot/*|test/system-tests/generator-springboot/*|test/tck/generator-bindings/springboot-http/*)
-      echo "springboot knative scaleway" ;;
+      echo "springboot springnative knative scaleway" ;;
     generator-knative/*|test/knative/*|test/system-tests/generator-knative/*|test/tck/generator-bindings/knative/*)
-      echo knative ;;
+      echo "knative springnative" ;;
     generator-scaleway-terraform/*|test/system-tests/generator-scaleway-terraform/*|test/tck/generator-bindings/scaleway-terraform/*)
       echo scaleway ;;
     *) echo "" ;;
@@ -83,3 +86,4 @@ for t in "${TARGETS[@]}"; do
   if [ "$all" = true ] || [[ "$hit" == *" $t "* ]]; then echo "$t=true"; else echo "$t=false"; fi
 done
 if [[ "$hit" == *" awsnative "* ]]; then echo "awsnative=true"; else echo "awsnative=false"; fi
+if [[ "$hit" == *" springnative "* ]]; then echo "springnative=true"; else echo "springnative=false"; fi

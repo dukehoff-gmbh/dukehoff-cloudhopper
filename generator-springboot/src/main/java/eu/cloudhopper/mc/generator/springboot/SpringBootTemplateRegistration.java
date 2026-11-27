@@ -160,6 +160,15 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger.ScheduleAttribute;
             javaFile = true
         ),
         @Template(
+            phase = GenerationPhase.FUNCTION,
+            templateName = "native-image.ftl",
+            description = "Generates the reachability metadata of the function for a native image (bound types)",
+            outputFileExtension = "json",
+            outputSubDirectory = "META-INF/native-image/cloudhopper",
+            outputFileName = "reachability-metadata.json",
+            classOutput = true
+        ),
+        @Template(
             phase = GenerationPhase.SHARED,
             templateName = "dockerfile.ftl",
             description = "Generates a Dockerfile for the Spring Boot app",
