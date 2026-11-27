@@ -125,6 +125,36 @@ The endpoint follows the CloudEvents HTTP binding (`ce-id`, `ce-source`,
 `ce-time` headers), so a Knative `Trigger` or another CloudEvents sender can
 deliver to `POST /events/<function name>` without Kafka on the classpath.
 
+## Native image
+
+The application can run as a GraalVM native image instead of on the JVM: it starts in well under a
+second (Spring reports about 80 ms for a small application instead of 1.5 s or more) and needs
+about a fifth of the memory. This matters most where instances scale to zero, as on
+[Knative](knative.md) and [Scaleway](scaleway.md), which run the same application.
+
+Build with the profile `springboot-native` in addition to the target's profile, then build the
+image from the generated Dockerfile:
+
+```bash
+mvn package -Pspringboot-http,springboot-native
+docker build -t my-app -f target/deployment/springboot-http/shared-resources_dockerfile..dockerfile .
+```
+
+- The profile runs Spring AOT (`process-aot`); the generated Dockerfile then compiles the native
+  image with GraalVM (`ghcr.io/graalvm/native-image-community:25.0.2`) in its first stage and
+  copies the executable into a small Debian image. The compilation takes a few minutes and
+  several GB of memory. Where Docker has little memory, limit the compiler with
+  `--build-arg NATIVE_IMAGE_OPTIONS=-J-Xmx3g` (slower).
+- The image is built for the platform of the build; `docker build --platform` selects another
+  one, which runs emulated and is much slower.
+- Jackson binds the functions' body, result and queue message types reflectively, and Spring AOT
+  does not see them behind the generated controllers. The annotation processor generates the
+  reflection configuration for these types and the types they contain
+  (`META-INF/native-image/cloudhopper/<function>/reachability-metadata.json`). Code of your own
+  that uses reflection, proxies or resources needs
+  [reachability metadata](https://www.graalvm.org/latest/reference-manual/native-image/metadata/)
+  or Spring's `RuntimeHints`.
+
 ## Runtime modules
 
 The archetype adds these dependencies to the profile; add them yourself in a project of your own:

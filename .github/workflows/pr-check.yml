@@ -28,6 +28,7 @@ jobs:
       knative: ${{ steps.diff.outputs.knative }}
       scaleway: ${{ steps.diff.outputs.scaleway }}
       awsnative: ${{ steps.diff.outputs.awsnative }}
+      springnative: ${{ steps.diff.outputs.springnative }}
     steps:
     - name: Check out code
       uses: actions/checkout@v7
@@ -49,7 +50,7 @@ jobs:
           cat changed.txt
           .github/scripts/affected-targets.sh < changed.txt > result.txt
         else
-          printf 'code=true\naws=true\nazure=true\ngcp=true\nspringboot=true\nknative=true\nscaleway=true\nawsnative=true\n' > result.txt
+          printf 'code=true\naws=true\nazure=true\ngcp=true\nspringboot=true\nknative=true\nscaleway=true\nawsnative=true\nspringnative=true\n' > result.txt
         fi
         cat result.txt
         cat result.txt >> "$GITHUB_OUTPUT"
@@ -209,6 +210,69 @@ jobs:
       run: mvn -B -ntp install -DskipTests -pl test/system-tests/generator-knative -am
 
     - name: Run TCK for Knative
+      working-directory: test/system-tests/generator-knative
+      run: mvn -B -ntp exec:java
+
+    - name: Show the cluster state
+      if: failure()
+      run: |
+        kubectl get ksvc,revision,pingsource,kafkasource,kafkasink,pods -A
+        kubectl describe kafkasource,pingsource -A | tail -80
+        kubectl logs -n knative-eventing -l app=kafka-source-dispatcher --tail=100 || true
+
+  # The Spring Boot application as a native image (springboot-http, knative, scaleway-terraform
+  # share it), tested on Knative in kind. Only for changes to the Spring Boot runtime, generator
+  # and the Knative TCK, and on manual runs: the native build in the Dockerfile takes minutes.
+  tck-knative-native:
+    name: TCK knative (native image)
+    needs: [changes, build-and-validate]
+    if: needs.changes.outputs.springnative == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v7
+
+    - name: Set up Java
+      uses: actions/setup-java@v6
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Maven settings for CI (Maven Central fallback)
+      run: cp .github/maven/ci-settings.xml ~/.m2/settings.xml
+
+    - name: Cache Maven packages
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Install kind
+      run: |
+        curl -sSLo kind https://kind.sigs.k8s.io/dl/v0.33.0/kind-linux-amd64
+        sudo install kind /usr/local/bin/kind
+        kind version; helm version --short; kubectl version --client
+
+    # the Knative ingress answers http://<service>.<namespace>.localhost:31080; make sure the
+    # service's host name resolves to the loopback address on the runner
+    - name: Resolve the service host name
+      run: echo '127.0.0.1 cloudhopper-tck.default.localhost' | sudo tee -a /etc/hosts
+
+    - name: Create the Knative cluster
+      run: test/knative/kind-setup.sh
+
+    - name: Install the modules the TCK needs
+      run: mvn -B -ntp install -DskipTests -pl test/system-tests/generator-knative -am
+
+    # clean: the annotation processor runs again with -Aruntime=native; Spring AOT
+    - name: Build the system test for the native image
+      run: mvn -B -ntp clean install -DskipTests -Pnative -pl test/system-tests/generator-knative
+
+    - name: Run TCK for Knative (native image)
       working-directory: test/system-tests/generator-knative
       run: mvn -B -ntp exec:java
 

@@ -27,7 +27,6 @@ package eu.cloudhopper.mc.provider.jdbc.keyvalue;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import eu.cloudhopper.mc.runtime.KeyValueStore;
 import eu.cloudhopper.mc.runtime.KeyValueStoreException;
@@ -78,9 +77,15 @@ public class JdbcKeyValueStoreFactory implements KeyValueStoreFactory {
             String url = config.getOptionalValue(URL, String.class).filter(v -> !v.isBlank())
                     .orElseThrow(() -> new KeyValueStoreException("No database for the @Table parameters: set " + URL
                             + " (environment variable CLOUDHOPPER_KEYVALUE_JDBC_URL)"));
-            HikariConfig pool = new HikariConfig();
+            // configured directly: new HikariDataSource(HikariConfig) copies the configuration by
+            // reflection over HikariConfig's fields, which finds nothing in a native image
+            HikariDataSource pool = new HikariDataSource();
             pool.setPoolName("cloudhopper-keyvalue");
-            pool.setJdbcUrl(url);
+            // the PostgreSQL data source itself rather than a JDBC URL: no driver lookup through
+            // DriverManager
+            org.postgresql.ds.PGSimpleDataSource postgres = new org.postgresql.ds.PGSimpleDataSource();
+            postgres.setURL(url);
+            pool.setDataSource(postgres);
             config.getOptionalValue(USERNAME, String.class).ifPresent(pool::setUsername);
             config.getOptionalValue(PASSWORD, String.class).ifPresent(pool::setPassword);
             pool.setMaximumPoolSize(config.getOptionalValue(POOL_SIZE, Integer.class).orElse(4));
@@ -91,7 +96,7 @@ public class JdbcKeyValueStoreFactory implements KeyValueStoreFactory {
             pool.setConnectionTimeout(Duration.ofSeconds(30).toMillis());
             // connect on first use, not here
             pool.setInitializationFailTimeout(-1);
-            dataSource = new HikariDataSource(pool);
+            dataSource = pool;
         }
         return dataSource;
     }

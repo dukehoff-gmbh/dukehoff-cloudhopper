@@ -1,0 +1,57 @@
+{
+  "comment": "What HikariCP and the PostgreSQL driver need in a native image, as JdbcKeyValueStoreFactory uses them: arrays HikariCP creates with Array.newInstance (FastList), fields of its and the driver's atomic field updaters, and the driver's default configuration.",
+  "reflection": [
+    {
+      "type": "com.zaxxer.hikari.util.ConcurrentBag$IConcurrentBagEntry[]"
+    },
+    {
+      "type": "java.sql.Statement[]"
+    },
+    {
+      "type": "com.zaxxer.hikari.pool.PoolBase",
+      "fields": [
+        {
+          "name": "catalog"
+        }
+      ]
+    },
+    {
+      "type": "com.zaxxer.hikari.pool.PoolEntry",
+      "fields": [
+        {
+          "name": "state"
+        }
+      ]
+    },
+    {
+      "type": "org.postgresql.Driver"
+    },
+    {
+      "type": "org.postgresql.core.QueryExecutorCloseAction",
+      "fields": [
+        {
+          "name": "pgStream"
+        }
+      ]
+    },
+    {
+      "type": "org.postgresql.jdbc.PgStatement",
+      "fields": [
+        {
+          "name": "cancelTimerTask"
+        },
+        {
+          "name": "isClosed"
+        },
+        {
+          "name": "statementState"
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "glob": "org/postgresql/driverconfig.properties"
+    }
+  ]
+}
