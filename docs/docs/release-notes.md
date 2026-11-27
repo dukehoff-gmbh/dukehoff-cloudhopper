@@ -10,6 +10,28 @@ announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/rele
 together with the full list of changes. What is being worked on is tracked in the
 [issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
+## 1.8
+
+- Authentication: a route that only signed-in users of an OpenID Connect provider
+  may call declares `@HttpTrigger(authenticated = true)`, optionally with
+  `scopes`. The generated handler verifies the bearer token (signature, issuer,
+  audience, expiry) on every target and answers 401 or 403; the function reads
+  the caller's claims with `@ClaimParam` or a `Claims` parameter. The provider is
+  configured with `cloudhopper.auth.issuer` and `cloudhopper.auth.audience`; see
+  [Authentication](guides/writing-functions.md#authentication)
+- AWS: API Gateway checks the tokens of authenticated routes as well, with a JWT
+  authorizer, so refused requests do not invoke the function
+- AWS: the functions can run as a GraalVM native image on the custom runtime
+  (`provided.al2023`) with the profile `aws-native`: cold starts of about 140 ms
+  instead of over a second, and about a third of the memory. The annotation
+  processor generates the reflection configuration for the functions' types;
+  see [Native image](platforms/aws.md#native-image)
+- AWS and GCP: a project without HTTP functions no longer generates an API;
+  on AWS such a project failed to generate
+- GCP: the API Gateway copy of a function gets the function's configuration
+  and secrets; before, functions behind API Gateway that read
+  `@ConfigProperty` values failed
+
 ## 1.7
 
 - HTTP functions set their status and headers: return `HttpResponse<T>`
