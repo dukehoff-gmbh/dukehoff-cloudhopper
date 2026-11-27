@@ -274,9 +274,18 @@ public class TestContextAws implements TestContext {
         }
     }
 
+    /**
+     * Whether the functions run as a native image (the system test built with -Pnative): set by
+     * the TCK job as CLOUDHOPPER_RUNTIME=native.
+     */
+    private static boolean nativeImage() {
+        return "native".equals(System.getenv("CLOUDHOPPER_RUNTIME"));
+    }
+
     @Override
     public java.util.Set<String> supportedExtensions() {
-        return java.util.Set.of("x-aws-snapstart"); // ExtensionKeys.Aws.SnapStart.KEY
+        // SnapStart exists only for the Java runtime; the generator ignores it for a native image
+        return nativeImage() ? java.util.Set.of() : java.util.Set.of("x-aws-snapstart"); // ExtensionKeys.Aws.SnapStart.KEY
     }
 
     @Override

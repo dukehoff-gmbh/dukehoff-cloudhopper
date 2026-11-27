@@ -72,7 +72,7 @@ import static javax.tools.Diagnostic.Kind.ERROR;
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("eu.cloudhopper.mc.annotations.Function")
 @SupportedOptions({"generatorId", "configOutputDir", "artifactId", "classifier", "version", "targetDir",
-        AnnotationFeatureValidator.STRICT_OPTION})
+        AnnotationFeatureValidator.STRICT_OPTION, "runtime", "nativeArchitecture"})
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
 
@@ -214,7 +214,8 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
 
             boolean authenticated = http != null && (http.authenticated() || http.scopes().length > 0);
             if (!validateParams(m, params) || (event != null && !validateEventTrigger(m, event, params))
-                    || !validateIdentity(m, fn) || !validateClaims(m, params, authenticated)) {
+                    || !validateIdentity(m, fn) || !validateClaims(m, params, authenticated)
+                    || !validateNativeImage(m, fn)) {
                 continue;
             }
             String pkg = elementUtils.getPackageOf(cls).getQualifiedName().toString();
@@ -277,6 +278,9 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                             pi.getDefaultValue().split(":")[0], Boolean.parseBoolean(pi.getDefaultValue().split(":")[1])))
                     .toList();
             hinfo.setTables(tables);
+            BindingTypes bindingTypes = new BindingTypes(elementUtils).add(m.getReturnType());
+            m.getParameters().forEach(p -> bindingTypes.add(p.asType()));
+            hinfo.setBindingTypes(bindingTypes.names());
             tables.forEach(t -> tableUses.add(new TableUse(m, t)));
             List<eu.cloudhopper.mc.generator.api.ConfigPropertyInfo> configProperties = new ArrayList<>(params.stream()
                     .filter(pi -> pi.getType() == ParamType.CONFIG)
@@ -418,6 +422,35 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
      * Checks the identity name and that an explicit identity is not also the implicit identity of a
      * function without one: both would silently run as one identity.
      */
+    /**
+     * A native image ({@code -Aruntime=native}) is one executable for all functions, built for
+     * one architecture ({@code -AnativeArchitecture}, arm64 by default): a function that asks
+     * for another architecture cannot run it. SnapStart exists only for the Java runtime.
+     */
+    private boolean validateNativeImage(ExecutableElement method, Function fn) {
+        if (!"native".equals(processingEnv.getOptions().getOrDefault("runtime", "jvm").trim())) {
+            return true;
+        }
+        String architecture = processingEnv.getOptions().getOrDefault("nativeArchitecture", "arm64").trim();
+        boolean valid = true;
+        for (eu.cloudhopper.mc.annotations.Extension extension : fn.extensions()) {
+            if (eu.cloudhopper.mc.annotations.ExtensionKeys.Aws.Architecture.KEY.equals(extension.name())
+                    && !architecture.equals(extension.value())) {
+                processingEnv.getMessager().printMessage(ERROR, "Function " + fn.name() + " asks for the architecture "
+                        + extension.value() + ", but the native image is built for " + architecture
+                        + ": one executable serves all functions. Remove the extension or build for "
+                        + extension.value() + " (-AnativeArchitecture).", method);
+                valid = false;
+            }
+            if (eu.cloudhopper.mc.annotations.ExtensionKeys.Aws.SnapStart.KEY.equals(extension.name())) {
+                processingEnv.getMessager().printMessage(javax.tools.Diagnostic.Kind.WARNING, "Function " + fn.name()
+                        + ": SnapStart is only available for the Java runtime and is ignored for the native image,"
+                        + " which starts without it.", method);
+            }
+        }
+        return valid;
+    }
+
     private boolean validateIdentity(ExecutableElement method, Function fn) {
         String identity = fn.identity();
         if (identity.isEmpty()) {

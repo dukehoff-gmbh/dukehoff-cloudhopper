@@ -1,0 +1,65 @@
+{
+  "comment": "Types provider-aws binds with Jackson: the API Gateway events and responses. The generated handlers and the functions' own types are registered by the files the annotation processor generates (META-INF/native-image/cloudhopper/<function>/).",
+  "reflection": [
+    {
+      "type": "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent$RequestContext",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent$RequestContext$Authorizer",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent$RequestContext$Authorizer$JWT",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent$RequestContext$CognitoIdentity",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent$RequestContext$Http",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent$RequestContext$IAM",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "com.amazonaws.services.lambda.runtime.events.APIGatewayV2ProxyRequestEvent",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    },
+    {
+      "type": "com.amazonaws.services.lambda.runtime.events.APIGatewayV2ProxyResponseEvent",
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "allDeclaredConstructors": true
+    }
+  ]
+}

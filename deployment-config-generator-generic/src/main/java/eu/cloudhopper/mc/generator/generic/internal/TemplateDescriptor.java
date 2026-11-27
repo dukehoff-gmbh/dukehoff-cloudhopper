@@ -47,6 +47,7 @@ public class TemplateDescriptor {
     private String outputSubDirectory;
     private boolean javaFile;
     private String outputFileName;
+    private boolean classOutput;
 
     /**
      * Constructs an empty descriptor.
@@ -129,6 +130,20 @@ public class TemplateDescriptor {
      */
     public boolean isJavaFile() {
         return javaFile;
+    }
+
+    /**
+     * @return whether the rendered file is a resource of the compiled classes (written with the
+     *         Filer to the class output, at {@code <outputSubDirectory>/<base>/<file name>})
+     *         instead of a file of the configuration output directory
+     */
+    public boolean isClassOutput() {
+        return classOutput;
+    }
+
+    public TemplateDescriptor withClassOutput(boolean classOutput) {
+        this.classOutput = classOutput;
+        return this;
     }
 
     @Override

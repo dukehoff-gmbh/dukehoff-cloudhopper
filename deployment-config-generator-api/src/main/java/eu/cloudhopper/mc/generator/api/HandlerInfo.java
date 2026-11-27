@@ -64,6 +64,7 @@ public class HandlerInfo {
     private java.util.List<QueueInfo> publishedQueues = java.util.List.of();
     private java.util.List<BucketInfo> buckets = java.util.List.of();
     private java.util.List<TableInfo> tables = java.util.List.of();
+    private java.util.List<String> bindingTypes = java.util.List.of();
 
     /**
      * Constructs a new {@code HandlerInfo} with the required properties.
@@ -250,6 +251,22 @@ public class HandlerInfo {
      */
     public void setTables(java.util.List<TableInfo> tables) {
         this.tables = tables == null ? java.util.List.of() : java.util.List.copyOf(tables);
+    }
+
+    /**
+     * @return the binary names of the types the function reads and writes as JSON (body, result,
+     *         queue messages, and the types they contain), for the reflection
+     *         configuration of native images
+     */
+    public java.util.List<String> getBindingTypes() {
+        return bindingTypes;
+    }
+
+    /**
+     * @param bindingTypes the binary names of the types the function binds
+     */
+    public void setBindingTypes(java.util.List<String> bindingTypes) {
+        this.bindingTypes = java.util.List.copyOf(bindingTypes);
     }
 
     /**

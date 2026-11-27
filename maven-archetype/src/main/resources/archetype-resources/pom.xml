@@ -14,6 +14,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <cloudhopper.version>${project.version}</cloudhopper.version>
+        <!-- jvm, or native with the profile aws-native -->
+        <cloudhopper.runtime>jvm</cloudhopper.runtime>
+        <!-- the architecture of a native image: arm64 or x86_64 -->
+        <native.architecture>arm64</native.architecture>
 #if($includeTerraformProfile == 'true')
         <!-- add the path to your terraform executable here -->
         <terraform.executable>terraform</terraform.executable>
@@ -62,6 +66,8 @@
                         <arg>-Aversion=\${project.version}</arg>
                         <arg>-Aclassifier=\${jar.classifier}</arg>
                         <arg>-AtargetDir=\${project.build.directory}</arg>
+                        <arg>-Aruntime=\${cloudhopper.runtime}</arg>
+                        <arg>-AnativeArchitecture=\${native.architecture}</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
@@ -430,6 +436,91 @@
                 </plugins>
             </build>
 #end
+        </profile>
+#end
+#if($generatorIds.contains("aws-terraform"))
+        <!-- aws-terraform as a native image on the Lambda custom runtime (provided.al2023), with
+             -Paws-terraform,aws-native: shorter cold starts, less memory. Builds the executable
+             bootstrap with GraalVM in a container (Docker; native images cannot be cross-compiled)
+             for native.architecture, and packs it into target/<artifactId>-<version>-aws-terraform-native.zip,
+             which the generated Terraform deploys. -->
+        <profile>
+            <id>aws-native</id>
+            <properties>
+                <cloudhopper.runtime>native</cloudhopper.runtime>
+                <native.image>ghcr.io/graalvm/native-image-community:25.0.2</native.image>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.5.1</version>
+                        <executions>
+                            <execution>
+                                <id>native-image</id>
+                                <!-- after the shade plugin has built the jar in package -->
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>docker</executable>
+                                    <arguments>
+                                        <argument>run</argument>
+                                        <argument>--rm</argument>
+                                        <argument>--platform</argument>
+                                        <argument>linux/\${native.architecture}</argument>
+                                        <argument>-v</argument>
+                                        <argument>\${project.build.directory}:/work</argument>
+                                        <argument>\${native.image}</argument>
+                                        <argument>--no-fallback</argument>
+                                        <argument>-cp</argument>
+                                        <argument>/work/\${project.artifactId}-\${project.version}-aws-terraform.jar</argument>
+                                        <argument>-o</argument>
+                                        <argument>/work/bootstrap</argument>
+                                        <argument>eu.cloudhopper.mc.provider.aws.NativeRuntime</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>3.7.1</version>
+                        <executions>
+                            <execution>
+                                <id>native-zip</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <finalName>\${project.artifactId}-\${project.version}-aws-terraform</finalName>
+                                    <appendAssemblyId>true</appendAssemblyId>
+                                    <attach>false</attach>
+                                    <inlineDescriptors>
+                                        <inlineDescriptor>
+                                            <id>native</id>
+                                            <formats>
+                                                <format>zip</format>
+                                            </formats>
+                                            <includeBaseDirectory>false</includeBaseDirectory>
+                                            <files>
+                                                <file>
+                                                    <source>\${project.build.directory}/bootstrap</source>
+                                                    <fileMode>0755</fileMode>
+                                                </file>
+                                            </files>
+                                        </inlineDescriptor>
+                                    </inlineDescriptors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
 #end
 #if($includeTerraformProfile == "true")

@@ -118,7 +118,7 @@ public class TemplateRegistrationProcessor extends AbstractProcessor {
                         template.outputFileExtension(),
                         template.outputSubDirectory(),
                         template.javaFile()
-                ).withOutputFileName(template.outputFileName());
+                ).withOutputFileName(template.outputFileName()).withClassOutput(template.classOutput());
 
                 phaseMap.computeIfAbsent(phaseKey, k -> new ArrayList<>()).add(descriptor);
             }
