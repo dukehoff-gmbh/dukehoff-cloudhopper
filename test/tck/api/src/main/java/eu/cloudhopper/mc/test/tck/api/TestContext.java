@@ -137,4 +137,15 @@ public interface TestContext {
     default String getApiDescription() {
         throw new UnsupportedOperationException("This binding cannot read the API description");
     }
+
+    /**
+     * The issuer of the tokens of the authentication test. By default {@link TckIssuer#ISSUER},
+     * whose key set the deployment gets as configuration; a binding that publishes the key set
+     * under an issuer URL of its own (so that the target's gateway can read it) returns that URL.
+     *
+     * @return the issuer
+     */
+    default String getAuthIssuer() {
+        return TckIssuer.ISSUER;
+    }
 }
