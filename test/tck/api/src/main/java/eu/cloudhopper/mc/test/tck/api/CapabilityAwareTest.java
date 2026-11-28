@@ -44,6 +44,13 @@ public interface CapabilityAwareTest extends FeatureAwareTest {
     String PROJECT_TERRAFORM_CONFIG = "project-terraform-config";
 
     /**
+     * The platform enforces the declared access of {@code @Bucket} and {@code @Table} per
+     * identity (IAM policies), not only the runtime: a function of a read-only identity that
+     * bypasses the runtime's check is refused by the platform.
+     */
+    String PLATFORM_PERMISSIONS = "platform-permissions";
+
+    /**
      * @return the capabilities the test needs, e.g. {@link #SECRETS}
      */
     List<String> requiredCapabilities();
