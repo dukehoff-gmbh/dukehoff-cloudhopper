@@ -69,4 +69,12 @@ class GenericDeploymentConfigGeneratorTest {
 
         assertEquals(List.of("dockerfile.ftl"), names(merged.get("shared")));
     }
+
+    @org.junit.jupiter.api.Test
+    void theArtifactIsReferredToRelativeToTheConfiguration() {
+        org.junit.jupiter.api.Assertions.assertEquals("../..", GenericDeploymentConfigGenerator.artifactDir(java.util.Map.of(
+                "targetDir", "/work/app/target", "configOutputDir", "/work/app/target/deployment/aws-terraform")));
+        org.junit.jupiter.api.Assertions.assertEquals("../../../build", GenericDeploymentConfigGenerator.artifactDir(java.util.Map.of(
+                "targetDir", "/work/build", "configOutputDir", "/work/app/target/deployment")));
+    }
 }
