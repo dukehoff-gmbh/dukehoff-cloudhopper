@@ -10,6 +10,34 @@ announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/rele
 together with the full list of changes. What is being worked on is tracked in the
 [issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
+## 1.10
+
+- Identities on Azure, Knative and Scaleway: every `@Function(identity)` gets a
+  deployment unit of its own, a function app with its own managed identity, a
+  Knative service with its own service account, a container; the functions
+  without an identity share the default unit. All units run the same package,
+  and each answers only for the functions of its identity. Existing deployments
+  keep their app or container as the default unit; see
+  [Identities and permissions](guides/writing-functions.md#identities-and-permissions)
+- Native image: types the application reads or writes as JSON itself are marked
+  with `@Reflective` and registered with the types they contain; array types are
+  always registered. Missing metadata now answers 500 with the generic body, and
+  the log names the type; see [Native image](platforms/aws.md#native-image)
+- Authentication: `cloudhopper.auth.required-claims` lists claims every token
+  must have, e.g. `token_use=access` to refuse Amazon Cognito ID tokens
+- AWS: `@OnPrime` methods of a function class warm its own dependencies before
+  the SnapStart snapshot; see [SnapStart](platforms/aws.md#snapstart)
+- AWS, GCP, Azure: the generated Terraform refers to the artifact relative to
+  the module instead of the absolute path of the build machine;
+  `cloudhopper_artifact_dir` sets another directory
+- AWS: switching SnapStart or the runtime replaces the invoke permissions
+  without a gap in which requests fail
+- Archetype: switching between the JVM and the native profile regenerates the
+  deployment without `mvn clean`
+- Azure: the package blob uses `storage_container_id` instead of the deprecated
+  `storage_account_name`; with an old `.terraform.lock.hcl`, run
+  `terraform init -upgrade`
+
 ## 1.9
 
 - Spring Boot, Knative and Scaleway: the application can run as a GraalVM native
