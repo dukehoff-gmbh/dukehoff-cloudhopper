@@ -10,6 +10,9 @@
       "allDeclaredFields": true,
       "allDeclaredMethods": true,
       "allDeclaredConstructors": true
+    },
+    {
+      "type": "${type}[]"
     }</#list>
   ]
 }

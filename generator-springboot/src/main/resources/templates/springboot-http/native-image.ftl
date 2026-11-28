@@ -6,6 +6,9 @@
       "allDeclaredFields": true,
       "allDeclaredMethods": true,
       "allDeclaredConstructors": true
+    },
+    {
+      "type": "${type}[]"
     }<#sep>,</#sep></#list>
   ]
 }

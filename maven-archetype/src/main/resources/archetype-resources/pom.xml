@@ -18,6 +18,8 @@
         <cloudhopper.runtime>jvm</cloudhopper.runtime>
         <!-- the architecture of a native image: arm64 or x86_64 -->
         <native.architecture>arm64</native.architecture>
+        <!-- packages whose classes a native image registers for reflection (Jackson): the project's own -->
+        <native.reflection.packages>${package}</native.reflection.packages>
 #if($includeTerraformProfile == 'true')
         <!-- add the path to your terraform executable here -->
         <terraform.executable>terraform</terraform.executable>
@@ -68,6 +70,7 @@
                         <arg>-AtargetDir=\${project.build.directory}</arg>
                         <arg>-Aruntime=\${cloudhopper.runtime}</arg>
                         <arg>-AnativeArchitecture=\${native.architecture}</arg>
+                        <arg>-AnativeReflectionPackages=\${native.reflection.packages}</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>

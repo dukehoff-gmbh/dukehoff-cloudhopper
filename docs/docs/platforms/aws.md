@@ -106,7 +106,12 @@ mvn package -Paws-terraform,aws-native
   (with a warning).
 - Jackson binds the functions' body, result and queue message types reflectively. The annotation
   processor generates the reflection configuration for these types and the types they contain
-  (`META-INF/native-image/cloudhopper/<function>/reachability-metadata.json`). Code of your own
+  (`META-INF/native-image/cloudhopper/<function>/reachability-metadata.json`), with their
+  array types. The classes of the packages in `-AnativeReflectionPackages` are registered as
+  well; the archetype sets it to the project's package (property `native.reflection.packages`),
+  so types the application writes as JSON itself, e.g. into a table, are covered. Missing
+  metadata fails with an `Error` (`MissingReflectionRegistrationError`), not an exception: the
+  function answers 500, and the log names the type. Code of your own
   that uses reflection, dynamic proxies or resources needs
   [reachability metadata](https://www.graalvm.org/latest/reference-manual/native-image/metadata/)
   of its own; libraries often bring it, or the
