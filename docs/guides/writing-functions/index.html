@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.0">
 <title data-rh="true">Writing Functions | Dukehoff Cloudhopper</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://cloudhopper.eu/img/social-card.png"><meta data-rh="true" name="twitter:image" content="https://cloudhopper.eu/img/social-card.png"><meta data-rh="true" property="og:url" content="https://cloudhopper.eu/docs/guides/writing-functions"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="Java, serverless, multi-cloud, AWS Lambda, Azure Functions, Google Cloud Functions, Terraform, OpenAPI, annotation processor"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Writing Functions | Dukehoff Cloudhopper"><meta data-rh="true" name="description" content="With Cloudhopper you write plain Java methods and describe them with a few"><meta data-rh="true" property="og:description" content="With Cloudhopper you write plain Java methods and describe them with a few"><link data-rh="true" rel="icon" href="/brand/favicon.svg"><link data-rh="true" rel="canonical" href="https://cloudhopper.eu/docs/guides/writing-functions"><link data-rh="true" rel="alternate" href="https://cloudhopper.eu/docs/guides/writing-functions" hreflang="en"><link data-rh="true" rel="alternate" href="https://cloudhopper.eu/docs/guides/writing-functions" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Writing Functions","item":"https://cloudhopper.eu/docs/guides/writing-functions"}]}</script><link rel="stylesheet" href="/assets/css/styles.4ce635aa.css">
-<script src="/assets/js/runtime~main.10a368e8.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.2acac5eb.js" defer="defer"></script>
 <script src="/assets/js/main.494a1b1a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -344,9 +344,13 @@ refer to the identity is described per target: <a href="/docs/platforms/aws#iden
 <p>The name of an identity does not depend on the function names. Renaming a function
 keeps its identity, so policies elsewhere that refer to it, for example a role in
 another account that trusts it, keep working.</p>
-<p>Targets that deploy all functions of a project as one unit run them as one identity
-and ignore <code>identity</code>; the build warns about it
-(<a href="https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues/82" target="_blank" rel="noopener noreferrer">#82</a>).</p>
+<p>Targets that run the functions of a project in a shared application deploy one unit per
+identity: a function app on <a href="/docs/platforms/azure#identities">Azure</a>, a Knative service
+with a service account of its own on <a href="/docs/platforms/knative#identities">Knative</a>, a
+container on <a href="/docs/platforms/scaleway#identities">Scaleway</a>. All units run the same
+package, and each answers only for the functions of its identity. On these targets the
+functions <strong>without</strong> an <code>identity</code> share one unit, the default one, instead of having
+one each.</p>
 <hr>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="vendor-extensions">Vendor extensions<a href="#vendor-extensions" class="hash-link" aria-label="Direct link to Vendor extensions" title="Direct link to Vendor extensions">​</a></h2>
 <p>When you need a provider-specific setting that has no dedicated <code>@Function</code>
