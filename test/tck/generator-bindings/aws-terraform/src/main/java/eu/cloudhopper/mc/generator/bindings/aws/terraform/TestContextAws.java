@@ -90,10 +90,13 @@ public class TestContextAws implements TestContext {
      */
     private java.util.Map<String, String> terraformEnvironment() {
         // tck_issuer.tf publishes the key set and passes the issuer through cloudhopper_extra_config
+        // tck.greeting as a reference to the parameter store (created by createExistingResources)
         java.util.Map<String, String> env = new java.util.HashMap<>(
                 eu.cloudhopper.mc.test.tck.api.TckConfiguration.terraformEnvironment(java.util.Set.of(
                         eu.cloudhopper.mc.test.tck.api.TckConfiguration.ISSUER_PROPERTY,
-                        eu.cloudhopper.mc.test.tck.api.TckConfiguration.JWKS_PROPERTY)));
+                        eu.cloudhopper.mc.test.tck.api.TckConfiguration.JWKS_PROPERTY),
+                        java.util.Map.of(eu.cloudhopper.mc.test.tck.api.TckConfiguration.GREETING_PROPERTY,
+                                "ssm:" + greetingParameter())));
         env.put("TF_VAR_tck_jwks", eu.cloudhopper.mc.test.tck.api.TckIssuer.jwks());
         env.put("TF_VAR_tck_secret", eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET);
         env.put("TF_VAR_cloudhopper_secrets", "{\"" + eu.cloudhopper.mc.test.tck.api.TckConfiguration.SECRET_PROPERTY
@@ -142,7 +145,42 @@ public class TestContextAws implements TestContext {
      * Creates the queues and buckets of {@code @EventTrigger(create = false)} functions: the
      * generated Terraform reads them with data sources, under their names without prefix.
      */
+    /** The SSM parameter that holds tck.greeting: cloudhopper_config refers to it as ssm:<name>. */
+    private String greetingParameter() {
+        return "/" + namePrefix + "cloudhopper-tck/greeting";
+    }
+
+    private void createGreetingParameter() {
+        try (software.amazon.awssdk.services.ssm.SsmClient ssm = software.amazon.awssdk.services.ssm.SsmClient.create()) {
+            ssm.putParameter(software.amazon.awssdk.services.ssm.model.PutParameterRequest.builder()
+                    .name(greetingParameter())
+                    .type(software.amazon.awssdk.services.ssm.model.ParameterType.STRING)
+                    .value(eu.cloudhopper.mc.test.tck.api.TckConfiguration.GREETING)
+                    .overwrite(true).build());
+            ssm.addTagsToResource(software.amazon.awssdk.services.ssm.model.AddTagsToResourceRequest.builder()
+                    .resourceType(software.amazon.awssdk.services.ssm.model.ResourceTypeForTagging.PARAMETER)
+                    .resourceId(greetingParameter())
+                    .tags(TCK_TAGS.entrySet().stream().map(t -> software.amazon.awssdk.services.ssm.model.Tag.builder()
+                            .key(t.getKey()).value(t.getValue()).build()).toList())
+                    .build());
+            System.out.println("📦 Created the SSM parameter " + greetingParameter());
+        }
+    }
+
+    private void deleteGreetingParameter() {
+        try (software.amazon.awssdk.services.ssm.SsmClient ssm = software.amazon.awssdk.services.ssm.SsmClient.create()) {
+            ssm.deleteParameter(software.amazon.awssdk.services.ssm.model.DeleteParameterRequest.builder()
+                    .name(greetingParameter()).build());
+            System.out.println("🧹 Deleted the SSM parameter " + greetingParameter());
+        } catch (software.amazon.awssdk.services.ssm.model.ParameterNotFoundException e) {
+            // nothing to delete
+        } catch (RuntimeException e) {
+            System.out.println("❗ Could not delete the SSM parameter " + greetingParameter() + ": " + e.getMessage());
+        }
+    }
+
     private void createExistingResources() throws IOException {
+        createGreetingParameter();
         try (SqsClient sqs = SqsClient.create()) {
             for (String queue : existingQueues()) {
                 createQueue(sqs, CreateQueueRequest.builder().queueName(queue).tags(TCK_TAGS).build());
@@ -207,6 +245,7 @@ public class TestContextAws implements TestContext {
     }
 
     private void deleteExistingResources() {
+        deleteGreetingParameter();
         try (SqsClient sqs = SqsClient.create(); S3Client s3 = S3Client.create()) {
             for (String queue : existingQueues()) {
                 try {
