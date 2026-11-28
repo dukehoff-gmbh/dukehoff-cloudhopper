@@ -104,7 +104,19 @@ public final class TckConfiguration {
      *         properties, as HCL/JSON
      */
     public static String terraformVariable(java.util.Set<String> without) {
-        return VALUES.entrySet().stream().filter(e -> !without.contains(e.getKey()))
+        return terraformVariable(without, Map.of());
+    }
+
+    /**
+     * @param without  properties the binding sets differently
+     * @param replaced values the binding passes instead of the TCK's, e.g. a reference to the
+     *                 parameter store that holds the value
+     * @return the value of the Terraform variable {@code cloudhopper_config}, as HCL/JSON
+     */
+    public static String terraformVariable(java.util.Set<String> without, Map<String, String> replaced) {
+        Map<String, String> values = new java.util.TreeMap<>(VALUES);
+        values.putAll(replaced);
+        return values.entrySet().stream().filter(e -> !without.contains(e.getKey()))
                 .map(e -> "\"" + e.getKey() + "\" = \"" + e.getValue().replace("\"", "\\\"") + "\"")
                 .collect(Collectors.joining(", ", "{", "}"));
     }
@@ -122,5 +134,14 @@ public final class TckConfiguration {
      */
     public static Map<String, String> terraformEnvironment(java.util.Set<String> without) {
         return Map.of("TF_VAR_cloudhopper_config", terraformVariable(without));
+    }
+
+    /**
+     * @param without  properties the binding sets differently
+     * @param replaced values the binding passes instead of the TCK's
+     * @return the environment for Terraform commands
+     */
+    public static Map<String, String> terraformEnvironment(java.util.Set<String> without, Map<String, String> replaced) {
+        return Map.of("TF_VAR_cloudhopper_config", terraformVariable(without, replaced));
     }
 }

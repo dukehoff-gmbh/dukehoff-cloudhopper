@@ -220,6 +220,26 @@ function's execution role, without the AWS SDK, and reads with
 
 Destroying the deployment deletes the tables it created, with their items.
 
+## Configuration from SSM Parameter Store
+
+A value of `cloudhopper_config` can refer to a parameter of SSM Parameter Store, e.g. one that
+another Terraform stack writes:
+
+```hcl
+cloudhopper_config = {
+  "cloudhopper.auth.issuer"   = "ssm:/app/auth/issuer"
+  "cloudhopper.auth.audience" = "ssm:/app/auth/client-id"
+}
+```
+
+Terraform reads the parameter when it plans (`data "aws_ssm_parameter"`), so the value is also
+known where the generated Terraform itself needs it, e.g. for the API Gateway JWT authorizer, and
+the functions get it like any other value; a changed parameter takes effect with the next
+`terraform apply`. The deployment needs `ssm:GetParameter`. Only `String` and `StringList`
+parameters: a `SecureString` would end up in plain text in the functions' environment and the
+state, so the plan refuses it; pass secrets in `cloudhopper_secrets`. References are resolved in
+`cloudhopper_config`; in `cloudhopper_extra_config`, refer to a data source of your own Terraform.
+
 ## Secrets
 
 The Terraform variable `cloudhopper_secrets` maps a property name to a secret in

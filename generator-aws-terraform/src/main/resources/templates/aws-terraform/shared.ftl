@@ -12,9 +12,6 @@ variable "cloudhopper_name_prefix" {
   default     = ""
 }
 
-# Values of the configuration properties the functions read with @ConfigProperty, by property
-# name, e.g. { "report.bucket" = "my-reports" }. Functions get them as environment variables
-# (report.bucket → REPORT_BUCKET).
 # The directory of the built artifact. By default the Maven target directory, relative to this
 # module, so that the configuration also works from another directory or machine (e.g. a CI job
 # that checked out the build's target directory).
@@ -28,6 +25,11 @@ locals {
   cloudhopper_artifact_dir = var.cloudhopper_artifact_dir != "" ? var.cloudhopper_artifact_dir : "${"$"}{path.module}/${artifactDir}"
 }
 
+# Values of the configuration properties the functions read with @ConfigProperty, by property
+# name, e.g. { "report.bucket" = "my-reports" }. Functions get them as environment variables
+# (report.bucket → REPORT_BUCKET). A value "ssm:<parameter name>" is read from SSM Parameter
+# Store when Terraform plans, e.g. { "cloudhopper.auth.issuer" = "ssm:/app/auth/issuer" }: a
+# String or StringList parameter; for secrets use cloudhopper_secrets.
 variable "cloudhopper_config" {
   description = "Values of the functions' configuration properties (@ConfigProperty), by property name"
   type        = map(string)
@@ -56,14 +58,30 @@ locals {
   cloudhopper_extra_config  = {}
   cloudhopper_extra_secrets = {}
 
-  # what the functions get
-  cloudhopper_config  = merge(var.cloudhopper_config, local.cloudhopper_extra_config)
+  # what the functions get; the ssm: references of cloudhopper_config resolved (below)
+  cloudhopper_config  = merge(var.cloudhopper_config, { for name, parameter in data.aws_ssm_parameter.cloudhopper_config : name => nonsensitive(parameter.value) }, local.cloudhopper_extra_config)
   cloudhopper_secrets = merge(var.cloudhopper_secrets, local.cloudhopper_extra_secrets)
   # properties set more than once, checked by a precondition
   cloudhopper_duplicate_properties = sort(setunion(
     setintersection(keys(var.cloudhopper_config), keys(local.cloudhopper_extra_config)),
     setintersection(keys(var.cloudhopper_secrets), keys(local.cloudhopper_extra_secrets)),
     setintersection(keys(local.cloudhopper_config), keys(local.cloudhopper_secrets))))
+}
+
+# The values of cloudhopper_config given as "ssm:<parameter name>", read when Terraform plans
+# (the deployment needs ssm:GetParameter). Only cloudhopper_config: values of
+# cloudhopper_extra_config can refer to data sources of the project's Terraform directly.
+data "aws_ssm_parameter" "cloudhopper_config" {
+  for_each = { for name, value in var.cloudhopper_config : name => trimprefix(value, "ssm:") if startswith(value, "ssm:") }
+  name     = each.value
+
+  lifecycle {
+    postcondition {
+      # a SecureString value would end up in plain text in the function's environment and the state
+      condition     = self.type != "SecureString"
+      error_message = "The configuration property ${"$"}{each.key} refers to the SecureString parameter ${"$"}{each.value}: pass secrets in cloudhopper_secrets (Secrets Manager) instead."
+    }
+  }
 }
 
 # Name of the API Gateway stage. "$default" serves the API at the root of its endpoint
