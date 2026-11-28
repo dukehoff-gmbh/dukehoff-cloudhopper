@@ -63,6 +63,12 @@ public final class Authenticator {
     public static final String JWKS_URI = "cloudhopper.auth.jwks-uri";
     /** The key set as JSON. */
     public static final String JWKS = "cloudhopper.auth.jwks";
+    /**
+     * Claims every token must have, as comma-separated {@code name=value} pairs, e.g.
+     * {@code token_use=access} so that an Amazon Cognito ID token of the same app client is
+     * refused. A claim with a list value must contain the value.
+     */
+    public static final String REQUIRED_CLAIMS = "cloudhopper.auth.required-claims";
 
     private static final Logger LOG = Logger.getLogger(Authenticator.class.getName());
 
@@ -99,6 +105,11 @@ public final class Authenticator {
         } catch (JwtVerifier.InvalidTokenException e) {
             throw invalid(e.getMessage());
         }
+        String missing = missingRequiredClaim(claims,
+                ConfigProvider.getConfig().getOptionalValue(REQUIRED_CLAIMS, String.class).orElse(""));
+        if (missing != null) {
+            throw invalid("of " + JwtVerifier.printable(claims.getSubject()) + ": " + missing);
+        }
         List<String> granted = claims.getScopes();
         for (String scope : scopes) {
             if (!granted.contains(scope)) {
@@ -109,6 +120,33 @@ public final class Authenticator {
             }
         }
         return claims;
+    }
+
+    /**
+     * @param claims   the claims of a valid token
+     * @param required the value of {@link #REQUIRED_CLAIMS}
+     * @return why the token lacks a required claim, or {@code null} if it has all of them
+     */
+    static String missingRequiredClaim(Claims claims, String required) {
+        for (String pair : required.split(",")) {
+            if (pair.isBlank()) {
+                continue;
+            }
+            int separator = pair.indexOf('=');
+            if (separator <= 0) {
+                throw new IllegalStateException(REQUIRED_CLAIMS + " needs name=value pairs, not: " + pair.trim());
+            }
+            String name = pair.substring(0, separator).trim();
+            String value = pair.substring(separator + 1).trim();
+            Object actual = claims.get(name);
+            boolean matches = actual instanceof java.util.Collection<?> values
+                    ? values.stream().anyMatch(v -> value.equals(String.valueOf(v)))
+                    : actual != null && value.equals(String.valueOf(actual));
+            if (!matches) {
+                return "claim " + name + " is not " + value;
+            }
+        }
+        return null;
     }
 
     private static HttpStatusException invalid(String reason) {

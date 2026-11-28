@@ -329,7 +329,8 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                         {eu.cloudhopper.mc.runtime.Authenticator.ISSUER, "true"},
                         {eu.cloudhopper.mc.runtime.Authenticator.AUDIENCE, "true"},
                         {eu.cloudhopper.mc.runtime.Authenticator.JWKS_URI, "false"},
-                        {eu.cloudhopper.mc.runtime.Authenticator.JWKS, "false"}}) {
+                        {eu.cloudhopper.mc.runtime.Authenticator.JWKS, "false"},
+                        {eu.cloudhopper.mc.runtime.Authenticator.REQUIRED_CLAIMS, "false"}}) {
                     if (configProperties.stream().noneMatch(c -> c.getName().equals(auth[0]))) {
                         configProperties.add(new eu.cloudhopper.mc.generator.api.ConfigPropertyInfo(auth[0],
                                 Boolean.parseBoolean(auth[1])));

@@ -323,6 +323,7 @@ variable `cloudhopper_config`):
 | `cloudhopper.auth.audience` | required: the expected `aud` claim; for access tokens of Amazon Cognito, which have none, the app client ID in `client_id` |
 | `cloudhopper.auth.jwks-uri` | the address of the provider's key set; by default the `jwks_uri` of `<issuer>/.well-known/openid-configuration` |
 | `cloudhopper.auth.jwks` | the key set itself as JSON, or Base64-encoded JSON, for providers the functions cannot reach; then nothing is fetched |
+| `cloudhopper.auth.required-claims` | claims every token must have, as `name=value` pairs separated by commas; a list claim must contain the value. For Amazon Cognito, `token_use=access` refuses the ID tokens of the same app client, which carry the client ID as `aud` |
 
 ```hcl
 cloudhopper_config = {
