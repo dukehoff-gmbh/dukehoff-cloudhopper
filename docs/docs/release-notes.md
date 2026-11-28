@@ -10,6 +10,20 @@ announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/rele
 together with the full list of changes. What is being worked on is tracked in the
 [issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
+## 1.9
+
+- Spring Boot, Knative and Scaleway: the application can run as a GraalVM native
+  image with the profile `springboot-native`; the generated Dockerfile compiles
+  it in its first stage. It starts in under 100 ms instead of over a second and
+  needs about a fifth of the memory. The annotation processor generates the
+  reflection configuration for the functions' types; see
+  [Native image](platforms/springboot.md#native-image)
+- Tables on Knative and Scaleway (PostgreSQL) work in a native image
+- AWS: functions with SnapStart prime their request path before the snapshot,
+  without running the function; the first request after a restore takes about
+  380 ms instead of 1.4 s, the cold start about 840 ms instead of 1.9 s; see
+  [SnapStart](platforms/aws.md#snapstart)
+
 ## 1.8
 
 - Authentication: a route that only signed-in users of an OpenID Connect provider
