@@ -24,6 +24,19 @@ with the [AWS setup guide](../setup/aws-prerequisites.md).
 | `queue.ftl` | Terraform | SQS queue and event source mapping |
 | `storage.ftl` | Terraform | S3 bucket and event notification |
 
+## Running a scheduled function by hand
+
+A `@ScheduledTrigger` function can be invoked directly, e.g. after a deployment or to try a new
+build. It accepts an EventBridge scheduled event, and an empty object as well; both run it
+without input:
+
+```bash
+aws lambda invoke --function-name <prefix><function> --payload '{}' \
+  --cli-binary-format raw-in-base64-out response.json
+```
+
+With [SnapStart](#snapstart), add `--qualifier live` to run the published version.
+
 ## Terraform variables
 
 The generated Terraform has these variables for the deployment as a whole; set them
