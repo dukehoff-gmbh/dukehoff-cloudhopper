@@ -23,7 +23,8 @@ resource "aws_cloudwatch_event_target" "${handlerInfo.functionId}_target" {
 }
 
 resource "aws_lambda_permission" "${handlerInfo.functionId}_invoke_permission" {
-  statement_id  = "AllowExecutionFromCloudWatch"
+  # a prefix, so that a new permission can exist next to the one it replaces
+  statement_id_prefix = "AllowExecutionFromCloudWatch-"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.${handlerInfo.functionId}.function_name
 <#if snapStart>
@@ -31,4 +32,10 @@ resource "aws_lambda_permission" "${handlerInfo.functionId}_invoke_permission" {
 </#if>
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.${handlerInfo.functionId}_schedule.arn
+
+  # switching SnapStart or the runtime moves the permission from the alias to the function (or
+  # back): the new one is created before the old one is removed, so no request is refused
+  lifecycle {
+    create_before_destroy = true
+  }
 }

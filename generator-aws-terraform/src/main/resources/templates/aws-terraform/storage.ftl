@@ -21,7 +21,8 @@ data "aws_s3_bucket" "${fid}_bucket" {
 </#if>
 
 resource "aws_lambda_permission" "${fid}_storage" {
-  statement_id   = "AllowS3Invoke"
+  # a prefix, so that a new permission can exist next to the one it replaces
+  statement_id_prefix = "AllowS3Invoke-"
   action         = "lambda:InvokeFunction"
   function_name  = aws_lambda_function.${fid}.function_name
 <#if snapStart>
@@ -30,6 +31,12 @@ resource "aws_lambda_permission" "${fid}_storage" {
   principal      = "s3.amazonaws.com"
   source_arn     = ${bucketArn}
   source_account = data.aws_caller_identity.current.account_id
+
+  # switching SnapStart or the runtime moves the permission from the alias to the function (or
+  # back): the new one is created before the old one is removed, so no request is refused
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Invokes the function for every object created in the bucket. S3 keeps one notification
