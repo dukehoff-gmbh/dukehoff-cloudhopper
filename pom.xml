@@ -93,7 +93,6 @@
         <module>provider-springboot</module>
         <module>test/tck/api</module>
         <module>test/system-tests/test-functions</module>
-        <module>demo</module>
         <module>test/system-tests/generator-aws-terraform</module>
         <module>test/system-tests/generator-azure-terraform</module>
         <module>test/system-tests/generator-gcp-terraform</module>
@@ -319,9 +318,8 @@
                             <!-- md5 and sha1 are what Central requires; sha256 and sha512 would add two files per
                                  artifact file, and Central limits the number of uploaded files per month -->
                             <checksums>required</checksums>
-                            <!-- tests, test fixtures and the demo; everything else is published -->
+                            <!-- tests and test fixtures; everything else is published -->
                             <excludeArtifacts>
-                                <excludeArtifact>demo</excludeArtifact>
                                 <excludeArtifact>test-functions</excludeArtifact>
                                 <excludeArtifact>test-domain</excludeArtifact>
                                 <excludeArtifact>test-support</excludeArtifact>

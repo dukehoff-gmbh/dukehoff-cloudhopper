@@ -14,7 +14,6 @@
         <generator.id>knative</generator.id>
         <output.dir>target/generated-sources/knative</output.dir>
         <jar.classifier>knative</jar.classifier>
-        <main.class>eu.cloudhopper.mc.demo.Application</main.class>
         <!-- jvm, or native with the profile native -->
         <cloudhopper.runtime>jvm</cloudhopper.runtime>
     </properties>

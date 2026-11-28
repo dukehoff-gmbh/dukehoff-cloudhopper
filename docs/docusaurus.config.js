@@ -27,7 +27,6 @@ const config = {
     projectName: 'dukehoff-cloudhopper', // Usually your repo name.
 
     onBrokenLinks: 'throw',
-    onBrokenMarkdownLinks: 'throw',
 
     // Even if you don't use internationalization, you can use this field to set
     // useful metadata like html lang. For example, if your site is Chinese, you
@@ -43,6 +42,9 @@ const config = {
     // Enable Mermaid support
     markdown: {
         mermaid: true,
+        hooks: {
+            onBrokenMarkdownLinks: 'throw',
+        },
     },
 
     // Pull in the Mermaid theme
