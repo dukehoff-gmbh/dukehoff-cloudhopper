@@ -91,6 +91,7 @@
         <module>provider-jdbc-keyvalue</module>
         <module>provider-http</module>
         <module>provider-springboot</module>
+        <module>cloudhopper-maven-plugin</module>
         <module>test/tck/api</module>
         <module>test/system-tests/test-functions</module>
         <module>demo</module>

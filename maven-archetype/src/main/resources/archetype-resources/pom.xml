@@ -515,74 +515,22 @@
             <id>aws-native</id>
             <properties>
                 <cloudhopper.runtime>native</cloudhopper.runtime>
-                <native.image>ghcr.io/graalvm/native-image-community:25.0.2</native.image>
             </properties>
             <build>
                 <plugins>
+                    <!-- cloudhopper:native-image (package) builds bootstrap with GraalVM in Docker and the zip;
+                         cloudhopper:native-smoke (verify, e.g. mvn verify -Paws-terraform,aws-native) runs it
+                         locally in the Lambda base image before a deployment -->
                     <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.5.1</version>
+                        <groupId>eu.cloudhopper.mc</groupId>
+                        <artifactId>cloudhopper-maven-plugin</artifactId>
+                        <version>\${cloudhopper.version}</version>
                         <executions>
                             <execution>
-                                <id>native-image</id>
-                                <!-- after the shade plugin has built the jar in package -->
-                                <phase>package</phase>
                                 <goals>
-                                    <goal>exec</goal>
+                                    <goal>native-image</goal>
+                                    <goal>native-smoke</goal>
                                 </goals>
-                                <configuration>
-                                    <executable>docker</executable>
-                                    <arguments>
-                                        <argument>run</argument>
-                                        <argument>--rm</argument>
-                                        <argument>--platform</argument>
-                                        <argument>linux/\${native.architecture}</argument>
-                                        <argument>-v</argument>
-                                        <argument>\${project.build.directory}:/work</argument>
-                                        <argument>\${native.image}</argument>
-                                        <argument>--no-fallback</argument>
-                                        <argument>-cp</argument>
-                                        <argument>/work/\${project.artifactId}-\${project.version}-aws-terraform.jar</argument>
-                                        <argument>-o</argument>
-                                        <argument>/work/bootstrap</argument>
-                                        <argument>eu.cloudhopper.mc.provider.aws.NativeRuntime</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>3.7.1</version>
-                        <executions>
-                            <execution>
-                                <id>native-zip</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <configuration>
-                                    <finalName>\${project.artifactId}-\${project.version}-aws-terraform</finalName>
-                                    <appendAssemblyId>true</appendAssemblyId>
-                                    <attach>false</attach>
-                                    <inlineDescriptors>
-                                        <inlineDescriptor>
-                                            <id>native</id>
-                                            <formats>
-                                                <format>zip</format>
-                                            </formats>
-                                            <includeBaseDirectory>false</includeBaseDirectory>
-                                            <files>
-                                                <file>
-                                                    <source>\${project.build.directory}/bootstrap</source>
-                                                    <fileMode>0755</fileMode>
-                                                </file>
-                                            </files>
-                                        </inlineDescriptor>
-                                    </inlineDescriptors>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
