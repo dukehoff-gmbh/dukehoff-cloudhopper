@@ -24,6 +24,30 @@ with the [AWS setup guide](../setup/aws-prerequisites.md).
 | `queue.ftl` | Terraform | SQS queue and event source mapping |
 | `storage.ftl` | Terraform | S3 bucket and event notification |
 
+## Logs
+
+What a function writes with `java.util.logging` or to standard output goes to the log group
+`/aws/lambda/<function name>`, which the generated Terraform creates with the retention
+`log_retention_days`. Cloudhopper's own runtime logs with `java.util.logging` and needs no
+logging library.
+
+Libraries that log through SLF4J, such as the AWS SDK for Java v2, need a binding; without one,
+every cold start prints `SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder"` and
+their messages are lost. Cloudhopper does not choose one for you. To send them to the same
+output as the function's, add the binding to `java.util.logging`:
+
+```xml
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-jdk14</artifactId>
+    <version>2.0.17</version>
+</dependency>
+```
+
+It brings `slf4j-api` 2, which also serves libraries built against SLF4J 1.7 (the SDK brings
+1.7.36), and works in a [native image](#native-image). To drop the libraries' messages instead,
+use `org.slf4j:slf4j-nop`; for structured JSON logs, a binding of your logging library.
+
 ## Running a scheduled function by hand
 
 A `@ScheduledTrigger` function can be invoked directly, e.g. after a deployment or to try a new
