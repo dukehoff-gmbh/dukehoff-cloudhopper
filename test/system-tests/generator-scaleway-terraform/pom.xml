@@ -14,7 +14,6 @@
         <generator.id>scaleway-terraform</generator.id>
         <output.dir>target/generated-sources/scaleway-terraform</output.dir>
         <jar.classifier>scaleway</jar.classifier>
-        <main.class>eu.cloudhopper.mc.demo.Application</main.class>
     </properties>
     <dependencyManagement>
         <dependencies>

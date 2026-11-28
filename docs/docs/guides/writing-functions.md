@@ -677,6 +677,5 @@ At build time the processor generates, per function:
 - metadata under `META-INF/`.
 
 You never edit these — rerun the build and they are regenerated. See the
-[Demo Project Guide](../modules/demo.md) for a full walk-through of the output, and
-the [Deployment Config API](../modules/deployment-config-api.md) for the annotation
+[Deployment Config API](../modules/deployment-config-api.md) for the annotation
 reference.
