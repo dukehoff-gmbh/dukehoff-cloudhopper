@@ -397,8 +397,9 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
 
     private void putOptions(Map<String, Object> dataModel) {
         Map<String, String> options = processingEnv.getOptions();
-        dataModel.put("runtime", options.getOrDefault("runtime", "jvm").trim());
-        dataModel.put("nativeArchitecture", options.getOrDefault("nativeArchitecture", "arm64").trim());
+        // an option given without a value (-Akey=) is present with the value null
+        dataModel.put("runtime", java.util.Objects.requireNonNullElse(options.get("runtime"), "jvm").trim());
+        dataModel.put("nativeArchitecture", java.util.Objects.requireNonNullElse(options.get("nativeArchitecture"), "arm64").trim());
         dataModel.put("artifactDir", artifactDir(options));
     }
 

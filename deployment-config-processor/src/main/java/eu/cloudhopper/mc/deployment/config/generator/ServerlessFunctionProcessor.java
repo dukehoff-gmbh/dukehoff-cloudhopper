@@ -466,10 +466,10 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
      * for another architecture cannot run it. SnapStart exists only for the Java runtime.
      */
     private boolean validateNativeImage(ExecutableElement method, Function fn) {
-        if (!"native".equals(processingEnv.getOptions().getOrDefault("runtime", "jvm").trim())) {
+        if (!"native".equals(java.util.Objects.requireNonNullElse(processingEnv.getOptions().get("runtime"), "jvm").trim())) {
             return true;
         }
-        String architecture = processingEnv.getOptions().getOrDefault("nativeArchitecture", "arm64").trim();
+        String architecture = java.util.Objects.requireNonNullElse(processingEnv.getOptions().get("nativeArchitecture"), "arm64").trim();
         boolean valid = true;
         for (eu.cloudhopper.mc.annotations.Extension extension : fn.extensions()) {
             if (eu.cloudhopper.mc.annotations.ExtensionKeys.Aws.Architecture.KEY.equals(extension.name())

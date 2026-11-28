@@ -84,7 +84,7 @@ final class NativeReflectionMetadata {
         if (!packagesDone) {
             // the first round only: later rounds contain the generated handlers
             packagesDone = true;
-            List<String> packages = Arrays.stream(env.getOptions().getOrDefault(OPTION, "").split(","))
+            List<String> packages = Arrays.stream(java.util.Objects.requireNonNullElse(env.getOptions().get(OPTION), "").split(","))
                     .map(String::trim).filter(p -> !p.isEmpty()).toList();
             if (!packages.isEmpty()) {
                 Deque<Element> pending = new ArrayDeque<>(round.getRootElements());

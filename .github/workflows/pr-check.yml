@@ -7,6 +7,10 @@ on:
   # runs everything, e.g. before a release
   workflow_dispatch:
 
+# read access to the code only; the AWS TCKs add id-token: write for their OIDC login
+permissions:
+  contents: read
+
 env:
   # one Terraform version for every job and TCK image (build arg TERRAFORM_VERSION)
   TERRAFORM_VERSION: 1.17.2
