@@ -10,6 +10,22 @@ announced on [GitHub](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/rele
 together with the full list of changes. What is being worked on is tracked in the
 [issues](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues).
 
+## 1.11
+
+- AWS: the new `cloudhopper-maven-plugin` builds the native image
+  (`cloudhopper:native-image`) and runs it locally before a deployment
+  (`cloudhopper:native-smoke`): every function's handler starts in the Lambda
+  base image and runs its request path, so missing reflection metadata fails
+  the build instead of the deployed function; events of your own run the
+  functions themselves. The archetype's `aws-native` profile uses both goals;
+  see [Native image](platforms/aws.md#native-image)
+- AWS: a value `ssm:<parameter name>` in `cloudhopper_config` is read from SSM
+  Parameter Store when Terraform plans, e.g. the issuer and client ID of a
+  Cognito user pool; see
+  [Configuration from SSM Parameter Store](platforms/aws.md#configuration-from-ssm-parameter-store)
+- Docs: logs on AWS, and an SLF4J binding for libraries such as the AWS SDK;
+  see [Logs](platforms/aws.md#logs)
+
 ## 1.10
 
 - Identities on Azure, Knative and Scaleway: every `@Function(identity)` gets a
