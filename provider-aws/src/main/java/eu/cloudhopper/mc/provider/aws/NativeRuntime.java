@@ -127,7 +127,8 @@ public final class NativeRuntime {
         try {
             result = MAPPER.writeValueAsBytes(handler.handleRequest(MAPPER.readValue(event, Object.class), context));
         } catch (Exception | LinkageError e) {
-            System.err.println("Invocation " + requestId + " failed: " + stackTrace(e));
+            String hint = eu.cloudhopper.mc.runtime.HttpReply.nativeImageHint(e);
+            System.err.println((hint != null ? hint + "\n" : "") + "Invocation " + requestId + " failed: " + stackTrace(e));
             post("invocation/" + requestId + "/error", error(e), "Runtime.UnhandledException");
             return;
         }

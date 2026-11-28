@@ -65,6 +65,8 @@ public abstract class ApiGatewayV2ProxyRequestHandler<I, O> implements RequestHa
                 body = new String(java.util.Base64.getDecoder().decode(body), StandardCharsets.UTF_8);
             }
             input = (body != null && !body.isBlank()) ? mapper.readValue(body, inputClass) : null;
+        } catch (LinkageError e) {
+            return toResponse(failure(e, context));
         } catch (Exception e) {
             return toResponse(HttpReply.invalidBody());
         }
@@ -78,13 +80,21 @@ public abstract class ApiGatewayV2ProxyRequestHandler<I, O> implements RequestHa
             O output = handler.handleRequest(input, pathParams, queryParams, Headers.of(event.getHeaders()),
                     new AwsContextAdapter(context));
             reply = HttpReply.of(output, this::json);
-        } catch (Exception e) {
-            reply = HttpReply.of(e);
-            if (reply.isUnexpected()) {
-                context.getLogger().log("Handler error: " + ApiGatewayV2HttpEventHandler.stackTrace(e));
-            }
+        } catch (Exception | LinkageError e) {
+            // a LinkageError: e.g. missing reachability metadata in a native image
+            reply = failure(e, context);
         }
         return toResponse(reply);
+    }
+
+    private static HttpReply failure(Throwable e, Context context) {
+        HttpReply reply = HttpReply.of(e);
+        if (reply.isUnexpected()) {
+            String hint = HttpReply.nativeImageHint(e);
+            context.getLogger().log((hint != null ? hint + "\n" : "") + "Handler error: "
+                    + ApiGatewayV2HttpEventHandler.stackTrace(e));
+        }
+        return reply;
     }
 
     private String json(Object value) {

@@ -68,6 +68,8 @@ public abstract class ApiGatewayV2HttpEventHandler<I, O> implements RequestHandl
                 body = new String(Base64.getDecoder().decode(body), StandardCharsets.UTF_8);
             }
             input = (body != null && !body.isBlank()) ? objectMapper.readValue(body, inputClass) : null;
+        } catch (LinkageError e) {
+            return toResponse(failure(e, awsContext));
         } catch (Exception e) {
             return toResponse(HttpReply.invalidBody());
         }
@@ -81,11 +83,9 @@ public abstract class ApiGatewayV2HttpEventHandler<I, O> implements RequestHandl
             O output = handler.handleRequest(input, pathParams, queryParams, Headers.of(event.getHeaders()),
                     new AwsContextAdapter(awsContext));
             reply = HttpReply.of(output, this::json);
-        } catch (Exception e) {
-            reply = HttpReply.of(e);
-            if (reply.isUnexpected()) {
-                awsContext.getLogger().log("Handler error: " + stackTrace(e));
-            }
+        } catch (Exception | LinkageError e) {
+            // a LinkageError: e.g. missing reachability metadata in a native image
+            reply = failure(e, awsContext);
         }
         return toResponse(reply);
     }
@@ -105,6 +105,16 @@ public abstract class ApiGatewayV2HttpEventHandler<I, O> implements RequestHandl
         toResponse(HttpReply.of(body != null ? body : Map.of("primed", true), this::json));
         toResponse(HttpReply.of(new IllegalStateException("priming")));
         toResponse(HttpReply.invalidBody());
+    }
+
+    private static HttpReply failure(Throwable e, Context context) {
+        HttpReply reply = HttpReply.of(e);
+        if (reply.isUnexpected()) {
+            String hint = HttpReply.nativeImageHint(e);
+            context.getLogger().log((hint != null ? hint + "\n" : "") + "Handler error: "
+                    + ApiGatewayV2HttpEventHandler.stackTrace(e));
+        }
+        return reply;
     }
 
     private String json(Object value) {
