@@ -86,7 +86,9 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
         @GeneratorFeature(
             supportedAnnotation = Function.class,
             supportedAttributes = {
-                FunctionAttribute.NAME
+                FunctionAttribute.NAME,
+                // one deployment unit per identity; the functions without one share the default unit
+                FunctionAttribute.IDENTITY
             }
         ),
         @GeneratorFeature(
@@ -140,7 +142,7 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
             outputFileName = "values.yaml"
         ),
         @Template(
-            phase = GenerationPhase.SHARED,
+            phase = GenerationPhase.FINALIZE,
             templateName = "service.ftl",
             description = "Generates the Knative Service that runs the application",
             outputFileExtension = "yaml",

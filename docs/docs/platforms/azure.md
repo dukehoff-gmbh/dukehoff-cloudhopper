@@ -94,8 +94,7 @@ cloudhopper_secrets = {
   managed identity, without the Azure SDK, and keeps it for the life of the
   instance. A new role assignment can take a few minutes to take effect; until
   then, the read is retried for about a minute.
-- All functions run in one function app, so they share one identity and can read
-  all secrets of the app.
+- Every function app (one per [identity](#identities)) gets read access to the secrets.
 - Deploying needs permission to create role assignments, e.g. the role *Role
   Based Access Control Administrator* (or *User Access Administrator*) in addition
   to *Contributor*.
@@ -106,6 +105,17 @@ The functions read the secret themselves instead of through Key Vault references
 the app settings: the platform resolves those when the app starts, and a role
 assignment that has not taken effect yet leaves the reference text as the value
 until the next refresh.
+
+## Identities
+
+Every identity (`@Function(identity = "...")`) gets a function app of its own,
+`my-shared-function-app-<identity>`, with a system-assigned managed identity; the functions
+without an identity run in `my-shared-function-app`. All apps run the same package, and each
+runs only the functions of its identity (the host's `functions` list,
+`AzureFunctionsJobHost__functions__<n>`), so a function is not reachable through another
+app. The outputs `function_app_principal_ids` (the object ID of each app's managed identity,
+by identity; `""` for the default app) and `function_app_hostnames` let your own Terraform
+grant an identity further access. The apps share the storage account and the plan.
 
 ## Runtime modules
 

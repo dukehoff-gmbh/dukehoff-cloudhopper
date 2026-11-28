@@ -88,7 +88,9 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
         @GeneratorFeature(
             supportedAnnotation = Function.class,
             supportedAttributes = {
-                FunctionAttribute.NAME
+                FunctionAttribute.NAME,
+                // one deployment unit per identity; the functions without one share the default unit
+                FunctionAttribute.IDENTITY
             }
         ),
         @GeneratorFeature(
@@ -155,6 +157,14 @@ import eu.cloudhopper.mc.generator.generic.annotations.TemplateRegistration;
             description = "Generates a queue, its dead-letter queue and a queue trigger that delivers to POST /events/<function>",
             outputFileExtension = "tf",
             outputSubDirectory = ""
+        ),
+        @Template(
+            phase = GenerationPhase.FINALIZE,
+            templateName = "units.ftl",
+            description = "Lists the deployment units: one container per identity",
+            outputFileExtension = "tf",
+            outputSubDirectory = "",
+            outputFileName = "units.tf"
         ),
         @Template(
             phase = GenerationPhase.FINALIZE,

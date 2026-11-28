@@ -128,6 +128,18 @@ service with the next revision. Do not set the same property in `env` as well.
 functions run in one container, so these are set for the whole service in
 `values.yaml` (`resources`, `timeoutSeconds`, `scaling`).
 
+## Identities
+
+Every identity (`@Function(identity = "...")`) gets a Knative service of its own,
+`<release>-<identity>`, running with a Kubernetes service account of the same name; the
+functions without an identity run in the service named like the release. All services run
+the same image, and each answers only the endpoints of the functions of its identity
+(`CLOUDHOPPER_IDENTITY`), so a function is not reachable through a service with other
+permissions. The PingSources and KafkaSources deliver to the service of the function's
+identity. Grant an identity access to cloud resources through its service account, e.g. with
+the workload identity of your cluster; buckets, tables and secrets configured in the chart's
+values are passed to all services.
+
 ## Native image
 
 The service can run the application as a GraalVM native image, which starts in well under a

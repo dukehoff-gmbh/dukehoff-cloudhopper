@@ -90,7 +90,8 @@ public class KafkaEventListeners implements SmartLifecycle {
      */
     public KafkaEventListeners(List<EventEndpoint> endpoints, ConsumerFactory<?, ?> consumerFactory,
             KafkaOperations<?, ?> kafkaOperations, String groupIdPrefix, int maxAttempts, Duration backoff) {
-        this.endpoints = endpoints;
+        // only the functions of this instance: another unit consumes the others' queues
+        this.endpoints = endpoints.stream().filter(e -> eu.cloudhopper.mc.provider.springboot.Identities.serves(e.identity())).toList();
         this.consumerFactory = stringConsumerFactory(consumerFactory);
         this.kafkaOperations = kafkaOperations;
         this.groupIdPrefix = groupIdPrefix;

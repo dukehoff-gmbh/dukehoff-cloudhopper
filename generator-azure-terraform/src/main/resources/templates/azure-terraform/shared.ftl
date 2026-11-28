@@ -110,72 +110,7 @@ data "azurerm_storage_account_blob_container_sas" "function_zip_sas" {
   }
 }
 
-resource "azurerm_linux_function_app" "shared_function_app" {
-  name                = "my-shared-function-app"
-  resource_group_name = azurerm_resource_group.function_rg.name
-  location            = azurerm_resource_group.function_rg.location
-  
-  service_plan_id            = azurerm_service_plan.function_plan.id
-  storage_account_name       = azurerm_storage_account.function_storage.name
-  storage_account_access_key = azurerm_storage_account.function_storage.primary_access_key
-
-  site_config {
-    application_stack {
-      java_version = "21" 
-    }
-  }
-
-  # the identity the functions read their secrets with
-  identity {
-    type = "SystemAssigned"
-  }
-
-  # all functions share the app, so it gets all configuration properties
-  app_settings = merge({
-    FUNCTIONS_WORKER_RUNTIME    = "java"
-    AzureWebJobsDisableHomepage = "true"
-    WEBSITE_RUN_FROM_PACKAGE    = "${"$"}{azurerm_storage_blob.function_code.url}?${"$"}{trim(data.azurerm_storage_account_blob_container_sas.function_zip_sas.sas, "?")}"
-    
-    # Enable Application Logging (Filesystem)
-    "AzureWebJobsDashboard"           = "true" # Not strictly required anymore, but harmless
-    "WEBSITE_ENABLE_APP_SERVICE_STORAGE" = "true"
-
-    # Set the logging level
-    "FUNCTIONS_EXTENSION_VERSION"    = "~4"    # You're already using this
-    "FUNCTIONS_LOGGING_CONSOLE_LEVEL" = "Information"  # or "Verbose" for even more
-
-    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.function_app_insights.connection_string
-    APPLICATIONINSIGHTS_ROLE_NAME         = "my-shared-function-app"
-  }, { for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value },
-  length(local.cloudhopper_secrets) == 0 ? {} : {
-    # the URIs of the secrets, read by the runtime from Key Vault
-    CLOUDHOPPER_SECRETS = jsonencode({ for name, id in local.cloudhopper_secrets :
-      name => "https://${"$"}{split("/", id)[8]}.vault.azure.net/secrets/${"$"}{split("/", id)[10]}" })
-  })
-
-  lifecycle {
-    precondition {
-      condition     = length(local.cloudhopper_duplicate_properties) == 0
-      error_message = "Properties are set more than once in cloudhopper_config, cloudhopper_secrets, cloudhopper_extra_config and cloudhopper_extra_secrets: ${"$"}{join(", ", local.cloudhopper_duplicate_properties)}"
-    }
-  }
-
-  depends_on = [azurerm_storage_blob.function_code]
-}
-
-# Read access of the function app to each secret it reads
-resource "azurerm_role_assignment" "cloudhopper_secret" {
-  for_each             = local.cloudhopper_secrets
-  scope                = each.value
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = azurerm_linux_function_app.shared_function_app.identity[0].principal_id
-}
-
-output "function_app_principal_id" {
-  description = "Object ID of the function app's managed identity, e.g. to grant it further access"
-  value       = azurerm_linux_function_app.shared_function_app.identity[0].principal_id
-}
-
+# The function apps, one per identity (@Function(identity)), are in api_apps.tf.
 
 resource "azurerm_application_insights" "function_app_insights" {
   name                = "${"$"}{var.project_name}-${"$"}{var.environment}-ai"
