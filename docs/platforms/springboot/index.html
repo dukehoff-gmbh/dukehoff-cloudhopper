@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Spring Boot | Dukehoff Cloudhopper</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://cloudhopper.eu/img/social-card.png"><meta data-rh="true" name="twitter:image" content="https://cloudhopper.eu/img/social-card.png"><meta data-rh="true" property="og:url" content="https://cloudhopper.eu/docs/platforms/springboot"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="keywords" content="Java, serverless, multi-cloud, AWS Lambda, Azure Functions, Google Cloud Functions, Terraform, OpenAPI, annotation processor"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Spring Boot | Dukehoff Cloudhopper"><meta data-rh="true" name="description" content="The profile springboot-http turns the functions into one Spring Boot application"><meta data-rh="true" property="og:description" content="The profile springboot-http turns the functions into one Spring Boot application"><link data-rh="true" rel="icon" href="/brand/favicon.svg"><link data-rh="true" rel="canonical" href="https://cloudhopper.eu/docs/platforms/springboot"><link data-rh="true" rel="alternate" href="https://cloudhopper.eu/docs/platforms/springboot" hreflang="en"><link data-rh="true" rel="alternate" href="https://cloudhopper.eu/docs/platforms/springboot" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Spring Boot","item":"https://cloudhopper.eu/docs/platforms/springboot"}]}</script><link rel="stylesheet" href="/assets/css/styles.c0ca609f.css">
-<script src="/assets/js/runtime~main.03135998.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.2fbe6c9c.js" defer="defer"></script>
 <script src="/assets/js/main.a6692f82.js" defer="defer"></script>
 </head>
 <body>
@@ -105,20 +105,42 @@ about a fifth of the memory. This matters most where instances scale to zero, as
 image from the generated Dockerfile:</p>
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">mvn package -Pspringboot-http,springboot-native</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token function" style="color:#d73a49">docker</span><span class="token plain"> build </span><span class="token parameter variable" style="color:#36acaa">-t</span><span class="token plain"> my-app </span><span class="token parameter variable" style="color:#36acaa">-f</span><span class="token plain"> target/deployment/springboot-http/shared-resources_dockerfile</span><span class="token punctuation" style="color:#393A34">..</span><span class="token plain">dockerfile </span><span class="token builtin class-name">.</span><br></div></code></pre></div></div>
 <ul>
-<li class="">The profile runs Spring AOT (<code>process-aot</code>); the generated Dockerfile then compiles the native
+<li class="">
+<p>The profile runs Spring AOT (<code>process-aot</code>); the generated Dockerfile then compiles the native
 image with GraalVM (<code>ghcr.io/graalvm/native-image-community:25.0.2</code>) in its first stage and
 copies the executable into a small Debian image. The compilation takes a few minutes and
 several GB of memory. Where Docker has little memory, limit the compiler with
-<code>--build-arg NATIVE_IMAGE_OPTIONS=-J-Xmx3g</code> (slower).</li>
-<li class="">The image is built for the platform of the build; <code>docker build --platform</code> selects another
-one, which runs emulated and is much slower.</li>
-<li class="">Jackson binds the functions&#x27; body, result and queue message types reflectively, and Spring AOT
+<code>--build-arg NATIVE_IMAGE_OPTIONS=-J-Xmx3g</code> (slower).</p>
+</li>
+<li class="">
+<p>The image is built for the platform of the build; <code>docker build --platform</code> selects another
+one, which runs emulated and is much slower.</p>
+</li>
+<li class="">
+<p>Jackson binds the functions&#x27; body, result and queue message types reflectively, and Spring AOT
 does not see them behind the generated controllers. The annotation processor generates the
 reflection configuration for these types and the types they contain
-(<code>META-INF/native-image/cloudhopper/&lt;function&gt;/reachability-metadata.json</code>). Code of your own
-that uses reflection, proxies or resources needs
+(<code>META-INF/native-image/cloudhopper/&lt;function&gt;/reachability-metadata.json</code>), with their
+array types.</p>
+</li>
+<li class="">
+<p>Types the application reads or writes as JSON itself, e.g. records it stores in a table or
+returns inside a <code>Map</code>, are marked with <code>@Reflective</code>; the types they contain come along:</p>
+<div class="language-java codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-java codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token annotation punctuation" style="color:#393A34">@Reflective</span><span class="token plain"></span><br></div><div class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token keyword" style="color:#00009f">public</span><span class="token plain"> </span><span class="token keyword" style="color:#00009f">record</span><span class="token plain"> </span><span class="token class-name">Measurement</span><span class="token punctuation" style="color:#393A34">(</span><span class="token class-name">String</span><span class="token plain"> detected</span><span class="token punctuation" style="color:#393A34">,</span><span class="token plain"> </span><span class="token class-name">List</span><span class="token generics punctuation" style="color:#393A34">&lt;</span><span class="token generics class-name">Day</span><span class="token generics punctuation" style="color:#393A34">&gt;</span><span class="token plain"> days</span><span class="token punctuation" style="color:#393A34">)</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">{</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">}</span><br></div></code></pre></div></div>
+<p><code>@Reflective(types = {...})</code> registers types of a library the same way. Each type gets a file
+of its own (<code>META-INF/native-image/cloudhopper/types/&lt;type&gt;/</code>). As an escape hatch,
+<code>-AnativeReflectionPackages=&lt;package&gt;</code> (archetype property <code>native.reflection.packages</code>)
+registers the classes of a package themselves, without the types they refer to.</p>
+</li>
+<li class="">
+<p>Missing metadata fails with an <code>Error</code> (<code>MissingReflectionRegistrationError</code>), not an
+exception: the function answers 500, and the log names the type.</p>
+</li>
+<li class="">
+<p>Code of your own that uses reflection, proxies or resources needs
 <a href="https://www.graalvm.org/latest/reference-manual/native-image/metadata/" target="_blank" rel="noopener noreferrer" class="">reachability metadata</a>
-or Spring&#x27;s <code>RuntimeHints</code>.</li>
+or Spring&#x27;s <code>RuntimeHints</code>.</p>
+</li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="runtime-modules">Runtime modules<a href="#runtime-modules" class="hash-link" aria-label="Direct link to Runtime modules" title="Direct link to Runtime modules" translate="no">​</a></h2>
 <p>The archetype adds these dependencies to the profile; add them yourself in a project of your own:</p>
