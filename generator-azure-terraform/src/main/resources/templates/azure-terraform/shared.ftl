@@ -99,8 +99,7 @@ resource "azurerm_storage_container" "function_container" {
 # Shared JAR file for all functions
 resource "azurerm_storage_blob" "function_code" {
   name                   = "${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.zip"
-  storage_account_name   = azurerm_storage_account.function_storage.name
-  storage_container_name = azurerm_storage_container.function_container.name
+  storage_container_id   = azurerm_storage_container.function_container.id
   type                   = "Block"
   source                 = "${"$"}{local.cloudhopper_artifact_dir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.zip"
   depends_on             = [azurerm_storage_container.function_container]
