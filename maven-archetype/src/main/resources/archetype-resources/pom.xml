@@ -18,8 +18,9 @@
         <cloudhopper.runtime>jvm</cloudhopper.runtime>
         <!-- the architecture of a native image: arm64 or x86_64 -->
         <native.architecture>arm64</native.architecture>
-        <!-- packages whose classes a native image registers for reflection (Jackson): the project's own -->
-        <native.reflection.packages>${package}</native.reflection.packages>
+        <!-- packages whose classes (only these, without the types they refer to) a native image
+             registers for reflection; prefer @Reflective on the types the application writes as JSON -->
+        <native.reflection.packages></native.reflection.packages>
 #if($includeTerraformProfile == 'true')
         <!-- add the path to your terraform executable here -->
         <terraform.executable>terraform</terraform.executable>

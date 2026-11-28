@@ -122,8 +122,8 @@ public final class HttpReply {
         for (Throwable e = error; e != null; e = e.getCause()) {
             if (isNativeImageError(e.getClass().getName())) {
                 return "Native image: " + e.getClass().getSimpleName() + ": " + e.getMessage()
-                        + " Register the type in META-INF/native-image/<groupId>/<artifactId>/reachability-metadata.json,"
-                        + " or let Cloudhopper generate it for your packages with -AnativeReflectionPackages=<package>.";
+                        + " Mark the type with @Reflective (eu.cloudhopper.mc.annotations), or register it in"
+                        + " META-INF/native-image/<groupId>/<artifactId>/reachability-metadata.json.";
             }
         }
         return null;

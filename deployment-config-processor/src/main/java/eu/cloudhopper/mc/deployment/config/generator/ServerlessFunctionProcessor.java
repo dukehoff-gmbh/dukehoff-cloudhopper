@@ -70,7 +70,7 @@ import javax.tools.Diagnostic;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("eu.cloudhopper.mc.annotations.Function")
+@SupportedAnnotationTypes({"eu.cloudhopper.mc.annotations.Function", "eu.cloudhopper.mc.annotations.Reflective"})
 @SupportedOptions({"generatorId", "configOutputDir", "artifactId", "classifier", "version", "targetDir",
         AnnotationFeatureValidator.STRICT_OPTION, "runtime", "nativeArchitecture",
         "nativeReflectionPackages"})
@@ -140,43 +140,18 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                 .asType();
     }
 
-    /** The types of the packages of -AnativeReflectionPackages, found in the first round. */
-    private List<javax.lang.model.type.TypeMirror> packageTypes;
-
-    /**
-     * The classes of the packages named in {@code -AnativeReflectionPackages} (comma separated;
-     * a package includes its subpackages), with their nested classes: for a native image, these
-     * are registered for reflection like the functions' own body and result types.
-     */
-    private List<javax.lang.model.type.TypeMirror> packageTypes(RoundEnvironment round) {
-        if (packageTypes == null) {
-            List<String> packages = java.util.Arrays.stream(processingEnv.getOptions()
-                            .getOrDefault("nativeReflectionPackages", "").split(","))
-                    .map(String::trim).filter(p -> !p.isEmpty()).toList();
-            packageTypes = new ArrayList<>();
-            if (!packages.isEmpty()) {
-                java.util.Deque<Element> pending = new java.util.ArrayDeque<>(round.getRootElements());
-                while (!pending.isEmpty()) {
-                    Element element = pending.pop();
-                    if (!(element instanceof TypeElement type)) {
-                        continue;
-                    }
-                    String pkg = elementUtils.getPackageOf(type).getQualifiedName().toString();
-                    if (packages.stream().anyMatch(p -> pkg.equals(p) || pkg.startsWith(p + "."))) {
-                        packageTypes.add(type.asType());
-                    }
-                    type.getEnclosedElements().stream().filter(e -> e instanceof TypeElement).forEach(pending::push);
-                }
-            }
-        }
-        return packageTypes;
-    }
+    /** The metadata of @Reflective types and of -AnativeReflectionPackages. */
+    private NativeReflectionMetadata nativeReflection;
 
     @Override
     public boolean process(Set<? extends TypeElement> annoTypes, RoundEnvironment round) {
         if (deploymentGenerator == null) {
             return true;
         }
+        if (nativeReflection == null) {
+            nativeReflection = new NativeReflectionMetadata(processingEnv);
+        }
+        nativeReflection.process(round);
         for (Element e : round.getElementsAnnotatedWith(Function.class)) {
 
             ExecutableElement m = (ExecutableElement) e;
@@ -318,8 +293,6 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
             hinfo.setTables(tables);
             BindingTypes bindingTypes = new BindingTypes(elementUtils).add(m.getReturnType());
             m.getParameters().forEach(p -> bindingTypes.add(p.asType()));
-            // the application's own types of -AnativeReflectionPackages, e.g. records it writes as JSON itself
-            packageTypes(round).forEach(bindingTypes::add);
             hinfo.setBindingTypes(bindingTypes.names());
             tables.forEach(t -> tableUses.add(new TableUse(m, t)));
             List<eu.cloudhopper.mc.generator.api.ConfigPropertyInfo> configProperties = new ArrayList<>(params.stream()

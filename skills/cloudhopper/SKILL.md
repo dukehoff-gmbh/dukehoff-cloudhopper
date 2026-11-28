@@ -190,8 +190,9 @@ mvn clean package -Paws-terraform
 cd target/deployment/aws-terraform && terraform init && terraform apply
 ```
 
-With `aws-native` or `springboot-native`, own code that uses reflection, proxies or resources needs GraalVM
-reachability metadata; the functions' body, result and message types are registered automatically.
+With `aws-native` or `springboot-native`, the functions' body, result and message types are registered
+for reflection automatically; mark other types the code reads or writes as JSON with `@Reflective`.
+Other reflection, proxies or resources need GraalVM reachability metadata.
 
 Only the profiles the project was created with exist in `pom.xml`. Which annotations and
 attributes each target supports: https://cloudhopper.eu/docs/platforms/generator-overview#support-matrix

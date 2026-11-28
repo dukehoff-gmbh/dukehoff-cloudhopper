@@ -327,6 +327,47 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void reflectiveTypesGetMetadataOfTheirOwnWithTheTypesTheyContain() {
+        String model = ""
+                + "package com.example.model;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "@Reflective(types = java.util.Locale.class)\n"
+                + "public record Measurement(String detected, java.util.List<Day> days) {\n"
+                + "  public record Day(String date, double cost) { }\n"
+                + "}\n";
+        String service = ""
+                + "package com.example.model;\n"
+                + "public class Store { private java.net.http.HttpClient client; public java.net.http.HttpClient getClient() { return client; } }\n";
+        String function = ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "public class Hello {\n"
+                + "  @Function(name=\"hello\")\n"
+                + "  public String hello() { return null; }\n"
+                + "}\n";
+        Compilation compilation = javac().withProcessors(new ServerlessFunctionProcessor())
+                .withOptions("-AnativeReflectionPackages=com.example.model")
+                .compile(JavaFileObjects.forSourceString("com.example.model.Measurement", model),
+                        JavaFileObjects.forSourceString("com.example.model.Store", service),
+                        JavaFileObjects.forSourceString("com.example.Hello", function));
+        assertThat(compilation).succeeded();
+        String measurement = "META-INF/native-image/cloudhopper/types/com.example.model.Measurement/reachability-metadata.json";
+        assertThat(compilation).generatedFile(javax.tools.StandardLocation.CLASS_OUTPUT, measurement).contentsAsUtf8String()
+                .contains("\"type\": \"com.example.model.Measurement$Day\"");
+        assertThat(compilation).generatedFile(javax.tools.StandardLocation.CLASS_OUTPUT, measurement).contentsAsUtf8String()
+                .contains("\"type\": \"com.example.model.Measurement[]\"");
+        // a type given in types: a JDK type is not walked, but registered as named
+        assertThat(compilation).generatedFile(javax.tools.StandardLocation.CLASS_OUTPUT,
+                "META-INF/native-image/cloudhopper/types/java.util.Locale/reachability-metadata.json");
+        // the package option registers the class itself, not the types it refers to
+        String store = "META-INF/native-image/cloudhopper/types/com.example.model.Store/reachability-metadata.json";
+        assertThat(compilation).generatedFile(javax.tools.StandardLocation.CLASS_OUTPUT, store).contentsAsUtf8String()
+                .contains("\"type\": \"com.example.model.Store\"");
+        assertThat(compilation).generatedFile(javax.tools.StandardLocation.CLASS_OUTPUT, store).contentsAsUtf8String()
+                .doesNotContain("HttpClient");
+    }
+
+    @Test
     public void onPrimeMethodsAreCalledByTheGeneratedHandler() {
         String source = ""
                 + "package com.example;\n"
