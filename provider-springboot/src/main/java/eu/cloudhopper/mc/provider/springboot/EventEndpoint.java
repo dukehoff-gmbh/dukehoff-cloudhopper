@@ -55,6 +55,15 @@ public interface EventEndpoint {
     String name();
 
     /**
+     * @return the unit of the function, its {@code @Function(identity)} or empty: a broker
+     *         binding delivers only to the functions {@link Identities#serves(String) this
+     *         instance serves}
+     */
+    default String identity() {
+        return "";
+    }
+
+    /**
      * Invokes the function for one event. Delivery is at least once: when this method throws,
      * the caller delivers the event again.
      *

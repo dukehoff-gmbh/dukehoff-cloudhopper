@@ -87,7 +87,8 @@ public class TestContextKnative implements TestContext {
     private final String s3 = env("CLOUDHOPPER_TCK_S3", "http://s3.blobstore.svc:8333");
     private final String jdbcUrl = env("CLOUDHOPPER_TCK_JDBC_URL", "jdbc:postgresql://postgres.keyvalue.svc:5432/cloudhopper");
 
-    private String baseUrl;
+    /** The URL of each deployment unit's service: "" for the default unit, else the identity. */
+    private final java.util.Map<String, String> unitUrls = new java.util.HashMap<>();
 
     /** The Kubernetes secret with the TCK secret, in the release's namespace. */
     private static final String SECRET_NAME = "cloudhopper-tck-secret";
@@ -169,10 +170,14 @@ public class TestContextKnative implements TestContext {
                     "ksvc,pingsource,kafkasource,kafkasink",
                     "--selector", "app.kubernetes.io/instance=" + RELEASE,
                     "--for=condition=Ready", "--timeout=300s");
-            String url = run(moduleDir, "kubectl", "get", "ksvc", RELEASE, "--namespace", namespace,
-                    "--output", "jsonpath={.status.url}").trim();
-            baseUrl = url + ":" + ingressPort;
-            System.out.println("✅ Service is up at " + baseUrl);
+            // one Knative service per identity (@Function(identity)); the default unit is named like the release
+            for (String unit : new java.util.TreeSet<>(units().stringPropertyNames().stream()
+                    .map(id -> units().getProperty(id)).toList())) {
+                String url = run(moduleDir, "kubectl", "get", "ksvc", serviceName(unit), "--namespace", namespace,
+                        "--output", "jsonpath={.status.url}").trim();
+                unitUrls.put(unit, url + ":" + ingressPort);
+                System.out.println("✅ Service " + serviceName(unit) + " is up at " + url + ":" + ingressPort);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to deploy the Knative service", e);
         }
@@ -188,7 +193,7 @@ public class TestContextKnative implements TestContext {
         } catch (IOException e) {
             throw new RuntimeException("Failed to uninstall the release " + RELEASE, e);
         }
-        baseUrl = null;
+        unitUrls.clear();
     }
 
     @Override
@@ -197,7 +202,7 @@ public class TestContextKnative implements TestContext {
         for (String key : handlers.stringPropertyNames()) {
             if (key.endsWith("_functionId") && handlers.getProperty(key).equalsIgnoreCase(functionName)) {
                 String base = key.substring(0, key.length() - "_functionId".length());
-                return baseUrl() + handlers.getProperty(base + "_path");
+                return baseUrl(functionName) + handlers.getProperty(base + "_path");
             }
         }
         throw new IllegalArgumentException("No HTTP route generated for function " + functionName);
@@ -206,7 +211,7 @@ public class TestContextKnative implements TestContext {
     @Override
     public Object invokeFunctionDirect(String functionName, Object input) {
         try {
-            URI uri = URI.create(baseUrl() + "/functions/" + functionName.toLowerCase());
+            URI uri = URI.create(baseUrl(functionName) + "/functions/" + functionName.toLowerCase());
             HttpRequest request = input == null
                     ? HttpRequest.newBuilder(uri).GET().build()
                     : HttpRequest.newBuilder(uri)
@@ -230,9 +235,9 @@ public class TestContextKnative implements TestContext {
     @Override
     public List<String> fetchLogs(String functionName) {
         try {
-            // one service hosts all functions, so the log is shared; the tests look for their own lines
+            // the services of all identities; the tests look for their own lines
             String logs = run(moduleDir, "kubectl", "logs", "--namespace", namespace,
-                    "--selector", "serving.knative.dev/service=" + RELEASE,
+                    "--selector", "app.kubernetes.io/instance=" + RELEASE,
                     "--container", "user-container", "--tail=-1", "--max-log-requests=10");
             return Arrays.asList(logs.split("\\R"));
         } catch (IOException e) {
@@ -303,7 +308,7 @@ public class TestContextKnative implements TestContext {
 
     private void postEvent(String path, String body) {
         try {
-            HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl() + path))
+            HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl(path.substring(path.lastIndexOf('/') + 1)) + path))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
@@ -330,11 +335,32 @@ public class TestContextKnative implements TestContext {
         }
     }
 
-    private String baseUrl() {
-        if (baseUrl == null) {
-            throw new IllegalStateException("The service is not deployed");
+    /** The deployment unit of each function (generated META-INF/function-units.properties). */
+    private Properties units() {
+        return load(deploymentDir.resolve("META-INF").resolve("function-units.properties"));
+    }
+
+    private static String serviceName(String unit) {
+        return unit.isEmpty() ? RELEASE : RELEASE + "-" + unit;
+    }
+
+    /** The URL of the service that runs the function: the one of its identity. */
+    private String baseUrl(String functionName) {
+        String url = unitUrls.get(units().getProperty(functionName.toLowerCase(), ""));
+        if (url == null) {
+            throw new IllegalStateException("The service of function " + functionName + " is not deployed");
         }
-        return baseUrl;
+        return url;
+    }
+
+    @Override
+    public String getDeployedIdentity(String functionName) {
+        try {
+            return run(moduleDir, "kubectl", "get", "ksvc", serviceName(units().getProperty(functionName.toLowerCase(), "")),
+                    "--namespace", namespace, "--output", "jsonpath={.spec.template.spec.serviceAccountName}").trim();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read the service account of " + functionName, e);
+        }
     }
 
     /** Runs a command and returns its standard output; fails with its output if it exits with an error. */

@@ -627,9 +627,13 @@ The name of an identity does not depend on the function names. Renaming a functi
 keeps its identity, so policies elsewhere that refer to it, for example a role in
 another account that trusts it, keep working.
 
-Targets that deploy all functions of a project as one unit run them as one identity
-and ignore `identity`; the build warns about it
-([#82](https://github.com/dukehoff-gmbh/dukehoff-cloudhopper/issues/82)).
+Targets that run the functions of a project in a shared application deploy one unit per
+identity: a function app on [Azure](../platforms/azure.md#identities), a Knative service
+with a service account of its own on [Knative](../platforms/knative.md#identities), a
+container on [Scaleway](../platforms/scaleway.md#identities). All units run the same
+package, and each answers only for the functions of its identity. On these targets the
+functions **without** an `identity` share one unit, the default one, instead of having
+one each.
 
 ---
 

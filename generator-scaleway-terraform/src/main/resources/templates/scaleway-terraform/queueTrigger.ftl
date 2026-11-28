@@ -26,7 +26,8 @@ resource "scaleway_mnq_sqs_queue" "${fid}_queue" {
 }
 
 resource "scaleway_container_trigger" "${fid}_queue" {
-  container_id = scaleway_container.app.id
+  # the container of the function's identity
+  container_id = scaleway_container.app["${unit}"].id
   name         = "${fn}-queue"
 
   sqs {

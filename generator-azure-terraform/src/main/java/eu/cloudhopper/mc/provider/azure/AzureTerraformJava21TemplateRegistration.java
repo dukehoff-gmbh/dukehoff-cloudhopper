@@ -70,8 +70,10 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
             ),
             @GeneratorFeature(
                     supportedAnnotation = Function.class,
-                    supportedAttributes = {    
-                        FunctionAttribute.NAME
+                    supportedAttributes = {
+                        FunctionAttribute.NAME,
+                        // one function app per identity; the functions without one share the default app
+                        FunctionAttribute.IDENTITY
                     }
             ),
             @GeneratorFeature(
@@ -166,6 +168,14 @@ import eu.cloudhopper.mc.annotations.ScheduledTrigger;
                     phase = GenerationPhase.EVENT,
                     templateName = "storage.ftl",
                     description = "Generates the blob container and its Event Grid subscription (Terraform)",
+                    outputFileExtension = "tf",
+                    outputSubDirectory = "",
+                    javaFile = false
+            ),
+            @Template(
+                    phase = GenerationPhase.FINALIZE,
+                    templateName = "apps.ftl",
+                    description = "Generates the function apps, one per identity (Terraform)",
                     outputFileExtension = "tf",
                     outputSubDirectory = "",
                     javaFile = false

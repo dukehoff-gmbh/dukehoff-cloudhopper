@@ -1,3 +1,4 @@
+<#assign unit = handlerInfo.sharedIdentity?then(handlerInfo.identity, "")>
 package ${handlerInfo.handlerPackage};
 
 import eu.cloudhopper.mc.provider.springboot.SpringBootRequestHandler;
@@ -26,6 +27,9 @@ public class ${handlerInfo.handlerClassName}FunctionController extends SpringBoo
 
     @RequestMapping(path = "/functions/${handlerInfo.functionId}", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity<?> invoke(<#if !noInput>@RequestBody(required = false) ${handlerInfo.inputType} input</#if>) {
+        if (!eu.cloudhopper.mc.provider.springboot.Identities.serves("${unit}")) {
+            return eu.cloudhopper.mc.provider.springboot.Identities.notServed();
+        }
         return handle(<#if noInput>null<#else>input</#if>);
     }
 }

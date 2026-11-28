@@ -1,3 +1,4 @@
+<#assign unit = handlerInfo.sharedIdentity?then(handlerInfo.identity, "")>
 package ${handlerInfo.handlerPackage};
 
 import eu.cloudhopper.mc.provider.springboot.SpringBootRequestHandler;
@@ -37,6 +38,9 @@ public class ${handlerInfo.handlerClassName}ScheduledJob extends SpringBootReque
 
     @Scheduled(cron = "${springCron}", zone = "${scheduleTimezone}")
     public void run() {
+        if (!eu.cloudhopper.mc.provider.springboot.Identities.serves("${unit}")) {
+            return; // another unit runs this function's schedule
+        }
         handle(null);
     }
 }

@@ -1,3 +1,4 @@
+<#assign unit = handlerInfo.sharedIdentity?then(handlerInfo.identity, "")>
 package ${handlerInfo.handlerPackage};
 
 import eu.cloudhopper.mc.provider.springboot.SpringBootRequestHandler;
@@ -26,6 +27,9 @@ public class ${handlerInfo.handlerClassName}ScheduleController extends SpringBoo
 
     @PostMapping("/schedules/${handlerInfo.functionId}")
     public ResponseEntity<Void> trigger() {
+        if (!eu.cloudhopper.mc.provider.springboot.Identities.serves("${unit}")) {
+            return eu.cloudhopper.mc.provider.springboot.Identities.notServed();
+        }
         handle(null);
         return ResponseEntity.noContent().build();
     }

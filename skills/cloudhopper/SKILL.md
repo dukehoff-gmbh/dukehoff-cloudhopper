@@ -169,6 +169,8 @@ Functions that need the same permissions share one: `@Function(name = "...", ide
 The generator grants only what the function's own triggers and queues need. Further permissions
 go into your own `.tf` file in `src/main/resources/deployment/<target>/`, attached to
 `aws_iam_role.identity_<identity>` (AWS) or `google_service_account.identity_<identity>.member` (GCP).
+On Azure, Knative and Scaleway each identity gets its own function app, service or container
+(functions without an identity share the default one).
 
 Docs: https://cloudhopper.eu/docs/guides/writing-functions#identities-and-permissions
 

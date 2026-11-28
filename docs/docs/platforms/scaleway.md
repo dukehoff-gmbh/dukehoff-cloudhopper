@@ -139,6 +139,17 @@ functions run in one container, so these are set for the whole container with
 the variables `memory_limit_bytes`, `cpu_limit`, `timeout`, `min_scale` and
 `max_scale`.
 
+## Identities
+
+Every identity (`@Function(identity = "...")`) gets a container of its own,
+`<container_name>-<identity>`; the functions without an identity run in `container_name`.
+All containers run the same image, and each answers only the endpoints of the functions of
+its identity (`CLOUDHOPPER_IDENTITY`); the cron and queue triggers call the container of the
+function's identity. The outputs `urls` and `container_ids` map each identity to its
+container (`""` for the default one). The credentials of the object storage, the database
+and the queues (`cloudhopper_*_credentials`) are those of the project and are passed to all
+containers.
+
 ## Native image
 
 The service can run the application as a GraalVM native image, which starts in well under a

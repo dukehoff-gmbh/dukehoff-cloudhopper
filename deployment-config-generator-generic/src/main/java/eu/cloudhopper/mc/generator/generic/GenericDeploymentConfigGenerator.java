@@ -140,6 +140,11 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
     private final Map<String, Boolean> storageBucketCreated = new java.util.TreeMap<>();
     /** The configuration properties (@ConfigProperty) the functions of each identity read, by identity. */
     private final Map<String, Set<String>> identityConfigProperties = new java.util.TreeMap<>();
+    /**
+     * The deployment unit of each function on targets that deploy one unit per identity: its
+     * {@code @Function(identity)}, or empty for the default unit of the functions without one.
+     */
+    private final Map<String, String> functionUnits = new java.util.TreeMap<>();
     private String generatorId;
 
     public GenericDeploymentConfigGenerator(ProcessingEnvironment processingEnv) {
@@ -196,6 +201,7 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
                 runPhase(processingEnv, GenerationPhase.IDENTITY, dataModel, handlerInfo, outputDir,
                         handlerInfo.getIdentity());
             }
+            functionUnits.put(handlerInfo.getFunctionId(), unit(handlerInfo));
             Set<String> properties = identityConfigProperties.computeIfAbsent(handlerInfo.getIdentity(),
                     identity -> new java.util.TreeSet<>());
             handlerInfo.getConfigProperties().forEach(property -> properties.add(property.getName()));
@@ -254,6 +260,10 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
         dataModel.put("queueCreated", queueCreated);
         dataModel.put("queuePublishers", queuePublishers);
         dataModel.put("identityConfigProperties", identityConfigProperties);
+        // the deployment units, sorted, the default unit ("") first if a function has no identity
+        dataModel.put("units", new ArrayList<>(new java.util.TreeSet<>(functionUnits.values())));
+        dataModel.put("functionUnits", functionUnits);
+        saveFunctionUnits(configOutputDir);
         dataModel.put("buckets", new ArrayList<>(buckets.values()));
         dataModel.put("bucketAccess", bucketAccess);
         dataModel.put("storageBuckets", storageBuckets);
@@ -354,6 +364,10 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
     protected Map<String, Object> createBaseDataModel(HandlerInfo handlerInfo) {
         Map<String, Object> dataModel = new HashMap<>();
         dataModel.put("handlerInfo", handlerInfo);
+        if (handlerInfo != null) {
+            // targets with one deployment unit per identity: the unit of this function
+            dataModel.put("unit", unit(handlerInfo));
+        }
         putOptions(dataModel);
         return dataModel;
     }
@@ -441,6 +455,30 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
             properties.store(os, "Generated Handler Info");
         } catch (IOException e) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Error writing properties file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * @param handlerInfo a function
+     * @return its deployment unit on targets with one unit per identity: the
+     *         {@code @Function(identity)}, or empty for the default unit
+     */
+    public static String unit(HandlerInfo handlerInfo) {
+        return handlerInfo.isSharedIdentity() ? handlerInfo.getIdentity() : "";
+    }
+
+    /** Writes META-INF/function-units.properties: function ID = unit, for the TCK bindings. */
+    private void saveFunctionUnits(String configOutputDir) {
+        Properties units = new Properties();
+        units.putAll(functionUnits);
+        java.nio.file.Path file = java.nio.file.Path.of(configOutputDir, "META-INF", "function-units.properties");
+        try {
+            java.nio.file.Files.createDirectories(file.getParent());
+            try (java.io.Writer out = java.nio.file.Files.newBufferedWriter(file)) {
+                units.store(out, "the deployment unit of each function; empty: the default unit");
+            }
+        } catch (IOException e) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, "Cannot write " + file + ": " + e.getMessage());
         }
     }
 
