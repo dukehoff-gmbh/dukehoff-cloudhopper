@@ -57,4 +57,47 @@ public class TemplateRendererTest {
             Locale.setDefault(saved);
         }
     }
+
+    /**
+     * A template of the project, cloudhopper-templates/<generator>/<template> on the class path
+     * of the compilation, replaces the generator's own; the others stay the generator's.
+     */
+    @Test
+    public void aProjectTemplateReplacesTheGeneratorsTemplate() throws Exception {
+        javax.tools.FileObject override = new javax.tools.SimpleJavaFileObject(
+                java.net.URI.create("string:///cloudhopper-templates/override-test/function.ftl"),
+                javax.tools.JavaFileObject.Kind.OTHER) {
+            @Override
+            public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+                return "project ${name}";
+            }
+
+            @Override
+            public java.io.Reader openReader(boolean ignoreEncodingErrors) {
+                return new java.io.StringReader("project ${name}");
+            }
+        };
+        javax.annotation.processing.Filer filer = (javax.annotation.processing.Filer) java.lang.reflect.Proxy.newProxyInstance(
+                getClass().getClassLoader(), new Class<?>[] {javax.annotation.processing.Filer.class},
+                (proxy, method, args) -> {
+                    if (method.getName().equals("getResource")
+                            && "cloudhopper-templates/override-test/function.ftl".equals(args[2].toString())) {
+                        return override;
+                    }
+                    throw new java.io.FileNotFoundException(String.valueOf(args == null ? null : args[2]));
+                });
+        javax.annotation.processing.ProcessingEnvironment env = (javax.annotation.processing.ProcessingEnvironment)
+                java.lang.reflect.Proxy.newProxyInstance(getClass().getClassLoader(),
+                        new Class<?>[] {javax.annotation.processing.ProcessingEnvironment.class},
+                        (proxy, method, args) -> method.getName().equals("getFiler") ? filer : null);
+        TemplateRenderer renderer = new TemplateRenderer();
+        renderer.initTemplateLoaders(TemplateRendererTest.class, java.util.List.of("override-test"), id -> "/templates/" + id, env);
+        Configuration configuration = renderer.configuration();
+        StringWriter function = new StringWriter();
+        configuration.getTemplate("function.ftl").process(Map.of("name", "hello"), function);
+        assertEquals("project hello", function.toString().trim());
+        StringWriter other = new StringWriter();
+        configuration.getTemplate("other.ftl").process(Map.of(), other);
+        assertEquals("built-in other", other.toString().trim());
+    }
 }

@@ -74,7 +74,7 @@ while IFS= read -r path; do
   case "$path" in
     # built and tested by the build and the archetype test; no TCK deploys them
     # (skills/ is the Agent Skill the archetype packages)
-    demo/*|maven-archetype/*|skills/*) continue ;;
+    maven-archetype/*|skills/*) continue ;;
   esac
   target=$(target_of "$path")
   if [ -n "$target" ]; then

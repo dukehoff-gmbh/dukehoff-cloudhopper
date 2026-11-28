@@ -14,7 +14,6 @@
         <generator.id>springboot-http</generator.id>
         <output.dir>target/generated-sources/springboot</output.dir>
         <jar.classifier>springboot</jar.classifier>
-        <main.class>eu.cloudhopper.mc.demo.Application</main.class>
     </properties>
     <dependencyManagement>
         <dependencies>
