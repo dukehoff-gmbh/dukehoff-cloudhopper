@@ -64,4 +64,13 @@ public abstract class AwsLambdaRequestHandler<I, O> implements RequestHandler<I,
         return handler.handleRequest(input, new AwsContextAdapter(awsContext));
     }
 
+
+    /**
+     * Calls the function's {@code @OnPrime} methods.
+     *
+     * @throws Exception if one fails
+     */
+    void prime() throws Exception {
+        handler.prime();
+    }
 }

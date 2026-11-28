@@ -327,6 +327,33 @@ public class ServerlessFunctionProcessorTest {
     }
 
     @Test
+    public void onPrimeMethodsAreCalledByTheGeneratedHandler() {
+        String source = ""
+                + "package com.example;\n"
+                + "import eu.cloudhopper.mc.annotations.*;\n"
+                + "public class Prices {\n"
+                + "  @OnPrime void load() { }\n"
+                + "  @OnPrime static void warm() { }\n"
+                + "  @Function(name=\"price\")\n"
+                + "  public String price() { return null; }\n"
+                + "}\n";
+        Compilation ok = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.Prices", source));
+        assertThat(ok).succeeded();
+        assertThat(ok).generatedSourceFile("com.example.Prices_price_Handler").contentsAsUtf8String()
+                .contains("public void prime() throws Exception");
+        assertThat(ok).generatedSourceFile("com.example.Prices_price_Handler").contentsAsUtf8String()
+                .contains("delegate.load();");
+        assertThat(ok).generatedSourceFile("com.example.Prices_price_Handler").contentsAsUtf8String()
+                .contains("Prices.warm();");
+
+        Compilation withParameter = javac().withProcessors(new ServerlessFunctionProcessor())
+                .compile(JavaFileObjects.forSourceString("com.example.Prices",
+                        source.replace("@OnPrime void load() { }", "@OnPrime void load(int x) { }")));
+        assertThat(withParameter).hadErrorContaining("@OnPrime method load must have no parameters and must not be private");
+    }
+
+    @Test
     public void aNativeImageHasOneArchitectureAndNoSnapStart() {
         String source = ""
                 + "package com.example;\n"

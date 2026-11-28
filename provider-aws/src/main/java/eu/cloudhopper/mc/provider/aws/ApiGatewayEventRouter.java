@@ -123,6 +123,16 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
         if (this.http instanceof ApiGatewayV2HttpEventHandler<?, ?> handler) {
             handler.prime();
         }
+        // the function's own dependencies (@OnPrime)
+        if (plain instanceof AwsLambdaRequestHandler<?, ?> function) {
+            try {
+                function.prime();
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IllegalStateException("@OnPrime failed: " + e.getMessage(), e);
+            }
+        }
     }
 
     /** The payload of a direct invocation as the function's input, or {@code null} if it takes none. */

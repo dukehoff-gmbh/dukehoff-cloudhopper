@@ -66,8 +66,26 @@ body type, the responses of a result, an error and an invalid body), so that res
 do not load and compile it on their first request. In a measurement (arm64, 512 MB, an HTTP
 function with a JSON body) the first request after a restore took about 380 ms instead of 1.4 s,
 and the cold start about 840 ms instead of 1.9 s. The function's own code is not run before the
-snapshot, so it has no effects on tables, queues or buckets; to warm clients or caches of your
-own, register an `org.crac` `Resource` and do it in `beforeCheckpoint`. For the shortest cold
+snapshot, so it has no effects on tables, queues or buckets. To warm clients or caches of your
+own, annotate a method of the function class with `@OnPrime`; it is called before the snapshot:
+
+```java
+public class Prices {
+    private final PriceList prices = new PriceList();
+
+    @OnPrime
+    void prime() {
+        prices.load();   // e.g. read the price list from a bucket once
+    }
+
+    @Function(name = "price", extensions = @Extension(name = ExtensionKeys.Aws.SnapStart.KEY,
+            value = ExtensionKeys.Aws.SnapStart.Values.PUBLISHED_VERSIONS))
+    public Price price(@PathParam String sku) { ... }
+}
+```
+
+The method has no parameters and is not private; an exception is logged and does not stop the
+snapshot. Without SnapStart, it is not called. For the shortest cold
 starts, see [Native image](#native-image).
 
 All instances restored from one snapshot share the state created during initialization:

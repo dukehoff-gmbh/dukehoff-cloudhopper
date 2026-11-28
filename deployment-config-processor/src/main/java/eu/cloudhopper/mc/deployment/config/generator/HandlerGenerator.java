@@ -165,6 +165,16 @@ public class HandlerGenerator {
             this.scopes = List.copyOf(scopes);
         }
 
+        /** The {@code @OnPrime} methods of the function class: name, and whether they are static. */
+        private List<Map.Entry<String, Boolean>> primeMethods = List.of();
+
+        /**
+         * @param primeMethods the {@code @OnPrime} methods of the function class (name to static)
+         */
+        public void setPrimeMethods(List<Map.Entry<String, Boolean>> primeMethods) {
+            this.primeMethods = List.copyOf(primeMethods);
+        }
+
         public String getPackageName() {
             return packageName;
         }
@@ -555,6 +565,21 @@ public class HandlerGenerator {
                     .endControlFlow();
         }
         classBuilder.addMethod(methodBuilder.build());
+        if (!info.primeMethods.isEmpty()) {
+            // @OnPrime: called before a SnapStart snapshot
+            MethodSpec.Builder prime = MethodSpec.methodBuilder("prime")
+                    .addAnnotation(Override.class)
+                    .addModifiers(Modifier.PUBLIC)
+                    .addException(Exception.class);
+            for (Map.Entry<String, Boolean> method : info.primeMethods) {
+                if (method.getValue()) {
+                    prime.addStatement("$T.$L()", serviceType, method.getKey());
+                } else {
+                    prime.addStatement("delegate.$L()", method.getKey());
+                }
+            }
+            classBuilder.addMethod(prime.build());
+        }
 
         return JavaFile.builder(info.getPackageName(), classBuilder.build())
                 .build();
