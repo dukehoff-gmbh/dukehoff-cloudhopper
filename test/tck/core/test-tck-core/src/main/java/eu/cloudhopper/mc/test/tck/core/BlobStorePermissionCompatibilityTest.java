@@ -39,7 +39,7 @@ import org.junit.Assert;
  * gets read access only, so the platform refuses a write that bypasses the check of the
  * {@code @Bucket} parameter.
  */
-public class BlobStorePermissionCompatibilityTest implements FeatureAwareTest {
+public class BlobStorePermissionCompatibilityTest implements eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest {
 
     @Override
     public void run(TestContext context) throws Exception {
@@ -59,5 +59,11 @@ public class BlobStorePermissionCompatibilityTest implements FeatureAwareTest {
                         List.of(Function.FunctionAttribute.NAME, Function.FunctionAttribute.IDENTITY)),
                 new RequiredFeature(Bucket.class.getName(),
                         List.of(Bucket.BucketAttribute.NAME, Bucket.BucketAttribute.ACCESS)));
+    }
+
+    @Override
+    public List<String> requiredCapabilities() {
+        // targets that pass the project's credentials to all units enforce the access in the runtime only
+        return List.of(PLATFORM_PERMISSIONS);
     }
 }

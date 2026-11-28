@@ -201,7 +201,11 @@ jobs:
     # the Knative ingress answers http://<service>.<namespace>.localhost:31080; make sure the
     # service's host name resolves to the loopback address on the runner
     - name: Resolve the service host name
-      run: echo '127.0.0.1 cloudhopper-tck.default.localhost' | sudo tee -a /etc/hosts
+      # one Knative service per identity of the test functions (#82)
+      run: |
+        for unit in '' -tck-shared -tck-reader; do
+          echo "127.0.0.1 cloudhopper-tck$unit.default.localhost" | sudo tee -a /etc/hosts
+        done
 
     - name: Create the Knative cluster
       run: test/knative/kind-setup.sh
@@ -260,7 +264,11 @@ jobs:
     # the Knative ingress answers http://<service>.<namespace>.localhost:31080; make sure the
     # service's host name resolves to the loopback address on the runner
     - name: Resolve the service host name
-      run: echo '127.0.0.1 cloudhopper-tck.default.localhost' | sudo tee -a /etc/hosts
+      # one Knative service per identity of the test functions (#82)
+      run: |
+        for unit in '' -tck-shared -tck-reader; do
+          echo "127.0.0.1 cloudhopper-tck$unit.default.localhost" | sudo tee -a /etc/hosts
+        done
 
     - name: Create the Knative cluster
       run: test/knative/kind-setup.sh

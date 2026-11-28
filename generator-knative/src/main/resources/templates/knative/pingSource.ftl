@@ -14,5 +14,6 @@ spec:
     ref:
       apiVersion: serving.knative.dev/v1
       kind: Service
-      name: {{ .Release.Name }}
+      # the service of the function's identity
+      name: {{ printf "%s<#if unit?has_content>-${unit}</#if>" .Release.Name | trunc 63 | trimSuffix "-" }}
     uri: /schedules/${handlerInfo.functionId}

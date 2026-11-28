@@ -99,7 +99,8 @@ public class TestContextScaleway implements TestContext {
     private final String registryNamespace = env("CLOUDHOPPER_TCK_SCW_REGISTRY", "dukehoff-cloudhopper-tck");
     private final String namePrefix = env("CLOUDHOPPER_TCK_NAME_PREFIX", "tck-");
 
-    private String baseUrl;
+    /** The URL of each deployment unit's container: "" for the default unit, else the identity. */
+    private final java.util.Map<String, String> unitUrls = new java.util.HashMap<>();
     private JsonNode outputs;
 
     @Override
@@ -129,22 +130,27 @@ public class TestContextScaleway implements TestContext {
             System.out.println("☁️ Applying the Terraform in " + moduleDir.relativize(deploymentDir));
             System.out.println(terraform(variables(image, "apply", "-auto-approve", "-input=false")));
             outputs = null;
-            baseUrl = output("url").replaceAll("/+$", "");
-            try {
-                waitUntilUp();
-            } catch (IllegalStateException notUp) {
-                // the container's status and error message, before the deployment is destroyed
+            // one container per identity (@Function(identity)); "" is the one of the functions without one
+            outputNode("urls").fields().forEachRemaining(unit ->
+                    unitUrls.put(unit.getKey(), unit.getValue().asText().replaceAll("/+$", "")));
+            for (java.util.Map.Entry<String, String> unit : unitUrls.entrySet()) {
                 try {
-                    terraform(variables(image, "apply", "-refresh-only", "-auto-approve", "-input=false"));
-                    terraform("state", "show", "scaleway_container.app").lines()
-                            .filter(line -> line.contains("status") || line.contains("error_message"))
-                            .forEach(line -> System.out.println("🩺 " + line.trim()));
-                } catch (IOException | RuntimeException diagnosis) {
-                    System.out.println("ℹ️ No container status: " + diagnosis.getMessage());
+                    waitUntilUp(unit.getValue());
+                } catch (IllegalStateException notUp) {
+                    // the container's status and error message, before the deployment is destroyed
+                    try {
+                        terraform(variables(image, "apply", "-refresh-only", "-auto-approve", "-input=false"));
+                        terraform("state", "show", "scaleway_container.app[\"" + unit.getKey() + "\"]").lines()
+                                .filter(line -> line.contains("status") || line.contains("error_message"))
+                                .forEach(line -> System.out.println("🩺 " + line.trim()));
+                    } catch (IOException | RuntimeException diagnosis) {
+                        System.out.println("ℹ️ No container status: " + diagnosis.getMessage());
+                    }
+                    throw notUp;
                 }
-                throw notUp;
+                System.out.println("✅ Container " + (unit.getKey().isEmpty() ? "(default)" : unit.getKey())
+                        + " is up at " + unit.getValue());
             }
-            System.out.println("✅ Container is up at " + baseUrl);
         } catch (IOException e) {
             throw new RuntimeException("Failed to deploy the Scaleway container", e);
         }
@@ -161,7 +167,7 @@ public class TestContextScaleway implements TestContext {
             throw new RuntimeException("Failed to destroy the Scaleway resources", e);
         } finally {
             deleteDockerConfig();
-            baseUrl = null;
+            unitUrls.clear();
             outputs = null;
         }
     }
@@ -172,7 +178,7 @@ public class TestContextScaleway implements TestContext {
         for (String key : handlers.stringPropertyNames()) {
             if (key.endsWith("_functionId") && handlers.getProperty(key).equalsIgnoreCase(functionName)) {
                 String base = key.substring(0, key.length() - "_functionId".length());
-                return baseUrl() + handlers.getProperty(base + "_path");
+                return baseUrl(functionName) + handlers.getProperty(base + "_path");
             }
         }
         throw new IllegalArgumentException("No HTTP route generated for function " + functionName);
@@ -181,7 +187,7 @@ public class TestContextScaleway implements TestContext {
     @Override
     public Object invokeFunctionDirect(String functionName, Object input) {
         try {
-            URI uri = URI.create(baseUrl() + "/functions/" + functionName.toLowerCase());
+            URI uri = URI.create(baseUrl(functionName) + "/functions/" + functionName.toLowerCase());
             HttpRequest request = input == null
                     ? HttpRequest.newBuilder(uri).GET().build()
                     : HttpRequest.newBuilder(uri)
@@ -204,10 +210,10 @@ public class TestContextScaleway implements TestContext {
 
     @Override
     public List<String> fetchLogs(String functionName) {
-        // one container hosts all functions, so the log is shared; the tests look for their own lines.
-        // Cockpit names the container's log stream <namespace><id>-<container>; container names
-        // consist of lowercase letters, digits and hyphens, so the name needs no escaping
-        String query = "{resource_type=\"serverless_container\", resource_name=~\".+-" + containerName + "\"}";
+        // the containers of all identities (container_name, container_name-<identity>); the tests look
+        // for their own lines. Cockpit names the container's log stream <namespace><id>-<container>;
+        // container names consist of lowercase letters, digits and hyphens, so they need no escaping
+        String query = "{resource_type=\"serverless_container\", resource_name=~\".+-" + containerName + "(-[a-z0-9-]+)?\"}";
         long now = Instant.now().toEpochMilli() * 1_000_000L;
         long start = now - LOG_WINDOW.toNanos();
         String uri = output("logs_url") + "/loki/api/v1/query_range"
@@ -297,6 +303,31 @@ public class TestContextScaleway implements TestContext {
         return args.toArray(String[]::new);
     }
 
+    private JsonNode outputNode(String key) {
+        output("url"); // reads the outputs
+        return outputs.path(key).path("value");
+    }
+
+    /** The deployment unit of each function (generated META-INF/function-units.properties). */
+    private Properties units() {
+        return load(deploymentDir.resolve("META-INF").resolve("function-units.properties"));
+    }
+
+    /** The URL of the container that runs the function: the one of its identity. */
+    private String baseUrl(String functionName) {
+        String url = unitUrls.get(units().getProperty(functionName.toLowerCase(), ""));
+        if (url == null) {
+            throw new IllegalStateException("The container of function " + functionName + " is not deployed");
+        }
+        return url;
+    }
+
+    @Override
+    public String getDeployedIdentity(String functionName) {
+        // the container of the function's identity: one per identity
+        return outputNode("container_ids").path(units().getProperty(functionName.toLowerCase(), "")).asText();
+    }
+
     private String output(String key) {
         try {
             if (outputs == null) {
@@ -312,7 +343,7 @@ public class TestContextScaleway implements TestContext {
         return value.asText();
     }
 
-    private void waitUntilUp() {
+    private void waitUntilUp(String baseUrl) {
         Instant deadline = Instant.now().plus(STARTUP_TIMEOUT);
         int last = -1;
         String lastError = null;
@@ -436,7 +467,7 @@ public class TestContextScaleway implements TestContext {
 
     private void postEvent(String path, String body) {
         try {
-            HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl() + path))
+            HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl(path.substring(path.lastIndexOf('/') + 1)) + path))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body))
                     .build();
@@ -463,12 +494,6 @@ public class TestContextScaleway implements TestContext {
         }
     }
 
-    private String baseUrl() {
-        if (baseUrl == null) {
-            throw new IllegalStateException("The container is not deployed");
-        }
-        return baseUrl;
-    }
 
     /**
      * Runs a command and returns its standard output; fails with its output if it exits with an

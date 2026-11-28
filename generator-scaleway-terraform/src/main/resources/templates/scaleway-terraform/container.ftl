@@ -139,8 +139,13 @@ resource "scaleway_container_namespace" "app" {
   name = var.container_name
 }
 
+# One container per identity (@Function(identity)), all from the same image: a container
+# answers only the endpoints of the functions of its identity (CLOUDHOPPER_IDENTITY). The
+# functions without an identity run in the container named container_name ("" in
+# local.cloudhopper_units, see units.tf); the others in container_name-<identity>.
 resource "scaleway_container" "app" {
-  name                         = var.container_name
+  for_each                     = toset(local.cloudhopper_units)
+  name                         = each.key == "" ? var.container_name : "${var.container_name}-${each.key}"
   namespace_id                 = scaleway_container_namespace.app.id
   image                        = var.image
   port                         = 8080
@@ -150,7 +155,7 @@ resource "scaleway_container" "app" {
   cpu_limit                    = var.cpu_limit
   timeout                      = var.timeout
   privacy                      = var.privacy
-  environment_variables        = merge({ for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, local.cloudhopper_publisher_environment, local.cloudhopper_blobstore_environment, local.cloudhopper_keyvalue_environment, var.environment_variables)
+  environment_variables        = merge({ for name, value in local.cloudhopper_config : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, local.cloudhopper_publisher_environment, local.cloudhopper_blobstore_environment, local.cloudhopper_keyvalue_environment, var.environment_variables, { CLOUDHOPPER_IDENTITY = each.key })
   secret_environment_variables = merge(local.cloudhopper_publisher_secrets, local.cloudhopper_blobstore_secrets, local.cloudhopper_keyvalue_secrets, { for name, value in local.cloudhopper_secrets : upper(replace(name, "/[^A-Za-z0-9]/", "_")) => value }, var.secret_environment_variables)
   # the cron triggers call the schedules; an in-process schedule would run in every instance
   args = ["--cloudhopper.schedules.in-process=false"]
@@ -171,12 +176,27 @@ resource "scaleway_container" "app" {
   }
 }
 
+# deployments made before the containers per identity keep their container as the default unit
+moved {
+  from = scaleway_container.app
+  to   = scaleway_container.app[""]
+}
+
 output "url" {
-  description = "Base URL of the application"
-  value       = scaleway_container.app.public_endpoint
+  description = "Base URL of the container of the functions without an identity"
+  value       = try(scaleway_container.app[""].public_endpoint, null)
+}
+
+output "urls" {
+  description = "Base URL of each identity's container; \"\" for the functions without an identity"
+  value       = { for unit, container in scaleway_container.app : unit => container.public_endpoint }
 }
 
 output "container_id" {
-  value = scaleway_container.app.id
+  value = try(scaleway_container.app[""].id, null)
+}
+
+output "container_ids" {
+  value = { for unit, container in scaleway_container.app : unit => container.id }
 }
 </#noparse>

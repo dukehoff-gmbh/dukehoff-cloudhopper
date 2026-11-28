@@ -40,7 +40,7 @@ import org.junit.Assert;
  * read access only, so the platform refuses a write that bypasses the check of the
  * {@code @Table} parameter.
  */
-public class KeyValuePermissionCompatibilityTest implements FeatureAwareTest {
+public class KeyValuePermissionCompatibilityTest implements eu.cloudhopper.mc.test.tck.api.CapabilityAwareTest {
 
     @Override
     public void run(TestContext context) throws Exception {
@@ -61,5 +61,11 @@ public class KeyValuePermissionCompatibilityTest implements FeatureAwareTest {
                         List.of(Function.FunctionAttribute.NAME, Function.FunctionAttribute.IDENTITY)),
                 new RequiredFeature(Table.class.getName(),
                         List.of(Table.TableAttribute.NAME, Table.TableAttribute.ACCESS)));
+    }
+
+    @Override
+    public List<String> requiredCapabilities() {
+        // targets that pass the project's credentials to all units enforce the access in the runtime only
+        return List.of(PLATFORM_PERMISSIONS);
     }
 }

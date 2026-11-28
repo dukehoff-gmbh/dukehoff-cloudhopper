@@ -1,3 +1,4 @@
+<#assign unit = handlerInfo.sharedIdentity?then(handlerInfo.identity, "")>
 package ${packageName};
 
 import eu.cloudhopper.mc.provider.springboot.SpringBootRequestHandler;
@@ -32,6 +33,9 @@ public class ${className} extends SpringBootRequestHandler<${inputType}, ${outpu
             @RequestParam Map<String, String> queryParams,
             @RequestHeader HttpHeaders headers<#if inputType != "void">,
             @RequestBody(required = false) ${inputType} input</#if>) {
+        if (!eu.cloudhopper.mc.provider.springboot.Identities.serves("${unit}")) {
+            return eu.cloudhopper.mc.provider.springboot.Identities.notServed();
+        }
         return handle(<#if inputType != "void">input<#else>null</#if>, pathParams, queryParams, headers.toSingleValueMap());
     }
 }

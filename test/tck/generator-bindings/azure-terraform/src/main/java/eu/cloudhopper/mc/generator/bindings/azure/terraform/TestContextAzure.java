@@ -37,6 +37,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -125,9 +126,12 @@ public class TestContextAzure implements TestContext {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            String fullUrl = azureFunctionBaseUrl.endsWith("/")
-                    ? azureFunctionBaseUrl + functionName + "_http_function_trigger"
-                    : azureFunctionBaseUrl + "/" + functionName + "_http_function_trigger";
+            // the app of the function's identity: one function app per identity
+            String hostname = unitOutput("function_app_hostnames", functionName);
+            String base = hostname.isEmpty() ? azureFunctionBaseUrl : "https://" + hostname + "/api/";
+            String fullUrl = base.endsWith("/")
+                    ? base + functionName + "_http_function_trigger"
+                    : base + "/" + functionName + "_http_function_trigger";
             System.err.println("full URL " + fullUrl);
             HttpRequest request;
 
@@ -166,6 +170,34 @@ public class TestContextAzure implements TestContext {
         } catch (Exception e) {
             throw new RuntimeException("Failed to invoke Azure Function: " + functionName, e);
         }
+    }
+
+    /**
+     * @param output        a Terraform output that maps each deployment unit to a value
+     * @param functionName  the function
+     * @return the value of the function's unit (META-INF/function-units.properties), or "" if
+     *         there is none
+     */
+    private String unitOutput(String output, String functionName) {
+        try {
+            Properties units = new Properties();
+            Path file = terraformDir.resolve("META-INF").resolve("function-units.properties");
+            if (Files.exists(file)) {
+                try (var in = Files.newInputStream(file)) {
+                    units.load(in);
+                }
+            }
+            String unit = units.getProperty(functionName.toLowerCase(), "");
+            return TerraformUtil.readTerraformOutput(terraformDir).path(output).path("value").path(unit).asText("");
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot read the Terraform output " + output, e);
+        }
+    }
+
+    @Override
+    public String getDeployedIdentity(String functionName) {
+        // the managed identity of the function's app: one app per identity
+        return unitOutput("function_app_principal_ids", functionName);
     }
 
     @Override

@@ -1,3 +1,4 @@
+<#assign unit = handlerInfo.sharedIdentity?then(handlerInfo.identity, "")>
 package ${packageName};
 
 import eu.cloudhopper.mc.provider.springboot.SpringBootEventHandler;
@@ -26,10 +27,18 @@ public class ${handlerInfo.handlerClassName}EventController extends SpringBootEv
                 "${handlerInfo.functionId}", eu.cloudhopper.mc.annotations.EventSource.${eventSource}, "${eventName}");
     }
 
+    @Override
+    public String identity() {
+        return "${unit}";
+    }
+
     @PostMapping("/events/${handlerInfo.functionId}")
     public ResponseEntity<Void> onEvent(
             @RequestBody(required = false) String body,
             @RequestHeader HttpHeaders headers) throws java.io.IOException {
+        if (!eu.cloudhopper.mc.provider.springboot.Identities.serves("${unit}")) {
+            return eu.cloudhopper.mc.provider.springboot.Identities.notServed();
+        }
         return handleEvent(body, headers.toSingleValueMap(), "${eventName}");
     }
 }
