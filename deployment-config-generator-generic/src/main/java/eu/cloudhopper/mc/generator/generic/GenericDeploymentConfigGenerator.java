@@ -376,10 +376,31 @@ public class GenericDeploymentConfigGenerator implements DeploymentConfigGenerat
      * Options of the build that templates may read: {@code runtime} ({@code jvm} by default, or
      * {@code native} for a native image) and {@code nativeArchitecture} (e.g. {@code arm64}).
      */
+    /**
+     * The directory of the built artifact relative to the generated configuration (e.g.
+     * {@code ../..} from {@code target/deployment/aws-terraform} to {@code target}), so that the
+     * configuration does not depend on the path of the build machine; the absolute target
+     * directory if the two do not share a root.
+     */
+    static String artifactDir(Map<String, String> options) {
+        String target = options.getOrDefault("targetDir", "./target");
+        String config = options.getOrDefault("configOutputDir", "target/generated-config");
+        try {
+            java.nio.file.Path relative = java.nio.file.Path.of(config).toAbsolutePath().normalize()
+                    .relativize(java.nio.file.Path.of(target).toAbsolutePath().normalize());
+            String path = relative.toString().replace('\\', '/');
+            return path.isEmpty() ? "." : path;
+        } catch (IllegalArgumentException e) {
+            return target.replace('\\', '/');
+        }
+    }
+
     private void putOptions(Map<String, Object> dataModel) {
         Map<String, String> options = processingEnv.getOptions();
-        dataModel.put("runtime", options.getOrDefault("runtime", "jvm").trim());
-        dataModel.put("nativeArchitecture", options.getOrDefault("nativeArchitecture", "arm64").trim());
+        // an option given without a value (-Akey=) is present with the value null
+        dataModel.put("runtime", java.util.Objects.requireNonNullElse(options.get("runtime"), "jvm").trim());
+        dataModel.put("nativeArchitecture", java.util.Objects.requireNonNullElse(options.get("nativeArchitecture"), "arm64").trim());
+        dataModel.put("artifactDir", artifactDir(options));
     }
 
     protected Map<String, Object> getApiIntegrationDataModelForTemplateRendering(HandlerInfo handlerInfo, HttpTrigger apiOp) {

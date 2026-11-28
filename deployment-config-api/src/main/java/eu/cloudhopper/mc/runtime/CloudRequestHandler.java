@@ -94,4 +94,14 @@ public interface CloudRequestHandler<I, O> {
                             Map<String, String> headers, HandlerContext context) {
         return handleRequest(input, pathParams, queryParams, context);
     }
+
+    /**
+     * Warms the function's own dependencies before a snapshot: calls the function class's
+     * {@link eu.cloudhopper.mc.annotations.OnPrime} methods. The generated handlers implement it;
+     * by default it does nothing.
+     *
+     * @throws Exception if a priming method fails
+     */
+    default void prime() throws Exception {
+    }
 }

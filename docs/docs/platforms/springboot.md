@@ -150,8 +150,23 @@ docker build -t my-app -f target/deployment/springboot-http/shared-resources_doc
 - Jackson binds the functions' body, result and queue message types reflectively, and Spring AOT
   does not see them behind the generated controllers. The annotation processor generates the
   reflection configuration for these types and the types they contain
-  (`META-INF/native-image/cloudhopper/<function>/reachability-metadata.json`). Code of your own
-  that uses reflection, proxies or resources needs
+  (`META-INF/native-image/cloudhopper/<function>/reachability-metadata.json`), with their
+  array types.
+- Types the application reads or writes as JSON itself, e.g. records it stores in a table or
+  returns inside a `Map`, are marked with `@Reflective`; the types they contain come along:
+
+  ```java
+  @Reflective
+  public record Measurement(String detected, List<Day> days) { }
+  ```
+
+  `@Reflective(types = {...})` registers types of a library the same way. Each type gets a file
+  of its own (`META-INF/native-image/cloudhopper/types/<type>/`). As an escape hatch,
+  `-AnativeReflectionPackages=<package>` (archetype property `native.reflection.packages`)
+  registers the classes of a package themselves, without the types they refer to.
+- Missing metadata fails with an `Error` (`MissingReflectionRegistrationError`), not an
+  exception: the function answers 500, and the log names the type.
+- Code of your own that uses reflection, proxies or resources needs
   [reachability metadata](https://www.graalvm.org/latest/reference-manual/native-image/metadata/)
   or Spring's `RuntimeHints`.
 

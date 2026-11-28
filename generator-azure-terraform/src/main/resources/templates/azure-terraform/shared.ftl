@@ -9,6 +9,19 @@ terraform {
 # Values of the configuration properties the functions read with @ConfigProperty, by property
 # name, e.g. { "report.bucket" = "my-reports" }. All functions run in one function app and get all of them as environment variables
 # (report.bucket → REPORT_BUCKET).
+# The directory of the built artifact. By default the Maven target directory, relative to this
+# module, so that the configuration also works from another directory or machine (e.g. a CI job
+# that checked out the build's target directory).
+variable "cloudhopper_artifact_dir" {
+  description = "Directory of the built artifact (jar or zip); empty: the Maven target directory relative to this module"
+  type        = string
+  default     = ""
+}
+
+locals {
+  cloudhopper_artifact_dir = var.cloudhopper_artifact_dir != "" ? var.cloudhopper_artifact_dir : "${"$"}{path.module}/${artifactDir}"
+}
+
 variable "cloudhopper_config" {
   description = "Values of the functions' configuration properties (@ConfigProperty), by property name"
   type        = map(string)
@@ -86,10 +99,9 @@ resource "azurerm_storage_container" "function_container" {
 # Shared JAR file for all functions
 resource "azurerm_storage_blob" "function_code" {
   name                   = "${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.zip"
-  storage_account_name   = azurerm_storage_account.function_storage.name
-  storage_container_name = azurerm_storage_container.function_container.name
+  storage_container_id   = azurerm_storage_container.function_container.id
   type                   = "Block"
-  source                 = "${handlerInfo.targetDir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.zip"
+  source                 = "${"$"}{local.cloudhopper_artifact_dir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.zip"
   depends_on             = [azurerm_storage_container.function_container]
 }
 

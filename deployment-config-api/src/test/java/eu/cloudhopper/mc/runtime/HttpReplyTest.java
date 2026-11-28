@@ -106,4 +106,17 @@ class HttpReplyTest {
         assertThrows(IllegalArgumentException.class, () -> HttpResponse.ok("x").header("X-A", "a\r\nX-B: b"));
         assertThrows(IllegalArgumentException.class, () -> HttpResponse.ok("x").header("Bad Name", "a"));
     }
+
+    @Test
+    public void aMissingReachabilityRegistrationIsRecognized() {
+        org.junit.jupiter.api.Assertions.assertTrue(HttpReply.isNativeImageError("org.graalvm.nativeimage.MissingReflectionRegistrationError"));
+        org.junit.jupiter.api.Assertions.assertTrue(HttpReply.isNativeImageError("org.graalvm.nativeimage.MissingResourceRegistrationError"));
+        org.junit.jupiter.api.Assertions.assertTrue(HttpReply.isNativeImageError("com.oracle.svm.core.jdk.UnsupportedFeatureError"));
+        org.junit.jupiter.api.Assertions.assertFalse(HttpReply.isNativeImageError("java.lang.NoClassDefFoundError"));
+        org.junit.jupiter.api.Assertions.assertNull(HttpReply.nativeImageHint(new IllegalStateException("other", new NoClassDefFoundError("x"))));
+        // any error answers 500 with the generic body, as an unexpected failure
+        HttpReply reply = HttpReply.of(new LinkageError("missing"));
+        org.junit.jupiter.api.Assertions.assertEquals(500, reply.status());
+        org.junit.jupiter.api.Assertions.assertTrue(reply.isUnexpected());
+    }
 }

@@ -70,9 +70,10 @@ import javax.tools.Diagnostic;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("eu.cloudhopper.mc.annotations.Function")
+@SupportedAnnotationTypes({"eu.cloudhopper.mc.annotations.Function", "eu.cloudhopper.mc.annotations.Reflective"})
 @SupportedOptions({"generatorId", "configOutputDir", "artifactId", "classifier", "version", "targetDir",
-        AnnotationFeatureValidator.STRICT_OPTION, "runtime", "nativeArchitecture"})
+        AnnotationFeatureValidator.STRICT_OPTION, "runtime", "nativeArchitecture",
+        "nativeReflectionPackages"})
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
 
@@ -139,11 +140,18 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                 .asType();
     }
 
+    /** The metadata of @Reflective types and of -AnativeReflectionPackages. */
+    private NativeReflectionMetadata nativeReflection;
+
     @Override
     public boolean process(Set<? extends TypeElement> annoTypes, RoundEnvironment round) {
         if (deploymentGenerator == null) {
             return true;
         }
+        if (nativeReflection == null) {
+            nativeReflection = new NativeReflectionMetadata(processingEnv);
+        }
+        nativeReflection.process(round);
         for (Element e : round.getElementsAnnotatedWith(Function.class)) {
 
             ExecutableElement m = (ExecutableElement) e;
@@ -234,6 +242,11 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                     !m.getThrownTypes().isEmpty()
             );
             info.setAuthentication(authenticated, http == null ? List.of() : List.of(http.scopes()));
+            List<Map.Entry<String, Boolean>> primeMethods = primeMethods(cls);
+            if (primeMethods == null) {
+                continue;
+            }
+            info.setPrimeMethods(primeMethods);
             try {
                 HandlerGenerator.generateHandler(info, processingEnv.getFiler());
             } catch (Exception ex) {
@@ -294,7 +307,8 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
                         {eu.cloudhopper.mc.runtime.Authenticator.ISSUER, "true"},
                         {eu.cloudhopper.mc.runtime.Authenticator.AUDIENCE, "true"},
                         {eu.cloudhopper.mc.runtime.Authenticator.JWKS_URI, "false"},
-                        {eu.cloudhopper.mc.runtime.Authenticator.JWKS, "false"}}) {
+                        {eu.cloudhopper.mc.runtime.Authenticator.JWKS, "false"},
+                        {eu.cloudhopper.mc.runtime.Authenticator.REQUIRED_CLAIMS, "false"}}) {
                     if (configProperties.stream().noneMatch(c -> c.getName().equals(auth[0]))) {
                         configProperties.add(new eu.cloudhopper.mc.generator.api.ConfigPropertyInfo(auth[0],
                                 Boolean.parseBoolean(auth[1])));
@@ -423,15 +437,39 @@ public class ServerlessFunctionProcessor extends BaseDeploymentInfoProcessor {
      * function without one: both would silently run as one identity.
      */
     /**
+     * The {@code @OnPrime} methods of a function class: without parameters and not private.
+     *
+     * @return the methods (name to static), or {@code null} after an error
+     */
+    private List<Map.Entry<String, Boolean>> primeMethods(TypeElement cls) {
+        List<Map.Entry<String, Boolean>> methods = new ArrayList<>();
+        boolean valid = true;
+        for (ExecutableElement method : javax.lang.model.util.ElementFilter.methodsIn(cls.getEnclosedElements())) {
+            if (method.getAnnotation(eu.cloudhopper.mc.annotations.OnPrime.class) == null) {
+                continue;
+            }
+            if (!method.getParameters().isEmpty() || method.getModifiers().contains(javax.lang.model.element.Modifier.PRIVATE)) {
+                processingEnv.getMessager().printMessage(ERROR, "@OnPrime method " + method.getSimpleName()
+                        + " must have no parameters and must not be private", method);
+                valid = false;
+                continue;
+            }
+            methods.add(Map.entry(method.getSimpleName().toString(),
+                    method.getModifiers().contains(javax.lang.model.element.Modifier.STATIC)));
+        }
+        return valid ? methods : null;
+    }
+
+    /**
      * A native image ({@code -Aruntime=native}) is one executable for all functions, built for
      * one architecture ({@code -AnativeArchitecture}, arm64 by default): a function that asks
      * for another architecture cannot run it. SnapStart exists only for the Java runtime.
      */
     private boolean validateNativeImage(ExecutableElement method, Function fn) {
-        if (!"native".equals(processingEnv.getOptions().getOrDefault("runtime", "jvm").trim())) {
+        if (!"native".equals(java.util.Objects.requireNonNullElse(processingEnv.getOptions().get("runtime"), "jvm").trim())) {
             return true;
         }
-        String architecture = processingEnv.getOptions().getOrDefault("nativeArchitecture", "arm64").trim();
+        String architecture = java.util.Objects.requireNonNullElse(processingEnv.getOptions().get("nativeArchitecture"), "arm64").trim();
         boolean valid = true;
         for (eu.cloudhopper.mc.annotations.Extension extension : fn.extensions()) {
             if (eu.cloudhopper.mc.annotations.ExtensionKeys.Aws.Architecture.KEY.equals(extension.name())

@@ -91,12 +91,9 @@ public abstract class SpringBootRequestHandler<I, O> {
         try {
             output = handler.handleRequest(input, pathParams, queryParams, Headers.of(headers),
                     new LocalHandlerContext());
-        } catch (RuntimeException e) {
-            HttpReply reply = HttpReply.of(e);
-            if (reply.isUnexpected()) {
-                LOG.log(Level.SEVERE, "Function failed", e);
-            }
-            return toEntity(reply);
+        } catch (RuntimeException | LinkageError e) {
+            // a LinkageError: e.g. missing reachability metadata in a native image
+            return failure(e);
         }
         if (output instanceof HttpResponse<?> response) {
             ResponseEntity.BodyBuilder builder = ResponseEntity.status(response.getStatus());
@@ -131,6 +128,28 @@ public abstract class SpringBootRequestHandler<I, O> {
      * @param e the exception of the message converter
      * @return the response
      */
+    /**
+     * Errors outside the function call, e.g. while Spring writes the result: in a native image,
+     * a result type without reachability metadata fails with an {@link Error}. Answered like any
+     * other failure of the function.
+     *
+     * @param e the error
+     * @return 500 with the generic body
+     */
+    @ExceptionHandler(LinkageError.class)
+    public ResponseEntity<?> linkageError(LinkageError e) {
+        return failure(e);
+    }
+
+    private ResponseEntity<?> failure(Throwable e) {
+        HttpReply reply = HttpReply.of(e);
+        if (reply.isUnexpected()) {
+            String hint = HttpReply.nativeImageHint(e);
+            LOG.log(Level.SEVERE, hint != null ? hint : "Function failed", e);
+        }
+        return toEntity(reply);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<String> invalidBody(HttpMessageNotReadableException e) {
         return toEntity(HttpReply.invalidBody());

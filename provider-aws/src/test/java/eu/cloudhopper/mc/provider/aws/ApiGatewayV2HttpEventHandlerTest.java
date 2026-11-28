@@ -93,6 +93,17 @@ class ApiGatewayV2HttpEventHandlerTest {
     }
 
     @Test
+    void anErrorOfTheFunctionAnswers500() {
+        // in a native image, missing reachability metadata is an Error, not an exception
+        APIGatewayV2HTTPResponse response = call((input, path, query, context) -> {
+            throw new LinkageError("Cannot reflectively access com.example.Item[]");
+        }, null);
+        assertEquals(500, response.getStatusCode());
+        assertEquals("{\"error\":\"Internal Server Error\"}", response.getBody());
+        assertEquals(1, log.size());
+    }
+
+    @Test
     void statusExceptionSetsStatus() {
         APIGatewayV2HTTPResponse response = call((input, path, query, context) -> {
             throw new HttpStatusException(404, "no order");

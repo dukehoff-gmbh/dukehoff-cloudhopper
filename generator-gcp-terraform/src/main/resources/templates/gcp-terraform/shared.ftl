@@ -9,6 +9,19 @@ terraform {
 # Values of the configuration properties the functions read with @ConfigProperty, by property
 # name, e.g. { "report.bucket" = "my-reports" }. Functions get them as environment variables
 # (report.bucket → REPORT_BUCKET).
+# The directory of the built artifact. By default the Maven target directory, relative to this
+# module, so that the configuration also works from another directory or machine (e.g. a CI job
+# that checked out the build's target directory).
+variable "cloudhopper_artifact_dir" {
+  description = "Directory of the built artifact (jar or zip); empty: the Maven target directory relative to this module"
+  type        = string
+  default     = ""
+}
+
+locals {
+  cloudhopper_artifact_dir = var.cloudhopper_artifact_dir != "" ? var.cloudhopper_artifact_dir : "${"$"}{path.module}/${artifactDir}"
+}
+
 variable "cloudhopper_config" {
   description = "Values of the functions' configuration properties (@ConfigProperty), by property name"
   type        = map(string)
@@ -64,5 +77,5 @@ resource "google_storage_bucket" "function_bucket" {
 resource "google_storage_bucket_object" "shared_function_archive" {
   name   = "${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.zip"
   bucket = google_storage_bucket.function_bucket.name
-  source = "${handlerInfo.targetDir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.zip"
+  source = "${"$"}{local.cloudhopper_artifact_dir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.zip"
 }

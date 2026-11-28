@@ -18,6 +18,9 @@
         <cloudhopper.runtime>jvm</cloudhopper.runtime>
         <!-- the architecture of a native image: arm64 or x86_64 -->
         <native.architecture>arm64</native.architecture>
+        <!-- packages whose classes (only these, without the types they refer to) a native image
+             registers for reflection; prefer @Reflective on the types the application writes as JSON -->
+        <native.reflection.packages></native.reflection.packages>
 #if($includeTerraformProfile == 'true')
         <!-- add the path to your terraform executable here -->
         <terraform.executable>terraform</terraform.executable>
@@ -48,6 +51,40 @@
 
     <build>
         <plugins>
+            <!-- The generated deployment depends on the options of the annotation processor (target,
+                 runtime, architecture). An incremental build does not run the processor again when
+                 only these change, e.g. -Paws-terraform,aws-native after -Paws-terraform: then the
+                 compiled classes are removed, so that the sources are compiled and the deployment is
+                 generated again. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>cloudhopper-options</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target xmlns:if="ant:if">
+                                <property name="cloudhopper.options" value="\${generator.id} \${cloudhopper.runtime} \${native.architecture} \${native.reflection.packages}"/>
+                                <property name="cloudhopper.options.file" value="\${project.build.directory}/cloudhopper-options.txt"/>
+                                <loadfile property="cloudhopper.options.previous" srcFile="\${cloudhopper.options.file}" failonerror="false" quiet="true"/>
+                                <condition property="cloudhopper.options.changed">
+                                    <not>
+                                        <equals arg1="\${cloudhopper.options.previous}" arg2="\${cloudhopper.options}"/>
+                                    </not>
+                                </condition>
+                                <delete dir="\${project.build.outputDirectory}" if:set="cloudhopper.options.changed"/>
+                                <mkdir dir="\${project.build.directory}"/>
+                                <echo file="\${cloudhopper.options.file}" message="\${cloudhopper.options}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -68,6 +105,7 @@
                         <arg>-AtargetDir=\${project.build.directory}</arg>
                         <arg>-Aruntime=\${cloudhopper.runtime}</arg>
                         <arg>-AnativeArchitecture=\${native.architecture}</arg>
+                        <arg>-AnativeReflectionPackages=\${native.reflection.packages}</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>

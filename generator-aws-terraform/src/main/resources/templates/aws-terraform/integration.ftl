@@ -33,7 +33,8 @@ resource "aws_apigatewayv2_route" "${handlerInfo.functionId}_route" {
 }
 
 resource "aws_lambda_permission" "${handlerInfo.functionId}_invoke" {
-  statement_id  = "AllowExecutionFromAPIGateway"
+  # a prefix, so that a new permission can exist next to the one it replaces
+  statement_id_prefix = "AllowExecutionFromAPIGateway-"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.${handlerInfo.functionId}.function_name
 <#if snapStart>
@@ -41,6 +42,12 @@ resource "aws_lambda_permission" "${handlerInfo.functionId}_invoke" {
 </#if>
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${"$"}{aws_apigatewayv2_api.main.execution_arn}/*/*"
+
+  # switching SnapStart or the runtime moves the permission from the alias to the function (or
+  # back): the new one is created before the old one is removed, so no request is refused
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 output "${handlerInfo.functionId}_url" {

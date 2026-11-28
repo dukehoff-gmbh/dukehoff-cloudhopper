@@ -12,14 +12,13 @@
 <#assign snapStart = !native && (handlerInfo.extensionsMap["x-aws-snapstart"]!"") == "PublishedVersions">
 <#assign lambdaTarget = snapStart?then("aws_lambda_alias.${handlerInfo.functionId}_live", "aws_lambda_function.${handlerInfo.functionId}")>
 resource "aws_lambda_function" "${handlerInfo.functionId}" {
-  #filename      = "${handlerInfo.targetDir}/${handlerInfo.artifactId}-${handlerInfo.version}-${handlerInfo.classifier}.jar"
   function_name = "${"$"}{var.cloudhopper_name_prefix}${handlerInfo.functionId}"
   role          = aws_iam_role.identity_${handlerInfo.identity}.arn
   handler       = "${handlerWrapperFullyQualifiedName}$Auto::handleRequest"
   
   s3_bucket     = aws_s3_bucket.lambda_artifacts.bucket
   s3_key        = aws_s3_object.lambda_jar.key
-  source_code_hash = filebase64sha256("${handlerInfo.targetDir}/${artifact}")
+  source_code_hash = filebase64sha256("${"$"}{local.cloudhopper_artifact_dir}/${artifact}")
 
   timeout = ${handlerInfo.timeout}
   memory_size = ${handlerInfo.memory}

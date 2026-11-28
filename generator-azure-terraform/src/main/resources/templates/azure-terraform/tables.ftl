@@ -7,6 +7,8 @@
 # @Table(name = "${t.name}"). Destroying the deployment deletes the table and its items.
 resource "azurerm_storage_table" "table_${t.id}" {
   name                 = "${t.name}"
+  # storage_account_name is deprecated (storage_account_id in azurerm 5), but changing it can
+  # replace the table and lose its items in existing deployments: kept until a migration exists
   storage_account_name = azurerm_storage_account.function_storage.name
 }
 </#list>

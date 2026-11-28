@@ -24,6 +24,19 @@ with the [AWS setup guide](../setup/aws-prerequisites.md).
 | `queue.ftl` | Terraform | SQS queue and event source mapping |
 | `storage.ftl` | Terraform | S3 bucket and event notification |
 
+## Running a scheduled function by hand
+
+A `@ScheduledTrigger` function can be invoked directly, e.g. after a deployment or to try a new
+build. It accepts an EventBridge scheduled event, and an empty object as well; both run it
+without input:
+
+```bash
+aws lambda invoke --function-name <prefix><function> --payload '{}' \
+  --cli-binary-format raw-in-base64-out response.json
+```
+
+With [SnapStart](#snapstart), add `--qualifier live` to run the published version.
+
 ## Terraform variables
 
 The generated Terraform has these variables for the deployment as a whole; set them
@@ -66,8 +79,26 @@ body type, the responses of a result, an error and an invalid body), so that res
 do not load and compile it on their first request. In a measurement (arm64, 512 MB, an HTTP
 function with a JSON body) the first request after a restore took about 380 ms instead of 1.4 s,
 and the cold start about 840 ms instead of 1.9 s. The function's own code is not run before the
-snapshot, so it has no effects on tables, queues or buckets; to warm clients or caches of your
-own, register an `org.crac` `Resource` and do it in `beforeCheckpoint`. For the shortest cold
+snapshot, so it has no effects on tables, queues or buckets. To warm clients or caches of your
+own, annotate a method of the function class with `@OnPrime`; it is called before the snapshot:
+
+```java
+public class Prices {
+    private final PriceList prices = new PriceList();
+
+    @OnPrime
+    void prime() {
+        prices.load();   // e.g. read the price list from a bucket once
+    }
+
+    @Function(name = "price", extensions = @Extension(name = ExtensionKeys.Aws.SnapStart.KEY,
+            value = ExtensionKeys.Aws.SnapStart.Values.PUBLISHED_VERSIONS))
+    public Price price(@PathParam String sku) { ... }
+}
+```
+
+The method has no parameters and is not private; an exception is logged and does not stop the
+snapshot. Without SnapStart, it is not called. For the shortest cold
 starts, see [Native image](#native-image).
 
 All instances restored from one snapshot share the state created during initialization:
@@ -106,8 +137,23 @@ mvn package -Paws-terraform,aws-native
   (with a warning).
 - Jackson binds the functions' body, result and queue message types reflectively. The annotation
   processor generates the reflection configuration for these types and the types they contain
-  (`META-INF/native-image/cloudhopper/<function>/reachability-metadata.json`). Code of your own
-  that uses reflection, dynamic proxies or resources needs
+  (`META-INF/native-image/cloudhopper/<function>/reachability-metadata.json`), with their
+  array types.
+- Types the application reads or writes as JSON itself, e.g. records it stores in a table or
+  returns inside a `Map`, are marked with `@Reflective`; the types they contain come along:
+
+  ```java
+  @Reflective
+  public record Measurement(String detected, List<Day> days) { }
+  ```
+
+  `@Reflective(types = {...})` registers types of a library the same way. Each type gets a file
+  of its own (`META-INF/native-image/cloudhopper/types/<type>/`). As an escape hatch,
+  `-AnativeReflectionPackages=<package>` (archetype property `native.reflection.packages`)
+  registers the classes of a package themselves, without the types they refer to.
+- Missing metadata fails with an `Error` (`MissingReflectionRegistrationError`), not an
+  exception: the function answers 500, and the log names the type.
+- Code of your own that uses reflection, dynamic proxies or resources needs
   [reachability metadata](https://www.graalvm.org/latest/reference-manual/native-image/metadata/)
   of its own; libraries often bring it, or the
   [tracing agent](https://www.graalvm.org/latest/reference-manual/native-image/metadata/AutomaticMetadataCollection/)

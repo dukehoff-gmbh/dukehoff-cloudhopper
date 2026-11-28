@@ -111,6 +111,33 @@ public final class HttpReply {
     }
 
     /**
+     * A hint for errors that exist only in a native image: a type, resource or proxy without
+     * reachability metadata surfaces as an {@link Error} such as
+     * {@code org.graalvm.nativeimage.MissingReflectionRegistrationError}, not as an exception.
+     *
+     * @param error an error of a function call
+     * @return what to do about it, or {@code null} if the error is not one of these
+     */
+    public static String nativeImageHint(Throwable error) {
+        for (Throwable e = error; e != null; e = e.getCause()) {
+            if (isNativeImageError(e.getClass().getName())) {
+                return "Native image: " + e.getClass().getSimpleName() + ": " + e.getMessage()
+                        + " Mark the type with @Reflective (eu.cloudhopper.mc.annotations), or register it in"
+                        + " META-INF/native-image/<groupId>/<artifactId>/reachability-metadata.json.";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param type the class name of an error
+     * @return whether it is one of the errors of missing reachability metadata in a native image
+     */
+    static boolean isNativeImageError(String type) {
+        return type.startsWith("org.graalvm.nativeimage.Missing") || type.equals("com.oracle.svm.core.jdk.UnsupportedFeatureError");
+    }
+
+    /**
      * @return the answer for a request body that cannot be read as the input type
      */
     public static HttpReply invalidBody() {

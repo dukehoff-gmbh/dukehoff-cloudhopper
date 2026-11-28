@@ -81,4 +81,27 @@ class SnapStartPrimingTest {
         assertEquals(1, SnapStartPriming.prime(List.of(new ApiGatewayEventRouter<>(plain, null, null))));
         assertEquals(0, CALLS.get());
     }
+
+    @Test
+    public void callsTheOnPrimeMethodsOfTheFunction() {
+        AtomicInteger primed = new AtomicInteger();
+        CloudRequestHandler<String, String> function = new CloudRequestHandler<>() {
+            @Override
+            public String handleRequest(String input, Map<String, String> pathParams, Map<String, String> queryParams,
+                    eu.cloudhopper.mc.runtime.HandlerContext context) {
+                CALLS.incrementAndGet();
+                return "called";
+            }
+
+            @Override
+            public void prime() {
+                primed.incrementAndGet();
+            }
+        };
+        CALLS.set(0);
+        AwsLambdaRequestHandler<String, String> plain = new AwsLambdaRequestHandler<>(function) { };
+        assertEquals(1, SnapStartPriming.prime(List.of(new ApiGatewayEventRouter<>(plain, null, null))));
+        assertEquals(1, primed.get());
+        assertEquals(0, CALLS.get());
+    }
 }
