@@ -38,6 +38,9 @@ target_of() {
       echo "knative scaleway" ;;
     generator-aws-terraform/*|test/system-tests/generator-aws-terraform/*|test/tck/generator-bindings/aws-terraform/*)
       echo "aws awsnative" ;;
+    # builds and smoke-tests the native image of aws-terraform
+    cloudhopper-maven-plugin/*)
+      echo awsnative ;;
     generator-azure-terraform/*|provider-azure/*|provider-azure-publisher/*|provider-azure-blobstore/*|provider-azure-keyvalue/*|test/system-tests/generator-azure-terraform/*|test/tck/generator-bindings/azure-terraform/*)
       echo azure ;;
     generator-gcp-terraform/*|provider-gcp/*|provider-gcp-publisher/*|provider-gcp-blobstore/*|provider-gcp-keyvalue/*|test/system-tests/generator-gcp-terraform/*|test/tck/generator-bindings/gcp-terraform/*)

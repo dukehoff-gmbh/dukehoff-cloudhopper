@@ -112,6 +112,22 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
      * the event, and {@link ApiGatewayV2HttpEventHandler#prime()}.
      */
     void prime() {
+        primeRequestPath();
+        // the function's own dependencies (@OnPrime)
+        primeFunction();
+    }
+
+    /**
+     * The event of the native smoke test ({@code mvn cloudhopper:native-smoke}): with
+     * {@code CLOUDHOPPER_SMOKE_TEST=true}, an event {@code {"cloudhopper-smoke-test": true}} runs
+     * the request path like the SnapStart priming, without the function and without its
+     * {@code @OnPrime} methods, and answers {@code {"primed": true}}. Outside the smoke test's
+     * container the event is an ordinary input.
+     */
+    static final String SMOKE_TEST_EVENT = "cloudhopper-smoke-test";
+    private static final boolean SMOKE_TEST = "true".equals(System.getenv("CLOUDHOPPER_SMOKE_TEST"));
+
+    private void primeRequestPath() {
         Map<String, Object> http = Map.of("method", "GET", "path", "/", "protocol", "HTTP/1.1",
                 "sourceIp", "127.0.0.1", "userAgent", "cloudhopper-priming");
         Map<String, Object> event = Map.of("version", "2.0", "routeKey", "GET /", "rawPath", "/",
@@ -123,7 +139,9 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
         if (this.http instanceof ApiGatewayV2HttpEventHandler<?, ?> handler) {
             handler.prime();
         }
-        // the function's own dependencies (@OnPrime)
+    }
+
+    private void primeFunction() {
         if (plain instanceof AwsLambdaRequestHandler<?, ?> function) {
             try {
                 function.prime();
@@ -145,6 +163,10 @@ public class ApiGatewayEventRouter<I, O> implements RequestHandler<Object, Objec
 
     @Override
     public Object handleRequest(Object input, Context context) {
+        if (SMOKE_TEST && input instanceof Map<?, ?> smoke && Boolean.TRUE.equals(smoke.get(SMOKE_TEST_EVENT))) {
+            primeRequestPath();
+            return Map.of("primed", true);
+        }
         if (input instanceof APIGatewayV2ProxyRequestEvent) {
             return proxy.handleRequest((APIGatewayV2ProxyRequestEvent) input, context);
         } else if (input instanceof APIGatewayV2HTTPEvent) {

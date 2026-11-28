@@ -122,10 +122,27 @@ Build with the profile `aws-native` in addition to `aws-terraform`:
 mvn package -Paws-terraform,aws-native
 ```
 
-- The profile builds the executable `bootstrap` with GraalVM in a container, so it needs
-  Docker (native images cannot be cross-compiled), and packs it into
+- The profile runs the goal `cloudhopper:native-image` of the `cloudhopper-maven-plugin`: it
+  builds the executable `bootstrap` with GraalVM in a container, so it needs Docker (native
+  images cannot be cross-compiled), and packs it into
   `target/<artifactId>-<version>-aws-terraform-native.zip`. The build takes about a minute and
-  a few GB of memory.
+  a few GB of memory; `-Dnative.options=-J-Xmx3g` limits it, `-Dnative.image=...` selects
+  another GraalVM image.
+- `mvn verify -Paws-terraform,aws-native` also runs `cloudhopper:native-smoke`: it starts the
+  `bootstrap` locally in the Lambda base image `public.ecr.aws/lambda/provided:al2023`, once per
+  function, and runs the request path of each (as the SnapStart priming does, without the
+  function's code, so it needs no cloud access). Errors that exist only in a native image, such
+  as missing reflection metadata, fail the build there instead of after the deployment. To run
+  functions themselves, list events in `src/test/native-smoke/events.json`:
+
+  ```json
+  [
+    {"function": "price", "event": {"customer": "acme"}, "environment": {"PRICE_LIST": "test"}}
+  ]
+  ```
+
+  An event fails the build when the invocation fails or an HTTP function answers 5xx;
+  `-Dnative.smoke.function=<name>` runs one function, `-Dnative.smoke.skip` skips the goal.
 - The generated Terraform deploys that zip with `runtime = "provided.al2023"`. One executable
   serves all functions; `eu.cloudhopper.mc.provider.aws.NativeRuntime` creates the handler the
   function's handler setting names.
@@ -296,3 +313,4 @@ The archetype adds these dependencies to the profile; add them yourself in a pro
 | `eu.cloudhopper.mc:provider-aws-publisher` | compile | `@Queue` publishers for SQS, without the AWS SDK |
 | `eu.cloudhopper.mc:provider-aws-blobstore` | compile | `@Bucket` stores for S3 and S3-compatible storage, without the AWS SDK |
 | `eu.cloudhopper.mc:provider-aws-keyvalue` | compile | `@Table` stores for DynamoDB, without the AWS SDK |
+| `eu.cloudhopper.mc:cloudhopper-maven-plugin` | build plugin (profile `aws-native`) | the goals `native-image` and `native-smoke` |

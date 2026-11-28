@@ -624,12 +624,15 @@ jobs:
           ${{ runner.os }}-maven-
 
     - name: Install the modules the TCK needs
-      run: mvn -B -ntp install -DskipTests -pl test/system-tests/generator-aws-terraform -am
+      # with the Maven plugin the native profile uses
+      run: mvn -B -ntp install -DskipTests -pl cloudhopper-maven-plugin,test/system-tests/generator-aws-terraform -am
 
     # GraalVM in a container (as in the archetype's aws-native profile): bootstrap and the zip
-    - name: Build the native image
+    # cloudhopper:native-image builds bootstrap and the zip; cloudhopper:native-smoke runs every
+    # function's handler in the Lambda base image before anything is deployed
+    - name: Build and smoke-test the native image
       # clean: the annotation processor must run again with -Aruntime=native
-      run: mvn -B -ntp clean package -DskipTests -Pnative -pl test/system-tests/generator-aws-terraform
+      run: mvn -B -ntp clean verify -DskipTests -Pnative -pl test/system-tests/generator-aws-terraform
 
     - name: Build TCK image for AWS
       uses: docker/build-push-action@v7.4.0
@@ -666,7 +669,7 @@ jobs:
           -e CLOUDHOPPER_RUNTIME
         run: |
           echo '🔍 Recompiling only system tests (native: generated Terraform for the zip built above)...'
-          mvn -f /workspace/pom.xml install -DskipTests -Pnative -Dexec.skip -Dassembly.skipAssembly -pl test/system-tests/generator-aws-terraform &&
+          mvn -f /workspace/pom.xml install -DskipTests -Pnative -Dnative.skip -Dnative.smoke.skip -pl test/system-tests/generator-aws-terraform &&
           echo '▶ Running TCK...'
           cd /workspace/test/system-tests/generator-aws-terraform/
           mvn exec:java \
